@@ -1,0 +1,24 @@
+! currently on this tutorial page: http://www.rastertek.com/dx11s2tut04.html
+
+
+after first triangle (or so), get code cleaned up
+
+i don't think we need a depth buffer since it'll all be path traced
+
+i think i'll need a deferred renderer type setup? I'll have an intermediary buffer that has uv and intensity that i will then process with the shader.
+
+show fps / mspf
+
+allow a way to specify screen w/h and fullscreen. Command line?
+
+================================= HIGH LEVEL GOALS =================================
+
+1) path trace diffuse / emissive of a scene with a mesh. (monochromatic?)
+2) use the brightness values to determine which tileable crosshatching texture to use (trilinear filtering w/ volume texture)
+3) success!
+4) maybe multiple scenes and some debug displays and such. (IMGUI? Or rely on renderdoc?)
+
+================================= NOTES =================================
+
+DX11 guid: http://www.rastertek.com/dx11tut02.html
+
