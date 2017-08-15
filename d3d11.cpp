@@ -4,6 +4,10 @@
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 
+// TODO: code cleanup
+
+// TODO: make a templated type of thing that releases and nulls itself on dtor
+
 // TODO: make into not globals!
 bool m_vsync_enabled;
 int m_videoCardMemory;
@@ -38,10 +42,8 @@ bool D3D11Init (
     IDXGIAdapter* adapter;
     IDXGIOutput* adapterOutput;
     unsigned int numModes, i, numerator, denominator;
-    unsigned long long stringLength;
     DXGI_MODE_DESC* displayModeList;
     DXGI_ADAPTER_DESC adapterDesc;
-    int error;
     DXGI_SWAP_CHAIN_DESC swapChainDesc;
     D3D_FEATURE_LEVEL featureLevel;
     ID3D11Texture2D* backBufferPtr;
@@ -124,7 +126,8 @@ bool D3D11Init (
     m_videoCardMemory = (int)(adapterDesc.DedicatedVideoMemory / 1024 / 1024);
 
     // Convert the name of the video card to a character array and store it.
-    //error = wcstombs_s(&stringLength, m_videoCardDescription, 128, adapterDesc.Description, 128);
+    //unsigned long long stringLength;
+    //int error = wcstombs_s(&stringLength, m_videoCardDescription, 128, adapterDesc.Description, 128);
     //if (error != 0)
     //{
         //return false;

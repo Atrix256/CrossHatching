@@ -1,5 +1,6 @@
 #include "model.h"
 
+// TODO: this may change from model to model?
 struct VertexType
 {
     DirectX::XMFLOAT3 position;
@@ -7,6 +8,7 @@ struct VertexType
     DirectX::XMFLOAT2 uv;
 };
 
+// TODO: not global
 ID3D11Buffer *m_vertexBuffer = nullptr;
 ID3D11Buffer *m_indexBuffer = nullptr;
 int m_vertexCount = 0;

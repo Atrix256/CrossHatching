@@ -1,7 +1,7 @@
 /////////////
 // GLOBALS //
 /////////////
-cbuffer MatrixBuffer
+cbuffer Constants
 {
     float4 pixelColor;
 };

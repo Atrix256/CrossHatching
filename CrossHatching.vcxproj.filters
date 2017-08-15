@@ -6,6 +6,7 @@
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="notes.txt" />
@@ -15,6 +16,7 @@
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="Texture.h" />
+    <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shader.fx" />

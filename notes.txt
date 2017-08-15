@@ -1,13 +1,17 @@
 get code cleaned up.
 get rid of todo's
 
-i don't think we need a depth buffer since it'll all be path traced, so remove that (eventually)
+
+
+get a compute shader running that writes to a texture
 
 i think i'll need a deferred renderer type setup? I'll have an intermediary buffer that has uv and intensity that i will then process with the shader.
 
-allow a way to specify screen w/h and fullscreen. Command line?
+i don't think we need a depth buffer since it'll all be path traced, so remove that (eventually)
 
 do i need to do anything to strip unused shader constants or otherwise only fill in those used etc?
+
+allow a way to specify screen w/h and fullscreen. Command line?
 
 show fps / mspf
 

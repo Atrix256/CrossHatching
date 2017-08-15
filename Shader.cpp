@@ -5,6 +5,7 @@
 #include <directxmath.h>
 #include <fstream>
 
+// TODO: not globals!
 ID3D11VertexShader* m_vertexShader = nullptr;
 ID3D11PixelShader* m_pixelShader = nullptr;
 ID3D11InputLayout* m_layout = nullptr;
@@ -60,7 +61,7 @@ bool ShaderInit (ID3D11Device* device, HWND hWnd, WCHAR* fileName, bool debug)
     ID3D10Blob* pixelShaderBuffer;
     D3D11_INPUT_ELEMENT_DESC polygonLayout[3];
     unsigned int numElements;
-    D3D11_BUFFER_DESC matrixBufferDesc;
+    D3D11_BUFFER_DESC constantBufferDesc;
     D3D11_SAMPLER_DESC samplerDesc;
 
     // Initialize the pointers this function will use to null.
@@ -169,15 +170,15 @@ bool ShaderInit (ID3D11Device* device, HWND hWnd, WCHAR* fileName, bool debug)
     pixelShaderBuffer = 0;
 
     // Setup the description of the dynamic matrix constant buffer that is in the vertex shader.
-    matrixBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-    matrixBufferDesc.ByteWidth = sizeof(SConstantBuffer);
-    matrixBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    matrixBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-    matrixBufferDesc.MiscFlags = 0;
-    matrixBufferDesc.StructureByteStride = 0;
+    constantBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+    constantBufferDesc.ByteWidth = sizeof(SConstantBuffer);
+    constantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    constantBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+    constantBufferDesc.MiscFlags = 0;
+    constantBufferDesc.StructureByteStride = 0;
 
     // Create the constant buffer pointer so we can access the vertex shader constant buffer from within this class.
-    result = device->CreateBuffer(&matrixBufferDesc, NULL, &m_constantBuffer);
+    result = device->CreateBuffer(&constantBufferDesc, NULL, &m_constantBuffer);
     if (FAILED(result))
     {
         return false;
