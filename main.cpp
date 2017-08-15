@@ -124,7 +124,7 @@ void InitWindow (size_t screenWidth, size_t screenHeight, bool fullScreen)
     SetFocus(g_hWnd);
 
     // Hide the mouse cursor.
-    ShowCursor(false);
+    //ShowCursor(false);
 
     return;
 }
@@ -169,6 +169,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
         }
         else
         {
+            ShaderSetConstants(D3D11GetContext(), 2.0f, 1.0f, 1.0f, 1.0f);
             D3D11BeginScene(0.4f, 0.0f, 0.4f, 1.0f);
             ModelRender(D3D11GetContext());
             ShaderDraw(D3D11GetContext(), 3);
