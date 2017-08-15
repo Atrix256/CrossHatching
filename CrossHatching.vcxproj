@@ -144,12 +144,16 @@
   <ItemGroup>
     <ClCompile Include="d3d11.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Model.cpp" />
+    <ClCompile Include="Shader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="notes.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="d3d11.h" />
+    <ClInclude Include="Model.h" />
+    <ClInclude Include="Shader.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shader.fx">

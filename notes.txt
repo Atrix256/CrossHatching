@@ -1,5 +1,10 @@
 ! currently on this tutorial page: http://www.rastertek.com/dx11s2tut04.html
 
+* option to compile shaders with debug
+
+* check it out in renderdoc to see what's up
+
+* get the constants working!
 
 after first triangle (or so), get code cleaned up
 
@@ -10,6 +15,15 @@ i think i'll need a deferred renderer type setup? I'll have an intermediary buff
 show fps / mspf
 
 allow a way to specify screen w/h and fullscreen. Command line?
+
+do i need to do anything to strip unused shader constants or otherwise only fill in those used etc?
+
+standardize vs and ps entry point names
+
+? strongly typed handles for void*'s
+ * meh... let them not be void * it's fine.
+
+ * test x64 and release
 
 ================================= HIGH LEVEL GOALS =================================
 

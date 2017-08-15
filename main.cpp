@@ -1,5 +1,7 @@
 #include <windows.h>
 #include "d3d11.h"
+#include "Shader.h"
+#include "Model.h"
 
 #define APPLICATION_NAME L"Generalized Cross Hatching"
 
@@ -107,14 +109,14 @@ void InitWindow (size_t screenWidth, size_t screenHeight, bool fullScreen)
         screenHeight = 600;
 
         // Place the window in the middle of the screen.
-        posX = (GetSystemMetrics(SM_CXSCREEN) - screenWidth) / 2;
-        posY = (GetSystemMetrics(SM_CYSCREEN) - screenHeight) / 2;
+        posX = (GetSystemMetrics(SM_CXSCREEN) - (int)screenWidth) / 2;
+        posY = (GetSystemMetrics(SM_CYSCREEN) - (int)screenHeight) / 2;
     }
 
     // Create the window with the screen settings and get the handle to it.
     g_hWnd = CreateWindowEx(WS_EX_APPWINDOW, APPLICATION_NAME, APPLICATION_NAME,
         WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_POPUP,
-        posX, posY, screenWidth, screenHeight, NULL, NULL, hinstance, NULL);
+        posX, posY, (int)screenWidth, (int)screenHeight, NULL, NULL, hinstance, NULL);
 
     // Bring the window up on the screen and set it as main focus.
     ShowWindow(g_hWnd, SW_SHOW);
@@ -136,13 +138,20 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
     // settings
     size_t width = 800;
     size_t height = 600;
-    bool fullScreen = true;
+    bool fullScreen = false;
     bool vsync = true;
 
     InitWindow(width, height, fullScreen);
 
     // TODO: if it fails, report why to a log or something. Or maybe show a message box
-    done = !D3D11Init(width, height, vsync, g_hWnd, fullScreen, 100.0f, 0.01f);
+    if (!D3D11Init(width, height, vsync, g_hWnd, fullScreen, 100.0f, 0.01f))
+        done = true;
+
+    if (!ShaderInit(D3D11GetDevice(), g_hWnd, L"shader.fx"))
+        done = true;
+
+    if (!ModelInit(D3D11GetDevice()))
+        done = true;
 
     while (!done)
     {
@@ -161,6 +170,8 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
         else
         {
             D3D11BeginScene(0.4f, 0.0f, 0.4f, 1.0f);
+            ModelRender(D3D11GetContext());
+            ShaderDraw(D3D11GetContext(), 3);
             D3D11EndScene();
 
             // TODO: this! make it run a frame
@@ -175,6 +186,8 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
         }
     }
 
+    ModelShutdown();
+    ShaderShutdown();
     D3D11Shutdown();
 
     return 0;

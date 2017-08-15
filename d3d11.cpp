@@ -1,8 +1,5 @@
 #include "d3d11.h"
 
-#include <d3d11.h>
-#include <directxmath.h>
-
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3dcompiler.lib")
@@ -20,7 +17,7 @@ ID3D11DepthStencilState* m_depthStencilState;
 ID3D11DepthStencilView* m_depthStencilView;
 ID3D11RasterizerState* m_rasterState;
 
-// TODO: they *seem* to be in directxmath.h. What gives?
+// TODO: they *seem* to be in directxmath.h. What gives? actually probably directx:: namespace or similar
 //XMMATRIX m_projectionMatrix;
 //XMMATRIX m_worldMatrix;
 //XMMATRIX m_orthoMatrix;
@@ -30,7 +27,7 @@ bool D3D11Init (
     size_t screenWidth,
     size_t screenHeight,
     bool vsync,
-    void* hwnd,
+    HWND hWnd,
     bool fullscreen,
     float screenDepth,
     float screenNear
@@ -156,8 +153,8 @@ bool D3D11Init (
     swapChainDesc.BufferCount = 1;
 
     // Set the width and height of the back buffer.
-    swapChainDesc.BufferDesc.Width = screenWidth;
-    swapChainDesc.BufferDesc.Height = screenHeight;
+    swapChainDesc.BufferDesc.Width = (UINT)screenWidth;
+    swapChainDesc.BufferDesc.Height = (UINT)screenHeight;
 
     // Set regular 32-bit surface for the back buffer.
     swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -178,7 +175,7 @@ bool D3D11Init (
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 
     // Set the handle for the window to render to.
-    swapChainDesc.OutputWindow = (HWND)hwnd;
+    swapChainDesc.OutputWindow = hWnd;
 
     // Turn multisampling off.
     swapChainDesc.SampleDesc.Count = 1;
@@ -238,8 +235,8 @@ bool D3D11Init (
     ZeroMemory(&depthBufferDesc, sizeof(depthBufferDesc));
 
     // Set up the description of the depth buffer.
-    depthBufferDesc.Width = screenWidth;
-    depthBufferDesc.Height = screenHeight;
+    depthBufferDesc.Width = (UINT)screenWidth;
+    depthBufferDesc.Height = (UINT)screenHeight;
     depthBufferDesc.MipLevels = 1;
     depthBufferDesc.ArraySize = 1;
     depthBufferDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
@@ -447,4 +444,14 @@ void D3D11EndScene ()
         // Present as fast as possible.
         m_swapChain->Present(0, 0);
     }
+}
+
+ID3D11Device* D3D11GetDevice()
+{
+    return m_device;
+}
+
+ID3D11DeviceContext* D3D11GetContext ()
+{
+    return m_deviceContext;
 }
