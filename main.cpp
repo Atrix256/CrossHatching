@@ -135,12 +135,12 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
     MSG msg;
     bool done = false;
 
-
     // settings
     size_t width = 800;
     size_t height = 600;
     bool fullScreen = false;
     bool vsync = true;
+    bool shaderDebug = true;
 
     InitWindow(width, height, fullScreen);
 
@@ -148,7 +148,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
     if (!D3D11Init(width, height, vsync, g_hWnd, fullScreen, 100.0f, 0.01f))
         done = true;
 
-    if (!ShaderInit(D3D11GetDevice(), g_hWnd, L"shader.fx"))
+    if (!ShaderInit(D3D11GetDevice(), g_hWnd, L"shader.fx", shaderDebug))
         done = true;
 
     if (!ModelInit(D3D11GetDevice()))
@@ -173,8 +173,8 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
         }
         else
         {
-            ShaderSetConstants(D3D11GetContext(), 2.0f, 1.0f, 1.0f, 1.0f, TextureGetTexture());
             D3D11BeginScene(0.4f, 0.0f, 0.4f, 1.0f);
+            ShaderSetConstants(D3D11GetContext(), 2.0f, 1.0f, 1.0f, 1.0f, TextureGetTexture());
             ModelRender(D3D11GetContext());
             ShaderDraw(D3D11GetContext(), 3);
             D3D11EndScene();

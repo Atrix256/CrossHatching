@@ -52,7 +52,7 @@ static void OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR*
 }
 
 
-bool ShaderInit (ID3D11Device* device, HWND hWnd, WCHAR* fileName)
+bool ShaderInit (ID3D11Device* device, HWND hWnd, WCHAR* fileName, bool debug)
 {
     HRESULT result;
     ID3D10Blob* errorMessage;
@@ -68,8 +68,12 @@ bool ShaderInit (ID3D11Device* device, HWND hWnd, WCHAR* fileName)
     vertexShaderBuffer = 0;
     pixelShaderBuffer = 0;
 
+    UINT compileFlags = D3D10_SHADER_ENABLE_STRICTNESS;
+    if (debug)
+        compileFlags |= D3D10_SHADER_DEBUG;
+
     // Compile the vertex shader code.
-        result = D3DCompileFromFile(fileName, NULL, NULL, "ColorVertexShader", "vs_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0,
+        result = D3DCompileFromFile(fileName, NULL, NULL, "vs_main", "vs_5_0", compileFlags, 0,
             &vertexShaderBuffer, &errorMessage);
     if (FAILED(result))
     {
@@ -88,7 +92,7 @@ bool ShaderInit (ID3D11Device* device, HWND hWnd, WCHAR* fileName)
     }
 
     // Compile the pixel shader code.
-    result = D3DCompileFromFile(fileName, NULL, NULL, "ColorPixelShader", "ps_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0,
+    result = D3DCompileFromFile(fileName, NULL, NULL, "ps_main", "ps_5_0", compileFlags, 0,
         &pixelShaderBuffer, &errorMessage);
     if (FAILED(result))
     {

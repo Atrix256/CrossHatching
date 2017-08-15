@@ -1,29 +1,17 @@
-! currently on this tutorial page: http://www.rastertek.com/dx11s2tut04.html
+get code cleaned up.
+get rid of todo's
 
-* option to compile shaders with debug
-
-* check it out in renderdoc to see what's up
-
-* get the constants working!
-
-after first triangle (or so), get code cleaned up
-
-i don't think we need a depth buffer since it'll all be path traced
+i don't think we need a depth buffer since it'll all be path traced, so remove that (eventually)
 
 i think i'll need a deferred renderer type setup? I'll have an intermediary buffer that has uv and intensity that i will then process with the shader.
-
-show fps / mspf
 
 allow a way to specify screen w/h and fullscreen. Command line?
 
 do i need to do anything to strip unused shader constants or otherwise only fill in those used etc?
 
-standardize vs and ps entry point names
+show fps / mspf
 
-? strongly typed handles for void*'s
- * meh... let them not be void * it's fine.
-
- * test x64 and release
+test x64 and release
 
 ================================= HIGH LEVEL GOALS =================================
 

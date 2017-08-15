@@ -2,7 +2,7 @@
 
 #include <d3d11.h>
 
-bool ShaderInit (ID3D11Device* device, HWND hWnd, wchar_t* fileName);
+bool ShaderInit (ID3D11Device* device, HWND hWnd, wchar_t* fileName, bool debug);
 
 void ShaderShutdown (void);
 
