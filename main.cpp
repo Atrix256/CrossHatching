@@ -2,6 +2,7 @@
 #include "d3d11.h"
 #include "Shader.h"
 #include "Model.h"
+#include "Texture.h"
 
 #define APPLICATION_NAME L"Generalized Cross Hatching"
 
@@ -153,6 +154,9 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
     if (!ModelInit(D3D11GetDevice()))
         done = true;
 
+    if (!TextureInitialize(D3D11GetDevice(), D3D11GetContext(), "stone01.tga"))
+        done = true;
+
     while (!done)
     {
         // Handle the windows messages.
@@ -169,24 +173,15 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
         }
         else
         {
-            ShaderSetConstants(D3D11GetContext(), 2.0f, 1.0f, 1.0f, 1.0f);
+            ShaderSetConstants(D3D11GetContext(), 2.0f, 1.0f, 1.0f, 1.0f, TextureGetTexture());
             D3D11BeginScene(0.4f, 0.0f, 0.4f, 1.0f);
             ModelRender(D3D11GetContext());
             ShaderDraw(D3D11GetContext(), 3);
             D3D11EndScene();
-
-            // TODO: this! make it run a frame
-            /*
-            // Otherwise do the frame processing.
-            result = Frame();
-            if (!result)
-            {
-                done = true;
-            }
-            */
         }
     }
 
+    TextureShutdown();
     ModelShutdown();
     ShaderShutdown();
     D3D11Shutdown();

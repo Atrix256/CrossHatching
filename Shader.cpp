@@ -9,6 +9,7 @@ ID3D11VertexShader* m_vertexShader = nullptr;
 ID3D11PixelShader* m_pixelShader = nullptr;
 ID3D11InputLayout* m_layout = nullptr;
 ID3D11Buffer* m_constantBuffer = nullptr;
+ID3D11SamplerState* m_sampleState = nullptr;
 
 struct SConstantBuffer
 {
@@ -57,10 +58,10 @@ bool ShaderInit (ID3D11Device* device, HWND hWnd, WCHAR* fileName)
     ID3D10Blob* errorMessage;
     ID3D10Blob* vertexShaderBuffer;
     ID3D10Blob* pixelShaderBuffer;
-    D3D11_INPUT_ELEMENT_DESC polygonLayout[2];
+    D3D11_INPUT_ELEMENT_DESC polygonLayout[3];
     unsigned int numElements;
     D3D11_BUFFER_DESC matrixBufferDesc;
-
+    D3D11_SAMPLER_DESC samplerDesc;
 
     // Initialize the pointers this function will use to null.
     errorMessage = 0;
@@ -137,6 +138,14 @@ bool ShaderInit (ID3D11Device* device, HWND hWnd, WCHAR* fileName)
     polygonLayout[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
     polygonLayout[1].InstanceDataStepRate = 0;
 
+    polygonLayout[2].SemanticName = "TEXCOORD";
+    polygonLayout[2].SemanticIndex = 0;
+    polygonLayout[2].Format = DXGI_FORMAT_R32G32_FLOAT;
+    polygonLayout[2].InputSlot = 0;
+    polygonLayout[2].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
+    polygonLayout[2].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+    polygonLayout[2].InstanceDataStepRate = 0;
+
     // Get a count of the elements in the layout.
     numElements = sizeof(polygonLayout) / sizeof(polygonLayout[0]);
 
@@ -170,11 +179,40 @@ bool ShaderInit (ID3D11Device* device, HWND hWnd, WCHAR* fileName)
         return false;
     }
 
+    // Create a texture sampler state description.
+    samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+    samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+    samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+    samplerDesc.MipLODBias = 0.0f;
+    samplerDesc.MaxAnisotropy = 1;
+    samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+    samplerDesc.BorderColor[0] = 0;
+    samplerDesc.BorderColor[1] = 0;
+    samplerDesc.BorderColor[2] = 0;
+    samplerDesc.BorderColor[3] = 0;
+    samplerDesc.MinLOD = 0;
+    samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+    // Create the texture sampler state.
+    result = device->CreateSamplerState(&samplerDesc, &m_sampleState);
+    if (FAILED(result))
+    {
+        return false;
+    }
+
     return true;
 }
 
 void ShaderShutdown (void)
 {
+    // Release the sampler state.
+    if (m_sampleState)
+    {
+        m_sampleState->Release();
+        m_sampleState = 0;
+    }
+
     // Release the matrix constant buffer.
     if (m_constantBuffer)
     {
@@ -204,7 +242,7 @@ void ShaderShutdown (void)
     }
 }
 
-bool ShaderSetConstants (ID3D11DeviceContext* deviceContext, float r, float g, float b, float a)
+bool ShaderSetConstants (ID3D11DeviceContext* deviceContext, float r, float g, float b, float a, ID3D11ShaderResourceView* texture)
 {
     HRESULT result;
     D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -246,6 +284,9 @@ bool ShaderSetConstants (ID3D11DeviceContext* deviceContext, float r, float g, f
     deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_constantBuffer);
     deviceContext->PSSetConstantBuffers(bufferNumber, 1, &m_constantBuffer);
 
+    // Set shader texture resource in the pixel shader.
+    deviceContext->PSSetShaderResources(0, 1, &texture);
+
     return true;
 }
 
@@ -257,6 +298,9 @@ void ShaderDraw (ID3D11DeviceContext* deviceContext, int indexCount)
     // Set the vertex and pixel shaders that will be used to render this triangle.
     deviceContext->VSSetShader(m_vertexShader, NULL, 0);
     deviceContext->PSSetShader(m_pixelShader, NULL, 0);
+
+    // Set the sampler state in the pixel shader.
+    deviceContext->PSSetSamplers(0, 1, &m_sampleState);
 
     // Render the triangle.
     deviceContext->DrawIndexed(indexCount, 0, 0);
