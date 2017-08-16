@@ -9,7 +9,8 @@ bool D3D11Init (
     HWND hWnd,
     bool fullscreen,
     float screenDepth,
-    float screenNear
+    float screenNear,
+    bool debug
 );
 
 void D3D11Shutdown();

@@ -244,3 +244,50 @@ void CShader::Draw (ID3D11DeviceContext* deviceContext, size_t indexCount)
     // Render the triangle.
     deviceContext->DrawIndexed((UINT)indexCount, 0, 0);
 }
+
+bool CComputeShader::Load(ID3D11Device* device, HWND hWnd, wchar_t* fileName, bool debug)
+{
+    HRESULT result;
+    ID3D10Blob* errorMessage;
+    ID3D10Blob* computeShaderBuffer;
+
+    // Initialize the pointers this function will use to null.
+    errorMessage = 0;
+    computeShaderBuffer = 0;
+
+    UINT compileFlags = D3D10_SHADER_ENABLE_STRICTNESS;
+    if (debug)
+        compileFlags |= D3D10_SHADER_DEBUG;
+
+    // Compile the compute shader code.
+    result = D3DCompileFromFile(fileName, NULL, NULL, "cs_main", "cs_5_0", compileFlags, 0,
+        &computeShaderBuffer, &errorMessage);
+    if (FAILED(result))
+    {
+        // If the shader failed to compile it should have writen something to the error message.
+        if (errorMessage)
+        {
+            OutputShaderErrorMessage(errorMessage, hWnd, fileName);
+        }
+        // If there was  nothing in the error message then it simply could not find the shader file itself.
+        else
+        {
+            MessageBox(hWnd, fileName, L"Missing Shader File", MB_OK);
+        }
+
+        return false;
+    }
+    
+    // Create the compute shader from the buffer.
+    result = device->CreateComputeShader(computeShaderBuffer->GetBufferPointer(), computeShaderBuffer->GetBufferSize(), NULL, &m_computeShader.m_ptr);
+    if (FAILED(result))
+    {
+        return false;
+    }
+
+    // Release the compute shader buffer since they are no longer needed.
+    computeShaderBuffer->Release();
+    computeShaderBuffer = 0;
+
+    return true;
+}

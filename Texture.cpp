@@ -159,12 +159,11 @@ bool CTexture::LoadTGA (ID3D11Device* device, ID3D11DeviceContext* deviceContext
     return true;
 }
 
-bool CTexture::CreateRenderTarget (ID3D11Device* device, ID3D11DeviceContext* deviceContext, size_t width, size_t height)
+bool CTexture::Create (ID3D11Device* device, ID3D11DeviceContext* deviceContext, size_t width, size_t height)
 {
-    // relevant article on rendering to textures: http://www.rastertek.com/dx11tut22.html
     D3D11_TEXTURE2D_DESC textureDesc;
-    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
     HRESULT hResult;
+    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
 
     // Setup the description of the texture.
     textureDesc.Height = (UINT)height;
@@ -186,19 +185,6 @@ bool CTexture::CreateRenderTarget (ID3D11Device* device, ID3D11DeviceContext* de
         return false;
     }
 
-    // set up the render target view description
-    D3D11_RENDER_TARGET_VIEW_DESC rtvDesc;
-    rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-    rtvDesc.Texture2D.MipSlice = 0;
-
-    // Create the render target view.
-    hResult = device->CreateRenderTargetView(m_texture.m_ptr, &rtvDesc, &m_renderTargetView.m_ptr);
-    if (FAILED(hResult))
-    {
-        return false;
-    }
-
     // Setup the shader resource view description.
     srvDesc.Format = textureDesc.Format;
     srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
@@ -213,9 +199,4 @@ bool CTexture::CreateRenderTarget (ID3D11Device* device, ID3D11DeviceContext* de
     }
 
     return true;
-}
-
-void CTexture::SetAsRenderTarget (ID3D11DeviceContext* deviceContext)
-{
-    deviceContext->OMSetRenderTargets(1, &m_renderTargetView.m_ptr, nullptr);
 }

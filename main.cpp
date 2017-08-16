@@ -2,6 +2,7 @@
 #include "Shader.h"
 #include "Model.h"
 #include "Texture.h"
+#include "RenderTarget.h"
 #include "Window.h"
 
 int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow)
@@ -15,15 +16,20 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
     bool fullScreen = false;
     bool vsync = true;
     bool shaderDebug = false;
+    bool d3ddebug = false;
 
     WindowInit(width, height, fullScreen);
 
     // TODO: if it fails, report why to a log or something. Or maybe show a message box
-    if (!D3D11Init(width, height, vsync, WindowGetHWND(), fullScreen, 100.0f, 0.01f))
+    if (!D3D11Init(width, height, vsync, WindowGetHWND(), fullScreen, 100.0f, 0.01f, d3ddebug))
         done = true;
 
     CShader shader;
     if (!shader.Load(D3D11GetDevice(), WindowGetHWND(), L"shader.fx", shaderDebug))
+        done = true;
+
+    CComputeShader computeShader;
+    if (!computeShader.Load(D3D11GetDevice(), WindowGetHWND(), L"computeshader.fx", shaderDebug))
         done = true;
 
     CModel model;
@@ -34,12 +40,16 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
     if (!texture.LoadTGA(D3D11GetDevice(), D3D11GetContext(), "stone01.tga"))
         done = true;
 
-    CTexture testBuffer;
-    if (!testBuffer.CreateRenderTarget(D3D11GetDevice(), D3D11GetContext(), width, height))
+    CRenderTarget testBuffer;
+    if (!testBuffer.Create(D3D11GetDevice(), D3D11GetContext(), width, height))
+        done = true;
+
+    CTexture rwTexture;
+    if (!rwTexture.Create(D3D11GetDevice(), D3D11GetContext(), width, height))
         done = true;
 
     // TODO: temp! write to test buffer render target
-    testBuffer.SetAsRenderTarget(D3D11GetContext());
+    //testBuffer.SetAsRenderTarget(D3D11GetContext());
 
     while (!done)
     {

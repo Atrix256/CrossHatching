@@ -4,6 +4,9 @@
 
 
 get a compute shader running that writes to a texture
+ * texture seems like it should be: D3D11_USAGE_DEFAULT.  Readable / writable by GPU!
+
+may not need render target class, we may only need the single render target, and just have compute shaders read/write to default usage textures?
 
 use a structured buffer for triangles? (models being ray traced)
 
@@ -13,6 +16,8 @@ i don't think we need a depth buffer since it'll all be path traced, so remove t
 
 do i need to do anything to strip unused shader constants or otherwise only fill in those used etc?
 
+a way to specify a scene? list spheres and meshes. they get loaded and passed through to the scene.
+
 allow a way to specify screen w/h and fullscreen. Command line?
 
 show fps / mspf
@@ -20,6 +25,15 @@ show fps / mspf
 test x64 and release
 
 TODO's
+
+Figure out how to get labels that show up in renderdoc
+
+Sean said he'd be willing to give me textures.
+
+Work with sean for the franklin booth technioque?
+
+* put shaders in a shader folder
+* put art in an art folder
 
 ================================= HIGH LEVEL GOALS =================================
 

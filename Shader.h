@@ -27,3 +27,12 @@ private:
     CAutoReleasePointer<ID3D11Buffer> m_constantBuffer;
     CAutoReleasePointer<ID3D11SamplerState> m_sampleState;
 };
+
+class CComputeShader
+{
+public:
+    bool Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, bool debug);
+
+private:
+    CAutoReleasePointer<ID3D11ComputeShader> m_computeShader;
+};
