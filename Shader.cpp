@@ -5,24 +5,11 @@
 #include <directxmath.h>
 #include <fstream>
 
-// TODO: not globals!
-ID3D11VertexShader* m_vertexShader = nullptr;
-ID3D11PixelShader* m_pixelShader = nullptr;
-ID3D11InputLayout* m_layout = nullptr;
-ID3D11Buffer* m_constantBuffer = nullptr;
-ID3D11SamplerState* m_sampleState = nullptr;
-
-struct SConstantBuffer
-{
-    float color[4];
-};
-
 static void OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shaderFilename)
 {
     char* compileErrors;
     unsigned long long bufferSize, i;
     std::ofstream fout;
-
 
     // Get a pointer to the error message text buffer.
     compileErrors = (char*)(errorMessage->GetBufferPointer());
@@ -52,8 +39,7 @@ static void OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR*
     return;
 }
 
-
-bool ShaderInit (ID3D11Device* device, HWND hWnd, WCHAR* fileName, bool debug)
+bool CShader::Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, bool debug)
 {
     HRESULT result;
     ID3D10Blob* errorMessage;
@@ -74,8 +60,8 @@ bool ShaderInit (ID3D11Device* device, HWND hWnd, WCHAR* fileName, bool debug)
         compileFlags |= D3D10_SHADER_DEBUG;
 
     // Compile the vertex shader code.
-        result = D3DCompileFromFile(fileName, NULL, NULL, "vs_main", "vs_5_0", compileFlags, 0,
-            &vertexShaderBuffer, &errorMessage);
+    result = D3DCompileFromFile(fileName, NULL, NULL, "vs_main", "vs_5_0", compileFlags, 0,
+        &vertexShaderBuffer, &errorMessage);
     if (FAILED(result))
     {
         // If the shader failed to compile it should have writen something to the error message.
@@ -112,14 +98,14 @@ bool ShaderInit (ID3D11Device* device, HWND hWnd, WCHAR* fileName, bool debug)
     }
 
     // Create the vertex shader from the buffer.
-    result = device->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), NULL, &m_vertexShader);
+    result = device->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), NULL, &m_vertexShader.m_ptr);
     if (FAILED(result))
     {
         return false;
     }
 
     // Create the pixel shader from the buffer.
-    result = device->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(), pixelShaderBuffer->GetBufferSize(), NULL, &m_pixelShader);
+    result = device->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(), pixelShaderBuffer->GetBufferSize(), NULL, &m_pixelShader.m_ptr);
     if (FAILED(result))
     {
         return false;
@@ -156,7 +142,7 @@ bool ShaderInit (ID3D11Device* device, HWND hWnd, WCHAR* fileName, bool debug)
 
     // Create the vertex input layout.
     result = device->CreateInputLayout(polygonLayout, numElements, vertexShaderBuffer->GetBufferPointer(),
-        vertexShaderBuffer->GetBufferSize(), &m_layout);
+        vertexShaderBuffer->GetBufferSize(), &m_layout.m_ptr);
     if (FAILED(result))
     {
         return false;
@@ -178,7 +164,7 @@ bool ShaderInit (ID3D11Device* device, HWND hWnd, WCHAR* fileName, bool debug)
     constantBufferDesc.StructureByteStride = 0;
 
     // Create the constant buffer pointer so we can access the vertex shader constant buffer from within this class.
-    result = device->CreateBuffer(&constantBufferDesc, NULL, &m_constantBuffer);
+    result = device->CreateBuffer(&constantBufferDesc, NULL, &m_constantBuffer.m_ptr);
     if (FAILED(result))
     {
         return false;
@@ -200,7 +186,7 @@ bool ShaderInit (ID3D11Device* device, HWND hWnd, WCHAR* fileName, bool debug)
     samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
     // Create the texture sampler state.
-    result = device->CreateSamplerState(&samplerDesc, &m_sampleState);
+    result = device->CreateSamplerState(&samplerDesc, &m_sampleState.m_ptr);
     if (FAILED(result))
     {
         return false;
@@ -209,58 +195,15 @@ bool ShaderInit (ID3D11Device* device, HWND hWnd, WCHAR* fileName, bool debug)
     return true;
 }
 
-void ShaderShutdown (void)
-{
-    // Release the sampler state.
-    if (m_sampleState)
-    {
-        m_sampleState->Release();
-        m_sampleState = 0;
-    }
-
-    // Release the matrix constant buffer.
-    if (m_constantBuffer)
-    {
-        m_constantBuffer->Release();
-        m_constantBuffer = 0;
-    }
-
-    // Release the layout.
-    if (m_layout)
-    {
-        m_layout->Release();
-        m_layout = 0;
-    }
-
-    // Release the pixel shader.
-    if (m_pixelShader)
-    {
-        m_pixelShader->Release();
-        m_pixelShader = 0;
-    }
-
-    // Release the vertex shader.
-    if (m_vertexShader)
-    {
-        m_vertexShader->Release();
-        m_vertexShader = 0;
-    }
-}
-
-bool ShaderSetConstants (ID3D11DeviceContext* deviceContext, float r, float g, float b, float a, ID3D11ShaderResourceView* texture)
+bool CShader::SetConstants (ID3D11DeviceContext* deviceContext, const SConstantBuffer& constantBuffer, ID3D11ShaderResourceView* texture)
 {
     HRESULT result;
     D3D11_MAPPED_SUBRESOURCE mappedResource;
     SConstantBuffer* dataPtr;
     unsigned int bufferNumber;
 
-    // Transpose the matrices to prepare them for the shader.
-    //worldMatrix = XMMatrixTranspose(worldMatrix);
-    //viewMatrix = XMMatrixTranspose(viewMatrix);
-    //projectionMatrix = XMMatrixTranspose(projectionMatrix);
-
     // Lock the constant buffer so it can be written to.
-    result = deviceContext->Map(m_constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+    result = deviceContext->Map(m_constantBuffer.m_ptr, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
     if (FAILED(result))
     {
         return false;
@@ -268,26 +211,17 @@ bool ShaderSetConstants (ID3D11DeviceContext* deviceContext, float r, float g, f
 
     // Get a pointer to the data in the constant buffer.
     dataPtr = (SConstantBuffer*)mappedResource.pData;
-
-    dataPtr->color[0] = r;
-    dataPtr->color[1] = g;
-    dataPtr->color[2] = b;
-    dataPtr->color[3] = a;
-
-    // Copy the matrices into the constant buffer.
-    //dataPtr->world = worldMatrix;
-    //dataPtr->view = viewMatrix;
-    //dataPtr->projection = projectionMatrix;
+    dataPtr[0] = constantBuffer;
 
     // Unlock the constant buffer.
-    deviceContext->Unmap(m_constantBuffer, 0);
+    deviceContext->Unmap(m_constantBuffer.m_ptr, 0);
 
     // Set the position of the constant buffer in the vertex shader.
     bufferNumber = 0;
 
     // Finanly set the constant buffer in the vertex shader with the updated values.
-    deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_constantBuffer);
-    deviceContext->PSSetConstantBuffers(bufferNumber, 1, &m_constantBuffer);
+    deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_constantBuffer.m_ptr);
+    deviceContext->PSSetConstantBuffers(bufferNumber, 1, &m_constantBuffer.m_ptr);
 
     // Set shader texture resource in the pixel shader.
     deviceContext->PSSetShaderResources(0, 1, &texture);
@@ -295,17 +229,17 @@ bool ShaderSetConstants (ID3D11DeviceContext* deviceContext, float r, float g, f
     return true;
 }
 
-void ShaderDraw (ID3D11DeviceContext* deviceContext, int indexCount)
+void CShader::Draw (ID3D11DeviceContext* deviceContext, int indexCount)
 {
     // Set the vertex input layout.
-    deviceContext->IASetInputLayout(m_layout);
+    deviceContext->IASetInputLayout(m_layout.m_ptr);
 
     // Set the vertex and pixel shaders that will be used to render this triangle.
-    deviceContext->VSSetShader(m_vertexShader, NULL, 0);
-    deviceContext->PSSetShader(m_pixelShader, NULL, 0);
+    deviceContext->VSSetShader(m_vertexShader.m_ptr, NULL, 0);
+    deviceContext->PSSetShader(m_pixelShader.m_ptr, NULL, 0);
 
     // Set the sampler state in the pixel shader.
-    deviceContext->PSSetSamplers(0, 1, &m_sampleState);
+    deviceContext->PSSetSamplers(0, 1, &m_sampleState.m_ptr);
 
     // Render the triangle.
     deviceContext->DrawIndexed(indexCount, 0, 0);

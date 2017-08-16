@@ -22,7 +22,8 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
     if (!D3D11Init(width, height, vsync, WindowGetHWND(), fullScreen, 100.0f, 0.01f))
         done = true;
 
-    if (!ShaderInit(D3D11GetDevice(), WindowGetHWND(), L"shader.fx", shaderDebug))
+    CShader shader;
+    if (!shader.Load(D3D11GetDevice(), WindowGetHWND(), L"shader.fx", shaderDebug))
         done = true;
 
     if (!ModelInit(D3D11GetDevice()))
@@ -48,16 +49,21 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
         }
         else
         {
+            SConstantBuffer constantBuffer;
+            constantBuffer.color[0] = 2.0f;
+            constantBuffer.color[1] = 1.0f;
+            constantBuffer.color[2] = 2.0f;
+            constantBuffer.color[3] = 3.0f;
+
             D3D11BeginScene(0.4f, 0.0f, 0.4f, 1.0f);
-            ShaderSetConstants(D3D11GetContext(), 2.0f, 1.0f, 1.0f, 1.0f, texture.GetTexture());
+            shader.SetConstants(D3D11GetContext(), constantBuffer, texture.GetTexture());
             ModelRender(D3D11GetContext());
-            ShaderDraw(D3D11GetContext(), 3);
+            shader.Draw(D3D11GetContext(), 3);
             D3D11EndScene();
         }
     }
 
     ModelShutdown();
-    ShaderShutdown();
     D3D11Shutdown();
 
     return 0;
