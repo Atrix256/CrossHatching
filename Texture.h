@@ -1,9 +1,16 @@
 #pragma once
 
 #include <d3d11.h>
+#include "Utils.h"
 
-// TODO: pluralize and do constructor / destructor stuff!
+class CTexture
+{
+public:
+    bool LoadTGA (ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* filename);
+    
+    ID3D11ShaderResourceView* GetTexture () { return m_textureView.m_ptr; }
 
-bool TextureInitialize (ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* filename);
-void TextureShutdown ();
-ID3D11ShaderResourceView* TextureGetTexture ();
+private:
+    CAutoReleasePointer<ID3D11Texture2D>            m_texture;
+    CAutoReleasePointer<ID3D11ShaderResourceView>   m_textureView;
+};

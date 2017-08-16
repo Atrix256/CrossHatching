@@ -28,7 +28,8 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
     if (!ModelInit(D3D11GetDevice()))
         done = true;
 
-    if (!TextureInitialize(D3D11GetDevice(), D3D11GetContext(), "stone01.tga"))
+    CTexture texture;
+    if (!texture.LoadTGA(D3D11GetDevice(), D3D11GetContext(), "stone01.tga"))
         done = true;
 
     while (!done)
@@ -48,14 +49,13 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
         else
         {
             D3D11BeginScene(0.4f, 0.0f, 0.4f, 1.0f);
-            ShaderSetConstants(D3D11GetContext(), 2.0f, 1.0f, 1.0f, 1.0f, TextureGetTexture());
+            ShaderSetConstants(D3D11GetContext(), 2.0f, 1.0f, 1.0f, 1.0f, texture.GetTexture());
             ModelRender(D3D11GetContext());
             ShaderDraw(D3D11GetContext(), 3);
             D3D11EndScene();
         }
     }
 
-    TextureShutdown();
     ModelShutdown();
     ShaderShutdown();
     D3D11Shutdown();
