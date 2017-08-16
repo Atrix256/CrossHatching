@@ -1,6 +1,3 @@
-get code cleaned up.
-get rid of todo's
-
 
 
 get a compute shader running that writes to a texture
@@ -16,6 +13,8 @@ allow a way to specify screen w/h and fullscreen. Command line?
 show fps / mspf
 
 test x64 and release
+
+TODO's
 
 ================================= HIGH LEVEL GOALS =================================
 
