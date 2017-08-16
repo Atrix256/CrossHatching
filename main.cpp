@@ -16,7 +16,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
     bool fullScreen = false;
     bool vsync = true;
     bool shaderDebug = false;
-    bool d3ddebug = false;
+    bool d3ddebug = true;
 
     WindowInit(width, height, fullScreen);
 
@@ -79,6 +79,10 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
             shader.SetConstants(D3D11GetContext(), constantBuffer, texture.GetTexture());
             model.Render(D3D11GetContext());
             shader.Draw(D3D11GetContext(), model.GetIndexCount());
+
+            // TODO: temp!
+            computeShader.Dispatch(D3D11GetContext(), 1, 1, 1);
+
             D3D11EndScene();
         }
     }

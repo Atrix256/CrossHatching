@@ -295,3 +295,9 @@ bool CComputeShader::Load(ID3D11Device* device, HWND hWnd, wchar_t* fileName, bo
 
     return true;
 }
+
+void CComputeShader::Dispatch (ID3D11DeviceContext* deviceContext, size_t x, size_t y, size_t z)
+{
+    deviceContext->CSSetShader(m_computeShader.m_ptr, NULL, 0);
+    deviceContext->Dispatch((UINT)x, (UINT)y, (UINT)z);
+}
