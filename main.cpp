@@ -26,7 +26,8 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
     if (!shader.Load(D3D11GetDevice(), WindowGetHWND(), L"shader.fx", shaderDebug))
         done = true;
 
-    if (!ModelInit(D3D11GetDevice()))
+    CModel model;
+    if (!model.Load(D3D11GetDevice()))
         done = true;
 
     CTexture texture;
@@ -57,13 +58,12 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
 
             D3D11BeginScene(0.4f, 0.0f, 0.4f, 1.0f);
             shader.SetConstants(D3D11GetContext(), constantBuffer, texture.GetTexture());
-            ModelRender(D3D11GetContext());
-            shader.Draw(D3D11GetContext(), 3);
+            model.Render(D3D11GetContext());
+            shader.Draw(D3D11GetContext(), model.GetIndexCount());
             D3D11EndScene();
         }
     }
 
-    ModelShutdown();
     D3D11Shutdown();
 
     return 0;

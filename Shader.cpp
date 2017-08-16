@@ -229,7 +229,7 @@ bool CShader::SetConstants (ID3D11DeviceContext* deviceContext, const SConstantB
     return true;
 }
 
-void CShader::Draw (ID3D11DeviceContext* deviceContext, int indexCount)
+void CShader::Draw (ID3D11DeviceContext* deviceContext, size_t indexCount)
 {
     // Set the vertex input layout.
     deviceContext->IASetInputLayout(m_layout.m_ptr);
@@ -242,5 +242,5 @@ void CShader::Draw (ID3D11DeviceContext* deviceContext, int indexCount)
     deviceContext->PSSetSamplers(0, 1, &m_sampleState.m_ptr);
 
     // Render the triangle.
-    deviceContext->DrawIndexed(indexCount, 0, 0);
+    deviceContext->DrawIndexed((UINT)indexCount, 0, 0);
 }

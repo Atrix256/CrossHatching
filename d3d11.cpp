@@ -4,11 +4,6 @@
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 
-// TODO: code cleanup
-
-// TODO: make a templated type of thing that releases and nulls itself on dtor
-
-// TODO: make into not globals!
 bool m_vsync_enabled;
 int m_videoCardMemory;
 char m_videoCardDescription[128];
@@ -20,12 +15,6 @@ ID3D11Texture2D* m_depthStencilBuffer;
 ID3D11DepthStencilState* m_depthStencilState;
 ID3D11DepthStencilView* m_depthStencilView;
 ID3D11RasterizerState* m_rasterState;
-
-// TODO: they *seem* to be in directxmath.h. What gives? actually probably directx:: namespace or similar
-//XMMATRIX m_projectionMatrix;
-//XMMATRIX m_worldMatrix;
-//XMMATRIX m_orthoMatrix;
-
 
 bool D3D11Init (
     size_t screenWidth,
@@ -124,14 +113,6 @@ bool D3D11Init (
 
     // Store the dedicated video card memory in megabytes.
     m_videoCardMemory = (int)(adapterDesc.DedicatedVideoMemory / 1024 / 1024);
-
-    // Convert the name of the video card to a character array and store it.
-    //unsigned long long stringLength;
-    //int error = wcstombs_s(&stringLength, m_videoCardDescription, 128, adapterDesc.Description, 128);
-    //if (error != 0)
-    //{
-        //return false;
-    //}
 
     // Release the display mode list.
     delete[] displayModeList;
@@ -345,16 +326,6 @@ bool D3D11Init (
     // Setup the projection matrix.
     fieldOfView = 3.141592654f / 4.0f;
     screenAspect = (float)screenWidth / (float)screenHeight;
-
-    // TODO: These matrices ???
-    // Create the projection matrix for 3D rendering.
-    //m_projectionMatrix = XMMatrixPerspectiveFovLH(fieldOfView, screenAspect, screenNear, screenDepth);
-
-    // Initialize the world matrix to the identity matrix.
-    //m_worldMatrix = XMMatrixIdentity();
-
-    // Create an orthographic projection matrix for 2D rendering.
-    //m_orthoMatrix = XMMatrixOrthographicLH((float)screenWidth, (float)screenHeight, screenNear, screenDepth);
 
     return true;
 }

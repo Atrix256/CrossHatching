@@ -18,7 +18,7 @@ public:
 
     bool SetConstants (ID3D11DeviceContext* deviceContext, const SConstantBuffer& constantBuffer, ID3D11ShaderResourceView* texture);
 
-    void Draw (ID3D11DeviceContext* deviceContext, int indexCount);
+    void Draw (ID3D11DeviceContext* deviceContext, size_t indexCount);
 
 private:
     CAutoReleasePointer<ID3D11VertexShader> m_vertexShader;
