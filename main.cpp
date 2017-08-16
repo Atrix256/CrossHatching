@@ -34,6 +34,13 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
     if (!texture.LoadTGA(D3D11GetDevice(), D3D11GetContext(), "stone01.tga"))
         done = true;
 
+    CTexture testBuffer;
+    if (!testBuffer.CreateRenderTarget(D3D11GetDevice(), D3D11GetContext(), width, height))
+        done = true;
+
+    // TODO: temp! write to test buffer render target
+    testBuffer.SetAsRenderTarget(D3D11GetContext());
+
     while (!done)
     {
         // Handle the windows messages.

@@ -1,6 +1,11 @@
+* maybe seperate render target into it's own class. (with set RT, clear, etc)
+* draw to render target, and have it then render from rt to screen
+* maybe make the main render target use the render target class too
 
 
 get a compute shader running that writes to a texture
+
+use a structured buffer for triangles? (models being ray traced)
 
 i think i'll need a deferred renderer type setup? I'll have an intermediary buffer that has uv and intensity that i will then process with the shader.
 
