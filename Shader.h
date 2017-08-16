@@ -5,6 +5,8 @@
 
 // TODO: how to handle constant buffers? Macro lists that generate something that is a template argument?
 // TODO: how to handle textures?
+// TODO: same with structured buffers and unordered access stuff
+// both for vs/ps as well as cs shaders.
 
 struct SConstantBuffer
 {

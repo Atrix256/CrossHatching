@@ -289,5 +289,9 @@ bool CComputeShader::Load(ID3D11Device* device, HWND hWnd, wchar_t* fileName, bo
     computeShaderBuffer->Release();
     computeShaderBuffer = 0;
 
+
+    // TODO: create a shader resource view (input texture?)
+    // TODO: need to setup inputs and outputs and have the compute shader do operations on them.
+
     return true;
 }

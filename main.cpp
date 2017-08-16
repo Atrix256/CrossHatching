@@ -28,6 +28,8 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
     if (!shader.Load(D3D11GetDevice(), WindowGetHWND(), L"shader.fx", shaderDebug))
         done = true;
 
+    // TODO: delete when working
+    // compute shader info: http://recreationstudios.blogspot.com/2010/04/simple-compute-shader-example.html
     CComputeShader computeShader;
     if (!computeShader.Load(D3D11GetDevice(), WindowGetHWND(), L"computeshader.fx", shaderDebug))
         done = true;
