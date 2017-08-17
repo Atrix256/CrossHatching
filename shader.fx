@@ -6,7 +6,7 @@ cbuffer Constants
     float4 pixelColor;
 };
 
-Texture2D shaderTexture;
+Texture2D<float4> shaderTexture;
 SamplerState SampleType;
 
 //////////////

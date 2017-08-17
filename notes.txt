@@ -1,12 +1,10 @@
-* maybe seperate render target into it's own class. (with set RT, clear, etc)
-* draw to render target, and have it then render from rt to screen
-* maybe make the main render target use the render target class too
+get a compute shader taking a structured buffer as input
+ may not need it to be able to take a texture as input, so could put that off til later.
 
-
-get a compute shader running that writes to a texture
- * texture seems like it should be: D3D11_USAGE_DEFAULT.  Readable / writable by GPU!
+* make it auto-clear the reference to textures from both compute shaders and vs/[s]
 
 may not need render target class, we may only need the single render target, and just have compute shaders read/write to default usage textures?
+ probably, but maybe the main render target could use the class i dunno
 
 use a structured buffer for triangles? (models being ray traced)
 

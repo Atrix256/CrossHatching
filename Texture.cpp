@@ -104,6 +104,7 @@ bool CTexture::LoadTGA (ID3D11Device* device, ID3D11DeviceContext* deviceContext
     HRESULT hResult;
     unsigned int rowPitch;
     D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+    D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc;
 
     std::vector<unsigned char> targaData;
 
@@ -123,7 +124,7 @@ bool CTexture::LoadTGA (ID3D11Device* device, ID3D11DeviceContext* deviceContext
     textureDesc.SampleDesc.Count = 1;
     textureDesc.SampleDesc.Quality = 0;
     textureDesc.Usage = D3D11_USAGE_DEFAULT;
-    textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+    textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET | D3D11_BIND_UNORDERED_ACCESS;
     textureDesc.CPUAccessFlags = 0;
     textureDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
 
@@ -153,6 +154,18 @@ bool CTexture::LoadTGA (ID3D11Device* device, ID3D11DeviceContext* deviceContext
         return false;
     }
 
+    // setup the unordered access view description
+    uavDesc.Format = textureDesc.Format;
+    uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
+    uavDesc.Texture2D.MipSlice = 0;
+
+    // create the unordered access view for the texture.
+    hResult = device->CreateUnorderedAccessView(m_texture.m_ptr, &uavDesc, &m_textureViewCompute.m_ptr);
+    if (FAILED(hResult))
+    {
+        return false;
+    }
+
     // Generate mipmaps for this texture.
     deviceContext->GenerateMips(m_textureView.m_ptr);
 
@@ -164,17 +177,18 @@ bool CTexture::Create (ID3D11Device* device, ID3D11DeviceContext* deviceContext,
     D3D11_TEXTURE2D_DESC textureDesc;
     HRESULT hResult;
     D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+    D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc;
 
     // Setup the description of the texture.
     textureDesc.Height = (UINT)height;
     textureDesc.Width = (UINT)width;
-    textureDesc.MipLevels = 0;
+    textureDesc.MipLevels = 1;
     textureDesc.ArraySize = 1;
     textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     textureDesc.SampleDesc.Count = 1;
     textureDesc.SampleDesc.Quality = 0;
     textureDesc.Usage = D3D11_USAGE_DEFAULT;
-    textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+    textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET | D3D11_BIND_UNORDERED_ACCESS;
     textureDesc.CPUAccessFlags = 0;
     textureDesc.MiscFlags = 0;
 
@@ -193,6 +207,18 @@ bool CTexture::Create (ID3D11Device* device, ID3D11DeviceContext* deviceContext,
 
     // Create the shader resource view for the texture.
     hResult = device->CreateShaderResourceView(m_texture.m_ptr, &srvDesc, &m_textureView.m_ptr);
+    if (FAILED(hResult))
+    {
+        return false;
+    }
+
+    // setup the unordered access view description
+    uavDesc.Format = textureDesc.Format;
+    uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
+    uavDesc.Texture2D.MipSlice = 0;
+
+    // create the unordered access view for the texture.
+    hResult = device->CreateUnorderedAccessView(m_texture.m_ptr, &uavDesc, &m_textureViewCompute.m_ptr);
     if (FAILED(hResult))
     {
         return false;

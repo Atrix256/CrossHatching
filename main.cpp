@@ -15,7 +15,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
     size_t height = 600;
     bool fullScreen = false;
     bool vsync = true;
-    bool shaderDebug = false;
+    bool shaderDebug = true;
     bool d3ddebug = true;
 
     WindowInit(width, height, fullScreen);
@@ -53,6 +53,9 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
     // TODO: temp! write to test buffer render target
     //testBuffer.SetAsRenderTarget(D3D11GetContext());
 
+    size_t dispatchX = 1 + width / 32;
+    size_t dispatchY = 1 + height / 32;
+
     while (!done)
     {
         // Handle the windows messages.
@@ -69,6 +72,17 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
         }
         else
         {
+
+            // TODO: temp!
+            // TODO: make this part of the dispatch call or something...
+            ID3D11UnorderedAccessView *uav = rwTexture.GetTextureCompute();
+            UINT count = -1;
+            D3D11GetContext()->CSSetUnorderedAccessViews(0, 1, &uav, &count);
+            computeShader.Dispatch(D3D11GetContext(), dispatchX, dispatchY, 1);
+            uav = NULL;
+            D3D11GetContext()->CSSetUnorderedAccessViews(0, 1, &uav, &count);
+
+
             SConstantBuffer constantBuffer;
             constantBuffer.color[0] = 2.0f;
             constantBuffer.color[1] = 1.0f;
@@ -76,13 +90,10 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
             constantBuffer.color[3] = 3.0f;
 
             D3D11BeginScene(0.4f, 0.0f, 0.4f, 1.0f);
-            shader.SetConstants(D3D11GetContext(), constantBuffer, texture.GetTexture());
+            shader.SetConstants(D3D11GetContext(), constantBuffer, rwTexture.GetTexture());
             model.Render(D3D11GetContext());
             shader.Draw(D3D11GetContext(), model.GetIndexCount());
-
-            // TODO: temp!
-            computeShader.Dispatch(D3D11GetContext(), 1, 1, 1);
-
+            shader.SetConstants(D3D11GetContext(), constantBuffer, nullptr);
             D3D11EndScene();
         }
     }

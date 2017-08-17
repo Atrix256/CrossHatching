@@ -12,7 +12,10 @@ public:
     
     ID3D11ShaderResourceView* GetTexture () { return m_textureView.m_ptr; }
 
+    ID3D11UnorderedAccessView* GetTextureCompute () { return m_textureViewCompute.m_ptr; }
+
 private:
     CAutoReleasePointer<ID3D11Texture2D>            m_texture;
     CAutoReleasePointer<ID3D11ShaderResourceView>   m_textureView;
+    CAutoReleasePointer<ID3D11UnorderedAccessView>  m_textureViewCompute;
 };

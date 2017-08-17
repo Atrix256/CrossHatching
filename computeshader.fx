@@ -3,6 +3,15 @@
 // Compute Shader
 ////////////////////////////////////////////////////////////////////////////////
 
+RWTexture2D<float4> Output;
+
+[numthreads(32, 32, 1)]
+void cs_main (uint3 threadID : SV_DispatchThreadID)
+{
+    Output[threadID.xy] = float4(frac(threadID.xy / 100.0f), 0, 1);
+}
+
+/*
 #ifdef USE_STRUCTURED_BUFFERS
 
 struct BufType
@@ -65,3 +74,5 @@ void cs_main( uint3 DTid : SV_DispatchThreadID )
 }
 
 #endif // USE_STRUCTURED_BUFFERS
+
+*/
