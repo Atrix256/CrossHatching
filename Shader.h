@@ -35,8 +35,14 @@ class CComputeShader
 public:
     bool Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, bool debug);
 
-    void Dispatch (ID3D11DeviceContext* deviceContext, size_t x, size_t y, size_t z);
+    bool Dispatch (ID3D11DeviceContext* deviceContext, const SConstantBuffer& constantBuffer, size_t x, size_t y, size_t z);
 
 private:
     CAutoReleasePointer<ID3D11ComputeShader> m_computeShader;
+
+    CAutoReleasePointer<ID3D11Buffer> m_constantBuffer;
+
+    // TODO: doesn't belong here
+    CAutoReleasePointer<ID3D11Buffer> m_structuredBuffer;
+    CAutoReleasePointer<ID3D11ShaderResourceView> m_structuredBufferSRV;
 };

@@ -30,6 +30,8 @@ Sean said he'd be willing to give me textures.
 
 Work with sean for the franklin booth technioque?
 
+? how do we make sure we don't write outside of the bounds in the compute shaders?
+
 * put shaders in a shader folder
 * put art in an art folder
 

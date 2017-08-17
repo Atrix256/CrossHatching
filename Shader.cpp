@@ -289,15 +289,102 @@ bool CComputeShader::Load(ID3D11Device* device, HWND hWnd, wchar_t* fileName, bo
     computeShaderBuffer->Release();
     computeShaderBuffer = 0;
 
+    // Setup the description of the dynamic matrix constant buffer that is in the vertex shader.
+    D3D11_BUFFER_DESC constantBufferDesc;
+    constantBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+    constantBufferDesc.ByteWidth = sizeof(SConstantBuffer);
+    constantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    constantBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+    constantBufferDesc.MiscFlags = 0;
+    constantBufferDesc.StructureByteStride = 0;
 
-    // TODO: create a shader resource view (input texture?)
-    // TODO: need to setup inputs and outputs and have the compute shader do operations on them.
+    // Create the constant buffer pointer so we can access the vertex shader constant buffer from within this class.
+    result = device->CreateBuffer(&constantBufferDesc, NULL, &m_constantBuffer.m_ptr);
+    if (FAILED(result))
+    {
+        return false;
+    }
+
+    // TODO: this doesn't belong in here, should be it's own class probably.
+
+    struct SBufferItem
+    {
+        float c[4];
+    };
+    SBufferItem initialData[1];
+    initialData[0].c[0] = 0.4f;
+    initialData[0].c[1] = 0.6f;
+    initialData[0].c[2] = 0.8f;
+    initialData[0].c[3] = 1.0f;
+    SBufferItem* pInitialData = &initialData[0];
+    UINT iNumElements = 1;
+
+    // CPU write, GPU read
+    D3D11_BUFFER_DESC bufferDesc;
+    ZeroMemory(&bufferDesc, sizeof(bufferDesc));
+    bufferDesc.ByteWidth = iNumElements * sizeof(SBufferItem);
+    bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+    bufferDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+    bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+    bufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+    bufferDesc.StructureByteStride = sizeof(SBufferItem);
+
+    D3D11_SUBRESOURCE_DATA bufferInitData;
+    ZeroMemory((&bufferInitData), sizeof(bufferInitData));
+    bufferInitData.pSysMem = pInitialData;
+    result = device->CreateBuffer((&bufferDesc), (pInitialData) ? (&bufferInitData) : NULL, &m_structuredBuffer.m_ptr);
+    if (FAILED(result))
+    {
+        return false;
+    }
+
+    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+    ZeroMemory(&srvDesc, sizeof(srvDesc));
+    srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
+    srvDesc.Buffer.ElementWidth = iNumElements;
+    result = device->CreateShaderResourceView(m_structuredBuffer.m_ptr, &srvDesc, &m_structuredBufferSRV.m_ptr);
+    if (FAILED(result))
+    {
+        return false;
+    }
 
     return true;
 }
 
-void CComputeShader::Dispatch (ID3D11DeviceContext* deviceContext, size_t x, size_t y, size_t z)
+bool CComputeShader::Dispatch (ID3D11DeviceContext* deviceContext, const SConstantBuffer& constantBuffer, size_t x, size_t y, size_t z)
 {
+    HRESULT result;
+    D3D11_MAPPED_SUBRESOURCE mappedResource;
+    SConstantBuffer* dataPtr;
+    unsigned int bufferNumber;
+
+    // Lock the constant buffer so it can be written to.
+    result = deviceContext->Map(m_constantBuffer.m_ptr, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+    if (FAILED(result))
+    {
+        return false;
+    }
+
+    // Get a pointer to the data in the constant buffer.
+    dataPtr = (SConstantBuffer*)mappedResource.pData;
+    dataPtr[0] = constantBuffer;
+
+    // Unlock the constant buffer.
+    deviceContext->Unmap(m_constantBuffer.m_ptr, 0);
+
+    // Set the position of the constant buffer in the vertex shader.
+    bufferNumber = 0;
+
+    // Finanly set the constant buffer in the vertex shader with the updated values.
+    deviceContext->CSSetConstantBuffers(bufferNumber, 1, &m_constantBuffer.m_ptr);
+
+
     deviceContext->CSSetShader(m_computeShader.m_ptr, NULL, 0);
+
+    deviceContext->CSSetShaderResources(0, 1, &m_structuredBufferSRV.m_ptr);
+
     deviceContext->Dispatch((UINT)x, (UINT)y, (UINT)z);
+
+    return true;
 }

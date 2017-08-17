@@ -56,6 +56,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
     size_t dispatchX = 1 + width / 32;
     size_t dispatchY = 1 + height / 32;
 
+    size_t frameNumber = 0; // TODO: temp!
     while (!done)
     {
         // Handle the windows messages.
@@ -72,22 +73,21 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
         }
         else
         {
+            SConstantBuffer constantBuffer;
+            constantBuffer.color[0] = float(frameNumber % 4) / float(8.0f) + 0.5f;
+            constantBuffer.color[1] = 1.0f;
+            constantBuffer.color[2] = 2.0f;
+            constantBuffer.color[3] = 3.0f;
 
             // TODO: temp!
             // TODO: make this part of the dispatch call or something...
             ID3D11UnorderedAccessView *uav = rwTexture.GetTextureCompute();
             UINT count = -1;
             D3D11GetContext()->CSSetUnorderedAccessViews(0, 1, &uav, &count);
-            computeShader.Dispatch(D3D11GetContext(), dispatchX, dispatchY, 1);
+            computeShader.Dispatch(D3D11GetContext(), constantBuffer, dispatchX, dispatchY, 1);
             uav = NULL;
             D3D11GetContext()->CSSetUnorderedAccessViews(0, 1, &uav, &count);
 
-
-            SConstantBuffer constantBuffer;
-            constantBuffer.color[0] = 2.0f;
-            constantBuffer.color[1] = 1.0f;
-            constantBuffer.color[2] = 2.0f;
-            constantBuffer.color[3] = 3.0f;
 
             D3D11BeginScene(0.4f, 0.0f, 0.4f, 1.0f);
             shader.SetConstants(D3D11GetContext(), constantBuffer, rwTexture.GetTexture());
@@ -95,6 +95,8 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
             shader.Draw(D3D11GetContext(), model.GetIndexCount());
             shader.SetConstants(D3D11GetContext(), constantBuffer, nullptr);
             D3D11EndScene();
+
+            ++frameNumber;
         }
     }
 
