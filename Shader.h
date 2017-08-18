@@ -1,6 +1,7 @@
 #pragma once
 
 #include <d3d11.h>
+#include <d3dcompiler.h>
 #include "Utils.h"
 
 // TODO: how to handle constant buffers? Macro lists that generate something that is a template argument?
@@ -8,6 +9,7 @@
 // TODO: same with structured buffers and unordered access stuff
 // both for vs/ps as well as cs shaders.
 
+// TODO: use the shadertypes.h somehow?
 struct SConstantBuffer
 {
     float color[4];
@@ -28,6 +30,12 @@ private:
     CAutoReleasePointer<ID3D11InputLayout> m_layout;
     CAutoReleasePointer<ID3D11Buffer> m_constantBuffer;
     CAutoReleasePointer<ID3D11SamplerState> m_sampleState;
+
+    CAutoReleasePointer<ID3D10Blob> m_vertexShaderBuffer;
+    CAutoReleasePointer<ID3D10Blob> m_pixelShaderBuffer;
+
+    CAutoReleasePointer<ID3D11ShaderReflection> m_psReflector;
+    CAutoReleasePointer<ID3D11ShaderReflection> m_vsReflector;
 };
 
 class CComputeShader
@@ -45,4 +53,8 @@ private:
     // TODO: doesn't belong here
     CAutoReleasePointer<ID3D11Buffer> m_structuredBuffer;
     CAutoReleasePointer<ID3D11ShaderResourceView> m_structuredBufferSRV;
+
+    CAutoReleasePointer<ID3D10Blob> m_computeShaderBuffer;
+
+    CAutoReleasePointer<ID3D11ShaderReflection> m_reflector;
 };

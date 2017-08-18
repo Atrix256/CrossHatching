@@ -20,9 +20,23 @@
     <ClInclude Include="Window.h" />
     <ClInclude Include="Utils.h" />
     <ClInclude Include="RenderTarget.h" />
+    <ClInclude Include="ShaderTypesList.h" />
+    <ClInclude Include="ShaderTypes.h" />
+    <ClInclude Include="Shaders\ShaderTypes.h">
+      <Filter>Shaders</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="shader.fx" />
-    <FxCompile Include="computeshader.fx" />
+    <FxCompile Include="Shaders\shader.fx">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\computeshader.fx">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{6344b81d-fa2a-4458-8f3c-3a380ef94119}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>

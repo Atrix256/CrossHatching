@@ -1,7 +1,6 @@
 #include "Shader.h"
 
 #include <d3d11.h>
-#include <d3dcompiler.h>
 #include <directxmath.h>
 #include <fstream>
 
@@ -43,8 +42,7 @@ bool CShader::Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, bool deb
 {
     HRESULT result;
     ID3D10Blob* errorMessage;
-    ID3D10Blob* vertexShaderBuffer;
-    ID3D10Blob* pixelShaderBuffer;
+
     D3D11_INPUT_ELEMENT_DESC polygonLayout[3];
     unsigned int numElements;
     D3D11_BUFFER_DESC constantBufferDesc;
@@ -52,16 +50,13 @@ bool CShader::Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, bool deb
 
     // Initialize the pointers this function will use to null.
     errorMessage = 0;
-    vertexShaderBuffer = 0;
-    pixelShaderBuffer = 0;
-
     UINT compileFlags = D3D10_SHADER_ENABLE_STRICTNESS;
     if (debug)
         compileFlags |= D3D10_SHADER_DEBUG;
 
     // Compile the vertex shader code.
-    result = D3DCompileFromFile(fileName, NULL, NULL, "vs_main", "vs_5_0", compileFlags, 0,
-        &vertexShaderBuffer, &errorMessage);
+    result = D3DCompileFromFile(fileName, NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE, "vs_main", "vs_5_0", compileFlags, 0,
+        &m_vertexShaderBuffer.m_ptr, &errorMessage);
     if (FAILED(result))
     {
         // If the shader failed to compile it should have writen something to the error message.
@@ -79,8 +74,8 @@ bool CShader::Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, bool deb
     }
 
     // Compile the pixel shader code.
-    result = D3DCompileFromFile(fileName, NULL, NULL, "ps_main", "ps_5_0", compileFlags, 0,
-        &pixelShaderBuffer, &errorMessage);
+    result = D3DCompileFromFile(fileName, NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE, "ps_main", "ps_5_0", compileFlags, 0,
+        &m_pixelShaderBuffer.m_ptr, &errorMessage);
     if (FAILED(result))
     {
         // If the shader failed to compile it should have writen something to the error message.
@@ -98,14 +93,14 @@ bool CShader::Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, bool deb
     }
 
     // Create the vertex shader from the buffer.
-    result = device->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), NULL, &m_vertexShader.m_ptr);
+    result = device->CreateVertexShader(m_vertexShaderBuffer.m_ptr->GetBufferPointer(), m_vertexShaderBuffer.m_ptr->GetBufferSize(), NULL, &m_vertexShader.m_ptr);
     if (FAILED(result))
     {
         return false;
     }
 
     // Create the pixel shader from the buffer.
-    result = device->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(), pixelShaderBuffer->GetBufferSize(), NULL, &m_pixelShader.m_ptr);
+    result = device->CreatePixelShader(m_pixelShaderBuffer.m_ptr->GetBufferPointer(), m_pixelShaderBuffer.m_ptr->GetBufferSize(), NULL, &m_pixelShader.m_ptr);
     if (FAILED(result))
     {
         return false;
@@ -141,19 +136,12 @@ bool CShader::Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, bool deb
     numElements = sizeof(polygonLayout) / sizeof(polygonLayout[0]);
 
     // Create the vertex input layout.
-    result = device->CreateInputLayout(polygonLayout, numElements, vertexShaderBuffer->GetBufferPointer(),
-        vertexShaderBuffer->GetBufferSize(), &m_layout.m_ptr);
+    result = device->CreateInputLayout(polygonLayout, numElements, m_vertexShaderBuffer.m_ptr->GetBufferPointer(),
+        m_vertexShaderBuffer.m_ptr->GetBufferSize(), &m_layout.m_ptr);
     if (FAILED(result))
     {
         return false;
     }
-
-    // Release the vertex shader buffer and pixel shader buffer since they are no longer needed.
-    vertexShaderBuffer->Release();
-    vertexShaderBuffer = 0;
-
-    pixelShaderBuffer->Release();
-    pixelShaderBuffer = 0;
 
     // Setup the description of the dynamic matrix constant buffer that is in the vertex shader.
     constantBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
@@ -187,6 +175,28 @@ bool CShader::Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, bool deb
 
     // Create the texture sampler state.
     result = device->CreateSamplerState(&samplerDesc, &m_sampleState.m_ptr);
+    if (FAILED(result))
+    {
+        return false;
+    }
+
+    // TODO: temp!
+    result = D3DReflect(m_pixelShaderBuffer.m_ptr->GetBufferPointer(), m_pixelShaderBuffer.m_ptr->GetBufferSize(), IID_ID3D11ShaderReflection, (void**)&m_psReflector.m_ptr);
+    if (FAILED(result))
+    {
+        return false;
+    }
+
+    result = D3DReflect(m_vertexShaderBuffer.m_ptr->GetBufferPointer(), m_vertexShaderBuffer.m_ptr->GetBufferSize(), IID_ID3D11ShaderReflection, (void**)&m_vsReflector.m_ptr);
+    if (FAILED(result))
+    {
+        return false;
+    }
+
+    //https://msdn.microsoft.com/en-us/library/windows/desktop/ff476625(v=vs.85).aspx
+    // TODO: GetResourceBindingDescByName().  To see what constant buffers etc it needs!
+    D3D11_SHADER_INPUT_BIND_DESC desc;
+    result = m_vsReflector.m_ptr->GetResourceBindingDescByName("Constants", &desc);
     if (FAILED(result))
     {
         return false;
@@ -249,19 +259,17 @@ bool CComputeShader::Load(ID3D11Device* device, HWND hWnd, wchar_t* fileName, bo
 {
     HRESULT result;
     ID3D10Blob* errorMessage;
-    ID3D10Blob* computeShaderBuffer;
 
     // Initialize the pointers this function will use to null.
     errorMessage = 0;
-    computeShaderBuffer = 0;
 
     UINT compileFlags = D3D10_SHADER_ENABLE_STRICTNESS;
     if (debug)
         compileFlags |= D3D10_SHADER_DEBUG;
 
     // Compile the compute shader code.
-    result = D3DCompileFromFile(fileName, NULL, NULL, "cs_main", "cs_5_0", compileFlags, 0,
-        &computeShaderBuffer, &errorMessage);
+    result = D3DCompileFromFile(fileName, NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE, "cs_main", "cs_5_0", compileFlags, 0,
+        &m_computeShaderBuffer.m_ptr, &errorMessage);
     if (FAILED(result))
     {
         // If the shader failed to compile it should have writen something to the error message.
@@ -279,15 +287,11 @@ bool CComputeShader::Load(ID3D11Device* device, HWND hWnd, wchar_t* fileName, bo
     }
     
     // Create the compute shader from the buffer.
-    result = device->CreateComputeShader(computeShaderBuffer->GetBufferPointer(), computeShaderBuffer->GetBufferSize(), NULL, &m_computeShader.m_ptr);
+    result = device->CreateComputeShader(m_computeShaderBuffer.m_ptr->GetBufferPointer(), m_computeShaderBuffer.m_ptr->GetBufferSize(), NULL, &m_computeShader.m_ptr);
     if (FAILED(result))
     {
         return false;
     }
-
-    // Release the compute shader buffer since they are no longer needed.
-    computeShaderBuffer->Release();
-    computeShaderBuffer = 0;
 
     // Setup the description of the dynamic matrix constant buffer that is in the vertex shader.
     D3D11_BUFFER_DESC constantBufferDesc;
@@ -344,6 +348,13 @@ bool CComputeShader::Load(ID3D11Device* device, HWND hWnd, wchar_t* fileName, bo
     srvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
     srvDesc.Buffer.ElementWidth = iNumElements;
     result = device->CreateShaderResourceView(m_structuredBuffer.m_ptr, &srvDesc, &m_structuredBufferSRV.m_ptr);
+    if (FAILED(result))
+    {
+        return false;
+    }
+
+    // TODO: temp!
+    result = D3DReflect(m_computeShaderBuffer.m_ptr->GetBufferPointer(), m_computeShaderBuffer.m_ptr->GetBufferSize(), IID_ID3D11ShaderReflection, (void**)&m_reflector.m_ptr);
     if (FAILED(result))
     {
         return false;

@@ -4,9 +4,30 @@
 #include "Texture.h"
 #include "RenderTarget.h"
 #include "Window.h"
+#include "ShaderTypes.h"
+
+bool WriteShaderTypesHLSL(void)
+{
+    FILE *file = fopen("Shaders/ShaderTypes.h", "w+t");
+    if (!file)
+        return false;
+
+    #define CONSTANT_BUFFER_BEGIN(NAME) fprintf(file, "cbuffer " #NAME "\n{\n");
+    #define BUFFER_FIELD(NAME, TYPE) fprintf(file,"  " #TYPE " " #NAME ";\n");
+    #define CONSTANT_BUFFER_END fprintf(file, "};\n");
+    #include "ShaderTypesList.h"
+
+    fclose(file);
+    return true;
+}
 
 int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow)
 {
+    // TODO: temp!
+    ShaderTypes::Constants s;
+
+    
+
     MSG msg;
     bool done = false;
 
@@ -20,18 +41,21 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
 
     WindowInit(width, height, fullScreen);
 
+    if (!WriteShaderTypesHLSL())
+        done = true;
+
     // TODO: if it fails, report why to a log or something. Or maybe show a message box
     if (!D3D11Init(width, height, vsync, WindowGetHWND(), fullScreen, 100.0f, 0.01f, d3ddebug))
         done = true;
 
     CShader shader;
-    if (!shader.Load(D3D11GetDevice(), WindowGetHWND(), L"shader.fx", shaderDebug))
+    if (!shader.Load(D3D11GetDevice(), WindowGetHWND(), L"Shaders/shader.fx", shaderDebug))
         done = true;
 
     // TODO: delete when working
     // compute shader info: http://recreationstudios.blogspot.com/2010/04/simple-compute-shader-example.html
     CComputeShader computeShader;
-    if (!computeShader.Load(D3D11GetDevice(), WindowGetHWND(), L"computeshader.fx", shaderDebug))
+    if (!computeShader.Load(D3D11GetDevice(), WindowGetHWND(), L"Shaders/computeshader.fx", shaderDebug))
         done = true;
 
     CModel model;
