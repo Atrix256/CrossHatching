@@ -1,4 +1,4 @@
-/*=================================================================
+/*
 
 These types are macro expanded to make C++ side structs.
 They also generate shader code at runtime that the shaders use.
@@ -32,6 +32,13 @@ STRUCTURED_BUFFER_FIELD(Name, Type) : defines a field
 STRUCTURED_BUFFER_END() : ends a structured buffer definition
 
 ===================================================================
+                          TEXTURES
+===================================================================
+
+TEXTURE(Name, FileName)
+  Name     - The name of the texture as it appears in C++ and shader code
+  FileName - The file name of the texture to load. If nullptr, will create a read write texture.
+
 */
 
 //=================================================================
@@ -61,6 +68,10 @@ STRUCTURED_BUFFER_END() : ends a structured buffer definition
 #define STRUCTURED_BUFFER_END
 #endif
 
+#ifndef TEXTURE
+#define TEXTURE(NAME, FILENAME)
+#endif
+
 //=================================================================
 //                     Constant Buffers
 //=================================================================
@@ -82,6 +93,13 @@ STRUCTURED_BUFFER_BEGIN(Input, SBufferItem, 1)
 STRUCTURED_BUFFER_END
 
 //=================================================================
+//                       TEXTURES
+//=================================================================
+
+TEXTURE(stone, "stone01.tga")
+TEXTURE(rwtexture, nullptr)
+
+//=================================================================
 // undefine everything for the caller's convenience
 #undef CONSTANT_BUFFER_BEGIN
 #undef CONSTANT_BUFFER_FIELD
@@ -89,3 +107,4 @@ STRUCTURED_BUFFER_END
 #undef STRUCTURED_BUFFER_BEGIN
 #undef STRUCTURED_BUFFER_FIELD
 #undef STRUCTURED_BUFFER_END
+#undef TEXTURE

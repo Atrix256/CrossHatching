@@ -180,12 +180,6 @@ bool CShader::Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, bool deb
     return true;
 }
 
-void CShader::SetConstants (ID3D11DeviceContext* deviceContext, ID3D11ShaderResourceView* texture)
-{
-    // Set shader texture resource in the pixel shader.
-    deviceContext->PSSetShaderResources(0, 1, &texture);
-}
-
 void CShader::Draw (ID3D11DeviceContext* deviceContext, size_t indexCount)
 {
     // Set the vertex input layout.

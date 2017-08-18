@@ -4,7 +4,6 @@
 // GLOBALS //
 /////////////
 
-Texture2D<float4> shaderTexture;
 SamplerState SampleType;
 
 //////////////
@@ -47,5 +46,5 @@ PixelInputType vs_main (VertexInputType input)
 ////////////////////////////////////////////////////////////////////////////////
 float4 ps_main (PixelInputType input) : SV_TARGET
 {
-    return input.color * shaderTexture.Sample(SampleType, input.uv);
+    return input.color * rwtexture.Sample(SampleType, input.uv) + stone.Sample(SampleType, input.uv) * 0.5f;
 }

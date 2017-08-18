@@ -44,6 +44,10 @@ clean up code (spaces after function names etc)
 
 ? should i add an assert / asserts everywhere?
 
+? when we create a texture via the macro list, instead of loading it, we probably need some way of specifying size. Not sure how to do that. Need a usage case I guess? Size of screen for now...
+
+? I'm thinking we probably want window borders / close button on this window.
+
 ================================= HIGH LEVEL GOALS =================================
 
 1) path trace diffuse / emissive of a scene with a mesh. (monochromatic?)

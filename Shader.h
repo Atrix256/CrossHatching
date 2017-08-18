@@ -6,9 +6,11 @@
 
 
 // TODO: how to handle textures?
-// TODO: how to handle structured buffers and unordered access stuff?
-// TODO: how to handle vertex format? or don't deal with it as you only have full screen quads?
+// TODO: how to handle unordered access stuff?
+// TODO: how to handle vertex format? or don't deal with it as you only have full screen quads? Yeah we should, will be nicer
+// TODO: how to handle sampler states? wrap, clamp, linear interp etc
 // TODO: look for anything else that needs reflection!
+
 
 enum class EShaderType
 {
@@ -21,8 +23,6 @@ class CShader
 {
 public:
     bool Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, bool debug);
-
-    void SetConstants (ID3D11DeviceContext* deviceContext, ID3D11ShaderResourceView* texture);
 
     void Draw (ID3D11DeviceContext* deviceContext, size_t indexCount);
 

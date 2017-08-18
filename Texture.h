@@ -10,9 +10,9 @@ public:
 
     bool Create (ID3D11Device* device, ID3D11DeviceContext* deviceContext, size_t width, size_t height);
     
-    ID3D11ShaderResourceView* GetTexture () { return m_textureView.m_ptr; }
+    ID3D11ShaderResourceView* GetSRV () { return m_textureView.m_ptr; }
 
-    ID3D11UnorderedAccessView* GetTextureCompute () { return m_textureViewCompute.m_ptr; }
+    ID3D11UnorderedAccessView* GetUAV () { return m_textureViewCompute.m_ptr; }
 
 private:
     CAutoReleasePointer<ID3D11Texture2D>            m_texture;

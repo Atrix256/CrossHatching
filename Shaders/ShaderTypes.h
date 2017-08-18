@@ -13,7 +13,11 @@ struct SBufferItem
   float4 c;
 };
 
-StructuredBuffer<Triangle>Triangles;
+Texture2D stone;
 
-StructuredBuffer<SBufferItem>Input;
+Texture2D rwtexture;
+
+StructuredBuffer<Triangle> Triangles;
+
+StructuredBuffer<SBufferItem> Input;
 

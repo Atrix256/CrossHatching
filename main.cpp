@@ -23,6 +23,12 @@ namespace ShaderData
         #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT) CStructuredBuffer<ShaderTypes::StructuredBuffers::##TYPENAME, COUNT> NAME;
         #include "ShaderTypesList.h"
     };
+
+    namespace Textures
+    {
+        #define TEXTURE(NAME, FILENAME) CTexture NAME;
+        #include "ShaderTypesList.h"
+    }
 };
 
 bool WriteShaderTypesHLSL (void)
@@ -30,6 +36,9 @@ bool WriteShaderTypesHLSL (void)
     FILE *file = fopen("Shaders/ShaderTypes.h", "w+t");
     if (!file)
         return false;
+
+    // write the texture declarations
+    #define TEXTURE(NAME, FILENAME) fprintf(file, "Texture2D " #NAME ";\n\n");
 
     // write the cbuffer declarations
     #define CONSTANT_BUFFER_BEGIN(NAME) fprintf(file, "cbuffer " #NAME "\n{\n");
@@ -44,7 +53,7 @@ bool WriteShaderTypesHLSL (void)
     #include "ShaderTypesList.h"
 
     // write the structured buffer declarations
-    #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT) fprintf(file, "StructuredBuffer<" #TYPENAME ">" #NAME ";\n\n");
+    #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT) fprintf(file, "StructuredBuffer<" #TYPENAME "> " #NAME ";\n\n");
 
     #include "ShaderTypesList.h"
 
@@ -58,6 +67,7 @@ void FillShaderParams (ID3D11DeviceContext* deviceContext, ID3D11ShaderReflectio
     D3D11_SHADER_INPUT_BIND_DESC desc;
     HRESULT result;
 
+    // reflect constant buffers
     #define CONSTANT_BUFFER_BEGIN(NAME) \
         result = reflector->GetResourceBindingDescByName(#NAME, &desc); \
         if (!FAILED(result)) { \
@@ -70,6 +80,7 @@ void FillShaderParams (ID3D11DeviceContext* deviceContext, ID3D11ShaderReflectio
                 deviceContext->CSSetConstantBuffers(desc.BindPoint, 1, &buffer); \
         }
     
+    // reflect structured buffers
     #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT) \
         result = reflector->GetResourceBindingDescByName(#NAME, &desc); \
         if (!FAILED(result)) { \
@@ -80,6 +91,21 @@ void FillShaderParams (ID3D11DeviceContext* deviceContext, ID3D11ShaderReflectio
                 deviceContext->PSSetShaderResources(desc.BindPoint, 1, &srv); \
             else \
                 deviceContext->CSSetShaderResources(desc.BindPoint, 1, &srv); \
+        }
+
+    // reflect textures
+    #define TEXTURE(NAME, FILENAME) \
+        result = reflector->GetResourceBindingDescByName(#NAME, &desc); \
+        if (!FAILED(result)) { \
+            UINT count = -1; \
+            ID3D11ShaderResourceView* srv = ShaderData::Textures::##NAME.GetSRV(); \
+            ID3D11UnorderedAccessView* uav = ShaderData::Textures::##NAME.GetUAV(); \
+            if (SHADER_TYPE == EShaderType::vertex) \
+                deviceContext->VSSetShaderResources(desc.BindPoint, 1, &srv); \
+            else if (SHADER_TYPE == EShaderType::pixel) \
+                deviceContext->PSSetShaderResources(desc.BindPoint, 1, &srv); \
+            else \
+                deviceContext->CSSetUnorderedAccessViews(desc.BindPoint, 1, &uav, &count); \
         }
 
     #include "ShaderTypesList.h"
@@ -108,12 +134,22 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
     if (!D3D11Init(width, height, vsync, WindowGetHWND(), fullScreen, 100.0f, 0.01f, d3ddebug))
         done = true;
 
+    // TODO: move the automatic init stuff into it's own function to declutter main. Maybe move all init stuff there?
+
     // create constant buffers
     #define CONSTANT_BUFFER_BEGIN(NAME) if (!ShaderData::ConstantBuffers::NAME.Create(D3D11GetDevice())) done = true;
     #include "ShaderTypesList.h"
 
     // create structured buffers
     #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT) if (!ShaderData::StructuredBuffers::NAME.Create(D3D11GetDevice())) done = true;
+    #include "ShaderTypesList.h"
+
+    // create textures
+    #define TEXTURE(NAME, FILENAME) \
+        if (FILENAME == nullptr) \
+            done = ShaderData::Textures::NAME.Create(D3D11GetDevice(), D3D11GetContext(), width, height) && done; \
+        else \
+            done = ShaderData::Textures::NAME.LoadTGA(D3D11GetDevice(), D3D11GetContext(), FILENAME) && done; 
     #include "ShaderTypesList.h"
 
     // write some triangles
@@ -159,16 +195,8 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
     if (!model.Load(D3D11GetDevice()))
         done = true;
 
-    CTexture texture;
-    if (!texture.LoadTGA(D3D11GetDevice(), D3D11GetContext(), "stone01.tga"))
-        done = true;
-
     CRenderTarget testBuffer;
     if (!testBuffer.Create(D3D11GetDevice(), D3D11GetContext(), width, height))
-        done = true;
-
-    CTexture rwTexture;
-    if (!rwTexture.Create(D3D11GetDevice(), D3D11GetContext(), width, height))
         done = true;
 
     // TODO: temp! write to test buffer render target
@@ -209,27 +237,30 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
                 done = true;
 
 
-            // TODO: temp!
             // TODO: make this part of the dispatch call or something...
-            ID3D11UnorderedAccessView *uav = rwTexture.GetTextureCompute();
+
+            // TODO: make uav's reflected.  Right now it doesn't know to ask for them. need to figure that out.  Or does it? i think it might...
+            // TODO: maybe just need to make it define this kind of thing in the shader's shadertypes.h: RWTexture2D<float4> Output : register(u0); ? (without register number)
+            ID3D11UnorderedAccessView *uav = ShaderData::Textures::rwtexture.GetUAV();
             UINT count = -1;
             D3D11GetContext()->CSSetUnorderedAccessViews(0, 1, &uav, &count);
-            computeShader.Dispatch(D3D11GetContext(), dispatchX, dispatchY, 1);
             FillShaderParams<EShaderType::compute>(D3D11GetContext(), computeShader.GetReflector());
+            computeShader.Dispatch(D3D11GetContext(), dispatchX, dispatchY, 1);
             uav = NULL;
             D3D11GetContext()->CSSetUnorderedAccessViews(0, 1, &uav, &count);
+            //D3D11GetContext()->CSSetUnorderedAccessViews(1, 1, &uav, &count);
 
 
             D3D11BeginScene(0.4f, 0.0f, 0.4f, 1.0f);
 
             FillShaderParams<EShaderType::vertex>(D3D11GetContext(), shader.GetVSReflector());
-            FillShaderParams<EShaderType::pixel>(D3D11GetContext(), shader.GetVSReflector());
+            FillShaderParams<EShaderType::pixel>(D3D11GetContext(), shader.GetPSReflector());
 
-            shader.SetConstants(D3D11GetContext(), rwTexture.GetTexture());
             model.Render(D3D11GetContext());
             shader.Draw(D3D11GetContext(), model.GetIndexCount());
-            shader.SetConstants(D3D11GetContext(), nullptr);
             D3D11EndScene();
+
+            // TODO: unbind the texture from PS so the CS can use it next frame!  Maybe have a function to unbind textures which have a NULL filename? i dunno if that's fully appropriate or not
 
             ++frameNumber;
         }
