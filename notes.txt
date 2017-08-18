@@ -35,6 +35,15 @@ Work with sean for the franklin booth technioque?
 * put shaders in a shader folder
 * put art in an art folder
 
+? am i updating constants correctly?
+
+GetResourceBindingDesc example (not by name, but does have to use strcmp so...)
+https://gamedev.stackexchange.com/questions/62361/working-with-d3d11-opengl-shader-reflection
+
+clean up code (spaces after function names etc)
+
+? should i add an assert / asserts everywhere?
+
 ================================= HIGH LEVEL GOALS =================================
 
 1) path trace diffuse / emissive of a scene with a mesh. (monochromatic?)

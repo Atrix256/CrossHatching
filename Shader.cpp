@@ -45,7 +45,6 @@ bool CShader::Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, bool deb
 
     D3D11_INPUT_ELEMENT_DESC polygonLayout[3];
     unsigned int numElements;
-    D3D11_BUFFER_DESC constantBufferDesc;
     D3D11_SAMPLER_DESC samplerDesc;
 
     // Initialize the pointers this function will use to null.
@@ -143,21 +142,6 @@ bool CShader::Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, bool deb
         return false;
     }
 
-    // Setup the description of the dynamic matrix constant buffer that is in the vertex shader.
-    constantBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-    constantBufferDesc.ByteWidth = sizeof(SConstantBuffer);
-    constantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    constantBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-    constantBufferDesc.MiscFlags = 0;
-    constantBufferDesc.StructureByteStride = 0;
-
-    // Create the constant buffer pointer so we can access the vertex shader constant buffer from within this class.
-    result = device->CreateBuffer(&constantBufferDesc, NULL, &m_constantBuffer.m_ptr);
-    if (FAILED(result))
-    {
-        return false;
-    }
-
     // Create a texture sampler state description.
     samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
     samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -195,48 +179,30 @@ bool CShader::Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, bool deb
 
     //https://msdn.microsoft.com/en-us/library/windows/desktop/ff476625(v=vs.85).aspx
     // TODO: GetResourceBindingDescByName().  To see what constant buffers etc it needs!
+    /*
     D3D11_SHADER_INPUT_BIND_DESC desc;
     result = m_vsReflector.m_ptr->GetResourceBindingDescByName("Constants", &desc);
     if (FAILED(result))
     {
         return false;
     }
+    */
 
-    return true;
-}
-
-bool CShader::SetConstants (ID3D11DeviceContext* deviceContext, const SConstantBuffer& constantBuffer, ID3D11ShaderResourceView* texture)
-{
-    HRESULT result;
-    D3D11_MAPPED_SUBRESOURCE mappedResource;
-    SConstantBuffer* dataPtr;
-    unsigned int bufferNumber;
-
-    // Lock the constant buffer so it can be written to.
-    result = deviceContext->Map(m_constantBuffer.m_ptr, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+    /*
+    result = m_vsReflector.m_ptr->GetResourceBindingDescByName("pixelColor", &desc);
     if (FAILED(result))
     {
         return false;
     }
-
-    // Get a pointer to the data in the constant buffer.
-    dataPtr = (SConstantBuffer*)mappedResource.pData;
-    dataPtr[0] = constantBuffer;
-
-    // Unlock the constant buffer.
-    deviceContext->Unmap(m_constantBuffer.m_ptr, 0);
-
-    // Set the position of the constant buffer in the vertex shader.
-    bufferNumber = 0;
-
-    // Finanly set the constant buffer in the vertex shader with the updated values.
-    deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_constantBuffer.m_ptr);
-    deviceContext->PSSetConstantBuffers(bufferNumber, 1, &m_constantBuffer.m_ptr);
-
-    // Set shader texture resource in the pixel shader.
-    deviceContext->PSSetShaderResources(0, 1, &texture);
+    */
 
     return true;
+}
+
+void CShader::SetConstants (ID3D11DeviceContext* deviceContext, ID3D11ShaderResourceView* texture)
+{
+    // Set shader texture resource in the pixel shader.
+    deviceContext->PSSetShaderResources(0, 1, &texture);
 }
 
 void CShader::Draw (ID3D11DeviceContext* deviceContext, size_t indexCount)
@@ -288,22 +254,6 @@ bool CComputeShader::Load(ID3D11Device* device, HWND hWnd, wchar_t* fileName, bo
     
     // Create the compute shader from the buffer.
     result = device->CreateComputeShader(m_computeShaderBuffer.m_ptr->GetBufferPointer(), m_computeShaderBuffer.m_ptr->GetBufferSize(), NULL, &m_computeShader.m_ptr);
-    if (FAILED(result))
-    {
-        return false;
-    }
-
-    // Setup the description of the dynamic matrix constant buffer that is in the vertex shader.
-    D3D11_BUFFER_DESC constantBufferDesc;
-    constantBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-    constantBufferDesc.ByteWidth = sizeof(SConstantBuffer);
-    constantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    constantBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-    constantBufferDesc.MiscFlags = 0;
-    constantBufferDesc.StructureByteStride = 0;
-
-    // Create the constant buffer pointer so we can access the vertex shader constant buffer from within this class.
-    result = device->CreateBuffer(&constantBufferDesc, NULL, &m_constantBuffer.m_ptr);
     if (FAILED(result))
     {
         return false;
@@ -363,39 +313,11 @@ bool CComputeShader::Load(ID3D11Device* device, HWND hWnd, wchar_t* fileName, bo
     return true;
 }
 
-bool CComputeShader::Dispatch (ID3D11DeviceContext* deviceContext, const SConstantBuffer& constantBuffer, size_t x, size_t y, size_t z)
+void CComputeShader::Dispatch (ID3D11DeviceContext* deviceContext, size_t x, size_t y, size_t z)
 {
-    HRESULT result;
-    D3D11_MAPPED_SUBRESOURCE mappedResource;
-    SConstantBuffer* dataPtr;
-    unsigned int bufferNumber;
-
-    // Lock the constant buffer so it can be written to.
-    result = deviceContext->Map(m_constantBuffer.m_ptr, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-    if (FAILED(result))
-    {
-        return false;
-    }
-
-    // Get a pointer to the data in the constant buffer.
-    dataPtr = (SConstantBuffer*)mappedResource.pData;
-    dataPtr[0] = constantBuffer;
-
-    // Unlock the constant buffer.
-    deviceContext->Unmap(m_constantBuffer.m_ptr, 0);
-
-    // Set the position of the constant buffer in the vertex shader.
-    bufferNumber = 0;
-
-    // Finanly set the constant buffer in the vertex shader with the updated values.
-    deviceContext->CSSetConstantBuffers(bufferNumber, 1, &m_constantBuffer.m_ptr);
-
-
     deviceContext->CSSetShader(m_computeShader.m_ptr, NULL, 0);
 
     deviceContext->CSSetShaderResources(0, 1, &m_structuredBufferSRV.m_ptr);
 
     deviceContext->Dispatch((UINT)x, (UINT)y, (UINT)z);
-
-    return true;
 }

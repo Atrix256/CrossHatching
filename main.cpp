@@ -1,3 +1,5 @@
+#define _CRT_SECURE_NO_WARNINGS
+
 #include "d3d11.h"
 #include "Shader.h"
 #include "Model.h"
@@ -5,8 +7,15 @@
 #include "RenderTarget.h"
 #include "Window.h"
 #include "ShaderTypes.h"
+#include "ConstantBuffer.h"
 
-bool WriteShaderTypesHLSL(void)
+namespace ShaderConstants
+{
+    #define CONSTANT_BUFFER_BEGIN(NAME) CConstantBuffer<ShaderTypes::##NAME> NAME;
+    #include "ShaderTypesList.h"
+};
+
+bool WriteShaderTypesHLSL (void)
 {
     FILE *file = fopen("Shaders/ShaderTypes.h", "w+t");
     if (!file)
@@ -21,13 +30,27 @@ bool WriteShaderTypesHLSL(void)
     return true;
 }
 
+template <EShaderType SHADER_TYPE>
+void FillShaderParams (ID3D11DeviceContext* deviceContext, ID3D11ShaderReflection* reflector)
+{
+    D3D11_SHADER_INPUT_BIND_DESC desc;
+    HRESULT result;
+
+    #define CONSTANT_BUFFER_BEGIN(NAME)  result = reflector->GetResourceBindingDescByName(#NAME, &desc); \
+        if (!FAILED(result)) { \
+            ID3D11Buffer* buffer = ShaderConstants::##NAME.Get(); \
+        if (SHADER_TYPE == EShaderType::vertex) \
+            deviceContext->VSSetConstantBuffers(desc.BindPoint, 1, &buffer); \
+        else if (SHADER_TYPE == EShaderType::pixel) \
+            deviceContext->PSSetConstantBuffers(desc.BindPoint, 1, &buffer); \
+        else \
+            deviceContext->CSSetConstantBuffers(desc.BindPoint, 1, &buffer); \
+        }
+    #include "ShaderTypesList.h"
+}
+
 int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow)
 {
-    // TODO: temp!
-    ShaderTypes::Constants s;
-
-    
-
     MSG msg;
     bool done = false;
 
@@ -47,6 +70,9 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
     // TODO: if it fails, report why to a log or something. Or maybe show a message box
     if (!D3D11Init(width, height, vsync, WindowGetHWND(), fullScreen, 100.0f, 0.01f, d3ddebug))
         done = true;
+
+    #define CONSTANT_BUFFER_BEGIN(NAME) if (!ShaderConstants::NAME.Create(D3D11GetDevice())) done = true;
+    #include "ShaderTypesList.h"
 
     CShader shader;
     if (!shader.Load(D3D11GetDevice(), WindowGetHWND(), L"Shaders/shader.fx", shaderDebug))
@@ -97,27 +123,41 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
         }
         else
         {
-            SConstantBuffer constantBuffer;
-            constantBuffer.color[0] = float(frameNumber % 4) / float(8.0f) + 0.5f;
-            constantBuffer.color[1] = 1.0f;
-            constantBuffer.color[2] = 2.0f;
-            constantBuffer.color[3] = 3.0f;
+            // update the constant buffer
+            bool writeOk = ShaderConstants::Constants.Write(
+                D3D11GetContext(),
+                [frameNumber] (ShaderTypes::Constants& constants)
+                {
+                    constants.pixelColor[0] = float(frameNumber % 4) / float(8.0f) + 0.5f;
+                    constants.pixelColor[1] = 1.0f;
+                    constants.pixelColor[2] = 2.0f;
+                    constants.pixelColor[3] = 3.0f;
+                }
+            );
+            if (!writeOk)
+                done = true;
+
 
             // TODO: temp!
             // TODO: make this part of the dispatch call or something...
             ID3D11UnorderedAccessView *uav = rwTexture.GetTextureCompute();
             UINT count = -1;
             D3D11GetContext()->CSSetUnorderedAccessViews(0, 1, &uav, &count);
-            computeShader.Dispatch(D3D11GetContext(), constantBuffer, dispatchX, dispatchY, 1);
+            computeShader.Dispatch(D3D11GetContext(), dispatchX, dispatchY, 1);
+            FillShaderParams<EShaderType::compute>(D3D11GetContext(), shader.GetVSReflector());
             uav = NULL;
             D3D11GetContext()->CSSetUnorderedAccessViews(0, 1, &uav, &count);
 
 
             D3D11BeginScene(0.4f, 0.0f, 0.4f, 1.0f);
-            shader.SetConstants(D3D11GetContext(), constantBuffer, rwTexture.GetTexture());
+
+            FillShaderParams<EShaderType::vertex>(D3D11GetContext(), shader.GetVSReflector());
+            FillShaderParams<EShaderType::pixel>(D3D11GetContext(), shader.GetVSReflector());
+
+            shader.SetConstants(D3D11GetContext(), rwTexture.GetTexture());
             model.Render(D3D11GetContext());
             shader.Draw(D3D11GetContext(), model.GetIndexCount());
-            shader.SetConstants(D3D11GetContext(), constantBuffer, nullptr);
+            shader.SetConstants(D3D11GetContext(), nullptr);
             D3D11EndScene();
 
             ++frameNumber;

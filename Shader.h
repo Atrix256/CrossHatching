@@ -4,15 +4,16 @@
 #include <d3dcompiler.h>
 #include "Utils.h"
 
-// TODO: how to handle constant buffers? Macro lists that generate something that is a template argument?
-// TODO: how to handle textures?
-// TODO: same with structured buffers and unordered access stuff
-// both for vs/ps as well as cs shaders.
 
-// TODO: use the shadertypes.h somehow?
-struct SConstantBuffer
+// TODO: how to handle textures?
+// TODO: how to handle structured buffers and unordered access stuff?
+// TODO: how to handle vertex format? or don't deal with it as you only have full screen quads?
+
+enum class EShaderType
 {
-    float color[4];
+    vertex,
+    pixel,
+    compute
 };
 
 class CShader
@@ -20,22 +21,24 @@ class CShader
 public:
     bool Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, bool debug);
 
-    bool SetConstants (ID3D11DeviceContext* deviceContext, const SConstantBuffer& constantBuffer, ID3D11ShaderResourceView* texture);
+    void SetConstants (ID3D11DeviceContext* deviceContext, ID3D11ShaderResourceView* texture);
 
     void Draw (ID3D11DeviceContext* deviceContext, size_t indexCount);
+
+    ID3D11ShaderReflection* GetVSReflector() { return m_vsReflector.m_ptr; }
+    ID3D11ShaderReflection* GetPSReflector() { return m_psReflector.m_ptr; }
 
 private:
     CAutoReleasePointer<ID3D11VertexShader> m_vertexShader;
     CAutoReleasePointer<ID3D11PixelShader> m_pixelShader;
     CAutoReleasePointer<ID3D11InputLayout> m_layout;
-    CAutoReleasePointer<ID3D11Buffer> m_constantBuffer;
     CAutoReleasePointer<ID3D11SamplerState> m_sampleState;
 
     CAutoReleasePointer<ID3D10Blob> m_vertexShaderBuffer;
     CAutoReleasePointer<ID3D10Blob> m_pixelShaderBuffer;
 
-    CAutoReleasePointer<ID3D11ShaderReflection> m_psReflector;
     CAutoReleasePointer<ID3D11ShaderReflection> m_vsReflector;
+    CAutoReleasePointer<ID3D11ShaderReflection> m_psReflector;
 };
 
 class CComputeShader
@@ -43,12 +46,12 @@ class CComputeShader
 public:
     bool Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, bool debug);
 
-    bool Dispatch (ID3D11DeviceContext* deviceContext, const SConstantBuffer& constantBuffer, size_t x, size_t y, size_t z);
+    void Dispatch (ID3D11DeviceContext* deviceContext, size_t x, size_t y, size_t z);
+
+    ID3D11ShaderReflection* GetReflector () { return m_reflector.m_ptr; }
 
 private:
     CAutoReleasePointer<ID3D11ComputeShader> m_computeShader;
-
-    CAutoReleasePointer<ID3D11Buffer> m_constantBuffer;
 
     // TODO: doesn't belong here
     CAutoReleasePointer<ID3D11Buffer> m_structuredBuffer;

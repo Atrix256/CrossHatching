@@ -25,6 +25,7 @@
     <ClInclude Include="Shaders\ShaderTypes.h">
       <Filter>Shaders</Filter>
     </ClInclude>
+    <ClInclude Include="ConstantBuffer.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\shader.fx">

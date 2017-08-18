@@ -154,6 +154,7 @@
     <Text Include="notes.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ConstantBuffer.h" />
     <ClInclude Include="d3d11.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="RenderTarget.h" />
