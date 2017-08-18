@@ -4,6 +4,8 @@ These types are macro expanded to make C++ side structs.
 They also generate shader code at runtime that the shaders use.
 
 ===================================================================
+                      Constant Buffers
+===================================================================
 
 CONSTANT_BUFFER_BEGIN(Name) : starts a constant buffer definition
   Name - the name of the constant buffer to begin
@@ -14,6 +16,8 @@ CONSTANT_BUFFER_FIELD(Name, Type) : defines a field
 
 CONSTANT_BUFFER_END() : ends a constant buffer definition
 
+===================================================================
+                      Structured Buffers
 ===================================================================
 
 STRUCTURED_BUFFER_BEGIN(Name, TypeName, Count) : starts a structured buffer definition
@@ -58,11 +62,16 @@ STRUCTURED_BUFFER_END() : ends a structured buffer definition
 #endif
 
 //=================================================================
-// The types
+//                     Constant Buffers
+//=================================================================
 
 CONSTANT_BUFFER_BEGIN(Constants)
     CONSTANT_BUFFER_FIELD(pixelColor, float4)
 CONSTANT_BUFFER_END
+
+//=================================================================
+//                    Structured Buffers
+//=================================================================
 
 STRUCTURED_BUFFER_BEGIN(Triangles, Triangle, 10)
     STRUCTURED_BUFFER_FIELD(position, float3)
