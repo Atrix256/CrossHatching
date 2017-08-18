@@ -11,6 +11,9 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="notes.txt" />
+    <Text Include="shader-error.txt">
+      <Filter>Shaders</Filter>
+    </Text>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="d3d11.h" />
@@ -26,6 +29,7 @@
       <Filter>Shaders</Filter>
     </ClInclude>
     <ClInclude Include="ConstantBuffer.h" />
+    <ClInclude Include="StructuredBuffer.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\shader.fx">

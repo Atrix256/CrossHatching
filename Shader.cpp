@@ -177,25 +177,6 @@ bool CShader::Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, bool deb
         return false;
     }
 
-    //https://msdn.microsoft.com/en-us/library/windows/desktop/ff476625(v=vs.85).aspx
-    // TODO: GetResourceBindingDescByName().  To see what constant buffers etc it needs!
-    /*
-    D3D11_SHADER_INPUT_BIND_DESC desc;
-    result = m_vsReflector.m_ptr->GetResourceBindingDescByName("Constants", &desc);
-    if (FAILED(result))
-    {
-        return false;
-    }
-    */
-
-    /*
-    result = m_vsReflector.m_ptr->GetResourceBindingDescByName("pixelColor", &desc);
-    if (FAILED(result))
-    {
-        return false;
-    }
-    */
-
     return true;
 }
 
@@ -259,51 +240,6 @@ bool CComputeShader::Load(ID3D11Device* device, HWND hWnd, wchar_t* fileName, bo
         return false;
     }
 
-    // TODO: this doesn't belong in here, should be it's own class probably.
-
-    struct SBufferItem
-    {
-        float c[4];
-    };
-    SBufferItem initialData[1];
-    initialData[0].c[0] = 0.4f;
-    initialData[0].c[1] = 0.6f;
-    initialData[0].c[2] = 0.8f;
-    initialData[0].c[3] = 1.0f;
-    SBufferItem* pInitialData = &initialData[0];
-    UINT iNumElements = 1;
-
-    // CPU write, GPU read
-    D3D11_BUFFER_DESC bufferDesc;
-    ZeroMemory(&bufferDesc, sizeof(bufferDesc));
-    bufferDesc.ByteWidth = iNumElements * sizeof(SBufferItem);
-    bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-    bufferDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-    bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-    bufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
-    bufferDesc.StructureByteStride = sizeof(SBufferItem);
-
-    D3D11_SUBRESOURCE_DATA bufferInitData;
-    ZeroMemory((&bufferInitData), sizeof(bufferInitData));
-    bufferInitData.pSysMem = pInitialData;
-    result = device->CreateBuffer((&bufferDesc), (pInitialData) ? (&bufferInitData) : NULL, &m_structuredBuffer.m_ptr);
-    if (FAILED(result))
-    {
-        return false;
-    }
-
-    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
-    ZeroMemory(&srvDesc, sizeof(srvDesc));
-    srvDesc.Format = DXGI_FORMAT_UNKNOWN;
-    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
-    srvDesc.Buffer.ElementWidth = iNumElements;
-    result = device->CreateShaderResourceView(m_structuredBuffer.m_ptr, &srvDesc, &m_structuredBufferSRV.m_ptr);
-    if (FAILED(result))
-    {
-        return false;
-    }
-
-    // TODO: temp!
     result = D3DReflect(m_computeShaderBuffer.m_ptr->GetBufferPointer(), m_computeShaderBuffer.m_ptr->GetBufferSize(), IID_ID3D11ShaderReflection, (void**)&m_reflector.m_ptr);
     if (FAILED(result))
     {
@@ -316,8 +252,6 @@ bool CComputeShader::Load(ID3D11Device* device, HWND hWnd, wchar_t* fileName, bo
 void CComputeShader::Dispatch (ID3D11DeviceContext* deviceContext, size_t x, size_t y, size_t z)
 {
     deviceContext->CSSetShader(m_computeShader.m_ptr, NULL, 0);
-
-    deviceContext->CSSetShaderResources(0, 1, &m_structuredBufferSRV.m_ptr);
 
     deviceContext->Dispatch((UINT)x, (UINT)y, (UINT)z);
 }

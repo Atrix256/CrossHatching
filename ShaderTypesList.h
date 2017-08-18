@@ -5,43 +5,78 @@ They also generate shader code at runtime that the shaders use.
 
 ===================================================================
 
-BUFFER_FIELD(Name, Type) : defines a field
+CONSTANT_BUFFER_BEGIN(Name) : starts a constant buffer definition
+  Name - the name of the constant buffer to begin
+
+CONSTANT_BUFFER_FIELD(Name, Type) : defines a field
   Name - the name of the field
   Type - the type of the field
 
+CONSTANT_BUFFER_END() : ends a constant buffer definition
+
 ===================================================================
 
-CONSTANT_BUFFER_BEGIN(Name) : starts a constant buffer definition
-  Name - the type of the constant buffer to begin
+STRUCTURED_BUFFER_BEGIN(Name, TypeName, Count) : starts a structured buffer definition
+  Name     - the name of the structured buffer to begin
+  TypeName - the name of the individual struct type
+  Count    - how many items there are in the buffer
 
-CONSTANT_BUFFER_END() : ends a constant buffer definition
+STRUCTURED_BUFFER_FIELD(Name, Type) : defines a field
+  Name - the name of the field
+  Type - the type of the field
+
+STRUCTURED_BUFFER_END() : ends a structured buffer definition
 
 ===================================================================
 */
 
 //=================================================================
-// define anything the caller didn't define
-#ifndef BUFFER_FIELD
-#define BUFFER_FIELD(NAME, TYPE)
-#endif
+// define anything the caller didn't define for convenience
 
 #ifndef CONSTANT_BUFFER_BEGIN
 #define CONSTANT_BUFFER_BEGIN(NAME)
+#endif
+
+#ifndef CONSTANT_BUFFER_FIELD
+#define CONSTANT_BUFFER_FIELD(NAME, TYPE)
 #endif
 
 #ifndef CONSTANT_BUFFER_END
 #define CONSTANT_BUFFER_END
 #endif
 
+#ifndef STRUCTURED_BUFFER_BEGIN
+#define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT)
+#endif
+
+#ifndef STRUCTURED_BUFFER_FIELD
+#define STRUCTURED_BUFFER_FIELD(NAME, TYPE)
+#endif
+
+#ifndef STRUCTURED_BUFFER_END
+#define STRUCTURED_BUFFER_END
+#endif
+
 //=================================================================
 // The types
 
 CONSTANT_BUFFER_BEGIN(Constants)
-  BUFFER_FIELD(pixelColor, float4)
+    CONSTANT_BUFFER_FIELD(pixelColor, float4)
 CONSTANT_BUFFER_END
 
+STRUCTURED_BUFFER_BEGIN(Triangles, Triangle, 10)
+    STRUCTURED_BUFFER_FIELD(position, float3)
+STRUCTURED_BUFFER_END
+
+STRUCTURED_BUFFER_BEGIN(Input, SBufferItem, 1)
+    STRUCTURED_BUFFER_FIELD(c, float4)
+STRUCTURED_BUFFER_END
+
 //=================================================================
-// undefine everything for the caller's convinience
-#undef BUFFER_FIELD
+// undefine everything for the caller's convenience
 #undef CONSTANT_BUFFER_BEGIN
+#undef CONSTANT_BUFFER_FIELD
 #undef CONSTANT_BUFFER_END
+#undef STRUCTURED_BUFFER_BEGIN
+#undef STRUCTURED_BUFFER_FIELD
+#undef STRUCTURED_BUFFER_END

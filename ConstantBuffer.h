@@ -1,6 +1,5 @@
 #pragma once
 
-// TODO: should this go somewhere else? it's own file?
 template <typename T>
 class CConstantBuffer
 {

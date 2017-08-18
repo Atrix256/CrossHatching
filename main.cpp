@@ -8,11 +8,21 @@
 #include "Window.h"
 #include "ShaderTypes.h"
 #include "ConstantBuffer.h"
+#include "StructuredBuffer.h"
 
-namespace ShaderConstants
+namespace ShaderData
 {
-    #define CONSTANT_BUFFER_BEGIN(NAME) CConstantBuffer<ShaderTypes::##NAME> NAME;
-    #include "ShaderTypesList.h"
+    namespace ConstantBuffers
+    {
+        #define CONSTANT_BUFFER_BEGIN(NAME) CConstantBuffer<ShaderTypes::ConstantBuffers::##NAME> NAME;
+        #include "ShaderTypesList.h"
+    };
+
+    namespace StructuredBuffers
+    {
+        #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT) CStructuredBuffer<ShaderTypes::StructuredBuffers::##TYPENAME, COUNT> NAME;
+        #include "ShaderTypesList.h"
+    };
 };
 
 bool WriteShaderTypesHLSL (void)
@@ -21,9 +31,21 @@ bool WriteShaderTypesHLSL (void)
     if (!file)
         return false;
 
+    // write the cbuffer declarations
     #define CONSTANT_BUFFER_BEGIN(NAME) fprintf(file, "cbuffer " #NAME "\n{\n");
-    #define BUFFER_FIELD(NAME, TYPE) fprintf(file,"  " #TYPE " " #NAME ";\n");
-    #define CONSTANT_BUFFER_END fprintf(file, "};\n");
+    #define CONSTANT_BUFFER_FIELD(NAME, TYPE) fprintf(file,"  " #TYPE " " #NAME ";\n");
+    #define CONSTANT_BUFFER_END fprintf(file, "};\n\n");
+
+    // write the struct declarations for structured buffers
+    #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT) fprintf(file, "struct " #TYPENAME "\n{\n");
+    #define STRUCTURED_BUFFER_FIELD(NAME, TYPE) fprintf(file,"  " #TYPE " " #NAME ";\n");
+    #define STRUCTURED_BUFFER_END fprintf(file, "};\n\n");
+
+    #include "ShaderTypesList.h"
+
+    // write the structured buffer declarations
+    #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT) fprintf(file, "StructuredBuffer<" #TYPENAME ">" #NAME ";\n\n");
+
     #include "ShaderTypesList.h"
 
     fclose(file);
@@ -36,17 +58,32 @@ void FillShaderParams (ID3D11DeviceContext* deviceContext, ID3D11ShaderReflectio
     D3D11_SHADER_INPUT_BIND_DESC desc;
     HRESULT result;
 
-    #define CONSTANT_BUFFER_BEGIN(NAME)  result = reflector->GetResourceBindingDescByName(#NAME, &desc); \
+    #define CONSTANT_BUFFER_BEGIN(NAME) \
+        result = reflector->GetResourceBindingDescByName(#NAME, &desc); \
         if (!FAILED(result)) { \
-            ID3D11Buffer* buffer = ShaderConstants::##NAME.Get(); \
-        if (SHADER_TYPE == EShaderType::vertex) \
-            deviceContext->VSSetConstantBuffers(desc.BindPoint, 1, &buffer); \
-        else if (SHADER_TYPE == EShaderType::pixel) \
-            deviceContext->PSSetConstantBuffers(desc.BindPoint, 1, &buffer); \
-        else \
-            deviceContext->CSSetConstantBuffers(desc.BindPoint, 1, &buffer); \
+            ID3D11Buffer* buffer = ShaderData::ConstantBuffers::##NAME.Get(); \
+            if (SHADER_TYPE == EShaderType::vertex) \
+                deviceContext->VSSetConstantBuffers(desc.BindPoint, 1, &buffer); \
+            else if (SHADER_TYPE == EShaderType::pixel) \
+                deviceContext->PSSetConstantBuffers(desc.BindPoint, 1, &buffer); \
+            else \
+                deviceContext->CSSetConstantBuffers(desc.BindPoint, 1, &buffer); \
         }
+    
+    #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT) \
+        result = reflector->GetResourceBindingDescByName(#NAME, &desc); \
+        if (!FAILED(result)) { \
+            ID3D11ShaderResourceView* srv = ShaderData::StructuredBuffers::##NAME.GetSRV(); \
+            if (SHADER_TYPE == EShaderType::vertex) \
+                deviceContext->VSSetShaderResources(desc.BindPoint, 1, &srv); \
+            else if (SHADER_TYPE == EShaderType::pixel) \
+                deviceContext->PSSetShaderResources(desc.BindPoint, 1, &srv); \
+            else \
+                deviceContext->CSSetShaderResources(desc.BindPoint, 1, &srv); \
+        }
+
     #include "ShaderTypesList.h"
+
 }
 
 int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow)
@@ -71,8 +108,42 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
     if (!D3D11Init(width, height, vsync, WindowGetHWND(), fullScreen, 100.0f, 0.01f, d3ddebug))
         done = true;
 
-    #define CONSTANT_BUFFER_BEGIN(NAME) if (!ShaderConstants::NAME.Create(D3D11GetDevice())) done = true;
+    // create constant buffers
+    #define CONSTANT_BUFFER_BEGIN(NAME) if (!ShaderData::ConstantBuffers::NAME.Create(D3D11GetDevice())) done = true;
     #include "ShaderTypesList.h"
+
+    // create structured buffers
+    #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT) if (!ShaderData::StructuredBuffers::NAME.Create(D3D11GetDevice())) done = true;
+    #include "ShaderTypesList.h"
+
+    // write some triangles
+    bool writeOK = ShaderData::StructuredBuffers::Triangles.Write(
+        D3D11GetContext(),
+        [] (std::array<ShaderTypes::StructuredBuffers::Triangle, 10>& data)
+        {
+            for (size_t i = 0; i < 10; ++i)
+            {
+                data[i].position[0] = float(i);
+                data[i].position[1] = float(i) + 0.1f;
+                data[i].position[2] = float(i) + 0.2f;
+            }
+        }
+    );
+    if (!writeOK)
+        done = true;
+
+    writeOK = ShaderData::StructuredBuffers::Input.Write(
+        D3D11GetContext(),
+        [] (std::array<ShaderTypes::StructuredBuffers::SBufferItem, 1>& data)
+        {
+            data[0].c[0] = 0.4f;
+            data[0].c[1] = 0.6f;
+            data[0].c[2] = 0.8f;
+            data[0].c[3] = 1.0f;
+        }
+    );
+    if (!writeOK)
+        done = true;
 
     CShader shader;
     if (!shader.Load(D3D11GetDevice(), WindowGetHWND(), L"Shaders/shader.fx", shaderDebug))
@@ -124,9 +195,9 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
         else
         {
             // update the constant buffer
-            bool writeOk = ShaderConstants::Constants.Write(
+            bool writeOk = ShaderData::ConstantBuffers::Constants.Write(
                 D3D11GetContext(),
-                [frameNumber] (ShaderTypes::Constants& constants)
+                [frameNumber] (ShaderTypes::ConstantBuffers::Constants& constants)
                 {
                     constants.pixelColor[0] = float(frameNumber % 4) / float(8.0f) + 0.5f;
                     constants.pixelColor[1] = 1.0f;
@@ -144,7 +215,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
             UINT count = -1;
             D3D11GetContext()->CSSetUnorderedAccessViews(0, 1, &uav, &count);
             computeShader.Dispatch(D3D11GetContext(), dispatchX, dispatchY, 1);
-            FillShaderParams<EShaderType::compute>(D3D11GetContext(), shader.GetVSReflector());
+            FillShaderParams<EShaderType::compute>(D3D11GetContext(), computeShader.GetReflector());
             uav = NULL;
             D3D11GetContext()->CSSetUnorderedAccessViews(0, 1, &uav, &count);
 

@@ -8,6 +8,7 @@
 // TODO: how to handle textures?
 // TODO: how to handle structured buffers and unordered access stuff?
 // TODO: how to handle vertex format? or don't deal with it as you only have full screen quads?
+// TODO: look for anything else that needs reflection!
 
 enum class EShaderType
 {
@@ -52,10 +53,6 @@ public:
 
 private:
     CAutoReleasePointer<ID3D11ComputeShader> m_computeShader;
-
-    // TODO: doesn't belong here
-    CAutoReleasePointer<ID3D11Buffer> m_structuredBuffer;
-    CAutoReleasePointer<ID3D11ShaderResourceView> m_structuredBufferSRV;
 
     CAutoReleasePointer<ID3D10Blob> m_computeShaderBuffer;
 
