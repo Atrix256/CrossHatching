@@ -176,6 +176,7 @@
     <ClInclude Include="StructuredBuffer.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="Utils.h" />
+    <ClInclude Include="VertexFormat.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>

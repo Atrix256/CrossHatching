@@ -9,12 +9,6 @@ SamplerState SampleType;
 //////////////
 // TYPEDEFS //
 //////////////
-struct VertexInputType
-{
-    float4 position : POSITION;
-    float4 color : COLOR;
-    float2 uv : TEXCOORD0;
-};
 
 struct PixelInputType
 {
@@ -26,7 +20,7 @@ struct PixelInputType
 ////////////////////////////////////////////////////////////////////////////////
 // Vertex Shader
 ////////////////////////////////////////////////////////////////////////////////
-PixelInputType vs_main (VertexInputType input)
+PixelInputType vs_main (PosColorUV input)
 {
     PixelInputType output;
 
@@ -36,7 +30,7 @@ PixelInputType vs_main (VertexInputType input)
 
     output.color = input.color * pixelColor;
 
-    output.uv = input.uv;
+    output.uv = input.uv * 5.0f;
 
     return output;
 }

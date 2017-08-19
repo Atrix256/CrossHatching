@@ -32,7 +32,21 @@ STRUCTURED_BUFFER_FIELD(Name, Type) : defines a field
 STRUCTURED_BUFFER_END() : ends a structured buffer definition
 
 ===================================================================
-                          TEXTURES
+                       Vertex Formats
+===================================================================
+
+VERTEX_FORMAT_BEGIN(Name)
+  Name - the name of the vertex format in both c++ and shader code
+
+VERTEX_FORMAT_FIELD(Name, Semantic, Type)
+  Name - the name of the field
+  Semantic - the shader semantic
+  Type - the data type
+
+VERTEX_FORMAT_END
+
+===================================================================
+                          Textures
 ===================================================================
 
 TEXTURE(Name, FileName)
@@ -68,6 +82,18 @@ TEXTURE(Name, FileName)
 #define STRUCTURED_BUFFER_END
 #endif
 
+#ifndef VERTEX_FORMAT_BEGIN
+#define VERTEX_FORMAT_BEGIN(NAME)
+#endif
+
+#ifndef VERTEX_FORMAT_FIELD
+#define VERTEX_FORMAT_FIELD(NAME, SEMANTIC, TYPE)
+#endif
+
+#ifndef VERTEX_FORMAT_END
+#define VERTEX_FORMAT_END
+#endif
+
 #ifndef TEXTURE
 #define TEXTURE(NAME, FILENAME)
 #endif
@@ -93,7 +119,17 @@ STRUCTURED_BUFFER_BEGIN(Input, SBufferItem, 1)
 STRUCTURED_BUFFER_END
 
 //=================================================================
-//                       TEXTURES
+//                     Vertex Formats
+//=================================================================
+
+VERTEX_FORMAT_BEGIN(PosColorUV)
+    VERTEX_FORMAT_FIELD(position, POSITION, float4)
+    VERTEX_FORMAT_FIELD(color, COLOR, float4)
+    VERTEX_FORMAT_FIELD(uv, TEXCOORD0, float2)
+VERTEX_FORMAT_END
+
+//=================================================================
+//                       Textures
 //=================================================================
 
 TEXTURE(stone, "stone01.tga")
@@ -107,4 +143,7 @@ TEXTURE(rwtexture, nullptr)
 #undef STRUCTURED_BUFFER_BEGIN
 #undef STRUCTURED_BUFFER_FIELD
 #undef STRUCTURED_BUFFER_END
+#undef VERTEX_FORMAT_BEGIN
+#undef VERTEX_FORMAT_FIELD
+#undef VERTEX_FORMAT_END
 #undef TEXTURE

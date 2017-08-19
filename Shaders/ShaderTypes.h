@@ -13,6 +13,13 @@ struct SBufferItem
   float4 c;
 };
 
+struct PosColorUV
+{
+  float4 position : POSITION;
+  float4 color : COLOR;
+  float2 uv : TEXCOORD0;
+};
+
 Texture2D stone;
 RWTexture2D<float4> stone_rw;
 

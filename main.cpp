@@ -9,6 +9,7 @@
 #include "ShaderTypes.h"
 #include "ConstantBuffer.h"
 #include "StructuredBuffer.h"
+#include "VertexFormat.h"
 
 namespace ShaderData
 {
@@ -49,6 +50,11 @@ bool WriteShaderTypesHLSL (void)
     #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT) fprintf(file, "struct " #TYPENAME "\n{\n");
     #define STRUCTURED_BUFFER_FIELD(NAME, TYPE) fprintf(file,"  " #TYPE " " #NAME ";\n");
     #define STRUCTURED_BUFFER_END fprintf(file, "};\n\n");
+
+    // write the vertex formats
+    #define VERTEX_FORMAT_BEGIN(NAME) fprintf(file, "struct " #NAME "\n{\n");
+    #define VERTEX_FORMAT_FIELD(NAME, SEMANTIC, TYPE) fprintf(file, "  " #TYPE " " #NAME " : " #SEMANTIC ";\n");
+    #define VERTEX_FORMAT_END fprintf(file, "};\n\n");
 
     #include "ShaderTypesList.h"
 
@@ -169,6 +175,13 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
         done = true;
 
     // TODO: move the automatic init stuff into it's own function to declutter main. Maybe move all init stuff there?
+
+    // TODO: there may be problems because we are giving "TEXCOORD0" but should just give "TEXCOORD". maybe has to do with semantic index.
+    CVertexFormat<3> vertexFormat;
+    const char* names[3] = { "POSITION", "COLOR", "TEXCOORD0" };
+    UINT indices[3] = { 0, 0, 0 };
+    if (!vertexFormat.Create(names, indices))
+        done = true;
 
     // create constant buffers
     #define CONSTANT_BUFFER_BEGIN(NAME) if (!ShaderData::ConstantBuffers::NAME.Create(D3D11GetDevice())) done = true;
