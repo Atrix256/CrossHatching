@@ -38,7 +38,7 @@ bool WriteShaderTypesHLSL (void)
         return false;
 
     // write the texture declarations
-    #define TEXTURE(NAME, FILENAME) fprintf(file, "Texture2D " #NAME ";\n\n");
+    #define TEXTURE(NAME, FILENAME) fprintf(file, "Texture2D " #NAME ";\nRWTexture2D<float4> " #NAME "_rw;\n\n");
 
     // write the cbuffer declarations
     #define CONSTANT_BUFFER_BEGIN(NAME) fprintf(file, "cbuffer " #NAME "\n{\n");
@@ -59,6 +59,35 @@ bool WriteShaderTypesHLSL (void)
 
     fclose(file);
     return true;
+}
+
+template <EShaderType SHADER_TYPE>
+void UnbindShaderTextures (ID3D11DeviceContext* deviceContext, ID3D11ShaderReflection* reflector)
+{
+    D3D11_SHADER_INPUT_BIND_DESC desc;
+    HRESULT result;
+
+    // reflect textures
+    #define TEXTURE(NAME, FILENAME) \
+        result = reflector->GetResourceBindingDescByName(#NAME, &desc); \
+        if (!FAILED(result)) { \
+            ID3D11ShaderResourceView* srv = nullptr; \
+            if (SHADER_TYPE == EShaderType::vertex) \
+                deviceContext->VSSetShaderResources(desc.BindPoint, 1, &srv); \
+            else if (SHADER_TYPE == EShaderType::pixel) \
+                deviceContext->PSSetShaderResources(desc.BindPoint, 1, &srv); \
+            else \
+                deviceContext->CSSetShaderResources(desc.BindPoint, 1, &srv); \
+        } \
+        result = reflector->GetResourceBindingDescByName(#NAME "_rw", &desc); \
+        if (!FAILED(result)) { \
+            UINT count = -1; \
+            ID3D11UnorderedAccessView* uav = nullptr; \
+            if (SHADER_TYPE == EShaderType::compute) \
+                deviceContext->CSSetUnorderedAccessViews(desc.BindPoint, 1, &uav, &count); \
+        }
+
+    #include "ShaderTypesList.h"
 }
 
 template <EShaderType SHADER_TYPE>
@@ -97,14 +126,19 @@ void FillShaderParams (ID3D11DeviceContext* deviceContext, ID3D11ShaderReflectio
     #define TEXTURE(NAME, FILENAME) \
         result = reflector->GetResourceBindingDescByName(#NAME, &desc); \
         if (!FAILED(result)) { \
-            UINT count = -1; \
             ID3D11ShaderResourceView* srv = ShaderData::Textures::##NAME.GetSRV(); \
-            ID3D11UnorderedAccessView* uav = ShaderData::Textures::##NAME.GetUAV(); \
             if (SHADER_TYPE == EShaderType::vertex) \
                 deviceContext->VSSetShaderResources(desc.BindPoint, 1, &srv); \
             else if (SHADER_TYPE == EShaderType::pixel) \
                 deviceContext->PSSetShaderResources(desc.BindPoint, 1, &srv); \
             else \
+                deviceContext->CSSetShaderResources(desc.BindPoint, 1, &srv); \
+        } \
+        result = reflector->GetResourceBindingDescByName(#NAME "_rw", &desc); \
+        if (!FAILED(result)) { \
+            UINT count = -1; \
+            ID3D11UnorderedAccessView* uav = ShaderData::Textures::##NAME.GetUAV(); \
+            if (SHADER_TYPE == EShaderType::compute) \
                 deviceContext->CSSetUnorderedAccessViews(desc.BindPoint, 1, &uav, &count); \
         }
 
@@ -236,31 +270,20 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
             if (!writeOk)
                 done = true;
 
-
-            // TODO: make this part of the dispatch call or something...
-
-            // TODO: make uav's reflected.  Right now it doesn't know to ask for them. need to figure that out.  Or does it? i think it might...
-            // TODO: maybe just need to make it define this kind of thing in the shader's shadertypes.h: RWTexture2D<float4> Output : register(u0); ? (without register number)
-            ID3D11UnorderedAccessView *uav = ShaderData::Textures::rwtexture.GetUAV();
-            UINT count = -1;
-            D3D11GetContext()->CSSetUnorderedAccessViews(0, 1, &uav, &count);
+            // compute shader
             FillShaderParams<EShaderType::compute>(D3D11GetContext(), computeShader.GetReflector());
             computeShader.Dispatch(D3D11GetContext(), dispatchX, dispatchY, 1);
-            uav = NULL;
-            D3D11GetContext()->CSSetUnorderedAccessViews(0, 1, &uav, &count);
-            //D3D11GetContext()->CSSetUnorderedAccessViews(1, 1, &uav, &count);
+            UnbindShaderTextures<EShaderType::compute>(D3D11GetContext(), computeShader.GetReflector());
 
-
+            // vs & ps
             D3D11BeginScene(0.4f, 0.0f, 0.4f, 1.0f);
-
             FillShaderParams<EShaderType::vertex>(D3D11GetContext(), shader.GetVSReflector());
             FillShaderParams<EShaderType::pixel>(D3D11GetContext(), shader.GetPSReflector());
-
             model.Render(D3D11GetContext());
             shader.Draw(D3D11GetContext(), model.GetIndexCount());
+            UnbindShaderTextures<EShaderType::vertex>(D3D11GetContext(), shader.GetVSReflector());
+            UnbindShaderTextures<EShaderType::pixel>(D3D11GetContext(), shader.GetPSReflector());
             D3D11EndScene();
-
-            // TODO: unbind the texture from PS so the CS can use it next frame!  Maybe have a function to unbind textures which have a NULL filename? i dunno if that's fully appropriate or not
 
             ++frameNumber;
         }

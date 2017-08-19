@@ -14,8 +14,10 @@ struct SBufferItem
 };
 
 Texture2D stone;
+RWTexture2D<float4> stone_rw;
 
 Texture2D rwtexture;
+RWTexture2D<float4> rwtexture_rw;
 
 StructuredBuffer<Triangle> Triangles;
 

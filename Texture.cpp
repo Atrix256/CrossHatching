@@ -148,7 +148,7 @@ bool CTexture::LoadTGA (ID3D11Device* device, ID3D11DeviceContext* deviceContext
     srvDesc.Texture2D.MipLevels = -1;
 
     // Create the shader resource view for the texture.
-    hResult = device->CreateShaderResourceView(m_texture.m_ptr, &srvDesc, &m_textureView.m_ptr);
+    hResult = device->CreateShaderResourceView(m_texture.m_ptr, &srvDesc, &m_textureSRV.m_ptr);
     if (FAILED(hResult))
     {
         return false;
@@ -160,14 +160,14 @@ bool CTexture::LoadTGA (ID3D11Device* device, ID3D11DeviceContext* deviceContext
     uavDesc.Texture2D.MipSlice = 0;
 
     // create the unordered access view for the texture.
-    hResult = device->CreateUnorderedAccessView(m_texture.m_ptr, &uavDesc, &m_textureViewCompute.m_ptr);
+    hResult = device->CreateUnorderedAccessView(m_texture.m_ptr, &uavDesc, &m_textureUAV.m_ptr);
     if (FAILED(hResult))
     {
         return false;
     }
 
     // Generate mipmaps for this texture.
-    deviceContext->GenerateMips(m_textureView.m_ptr);
+    deviceContext->GenerateMips(m_textureSRV.m_ptr);
 
     return true;
 }
@@ -206,7 +206,7 @@ bool CTexture::Create (ID3D11Device* device, ID3D11DeviceContext* deviceContext,
     srvDesc.Texture2D.MipLevels = -1;
 
     // Create the shader resource view for the texture.
-    hResult = device->CreateShaderResourceView(m_texture.m_ptr, &srvDesc, &m_textureView.m_ptr);
+    hResult = device->CreateShaderResourceView(m_texture.m_ptr, &srvDesc, &m_textureSRV.m_ptr);
     if (FAILED(hResult))
     {
         return false;
@@ -218,7 +218,7 @@ bool CTexture::Create (ID3D11Device* device, ID3D11DeviceContext* deviceContext,
     uavDesc.Texture2D.MipSlice = 0;
 
     // create the unordered access view for the texture.
-    hResult = device->CreateUnorderedAccessView(m_texture.m_ptr, &uavDesc, &m_textureViewCompute.m_ptr);
+    hResult = device->CreateUnorderedAccessView(m_texture.m_ptr, &uavDesc, &m_textureUAV.m_ptr);
     if (FAILED(hResult))
     {
         return false;
