@@ -134,7 +134,7 @@ VERTEX_FORMAT_END
 //                       Textures
 //=================================================================
 
-TEXTURE(stone, "stone01.tga")
+TEXTURE(stone, "Art/stone01.tga")
 TEXTURE(rwtexture, nullptr)
 
 //=================================================================

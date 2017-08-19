@@ -4,9 +4,6 @@
 #include <d3dcompiler.h>
 #include "Utils.h"
 
-// TODO: how to handle sampler states? wrap, clamp, linear interp etc
-// TODO: look for anything else that needs reflection or cleanup before moving on to path tracing stuff
-
 enum class EShaderType
 {
     vertex,
@@ -28,7 +25,6 @@ private:
     CAutoReleasePointer<ID3D11VertexShader> m_vertexShader;
     CAutoReleasePointer<ID3D11PixelShader> m_pixelShader;
     CAutoReleasePointer<ID3D11InputLayout> m_layout;
-    CAutoReleasePointer<ID3D11SamplerState> m_sampleState;
 
     CAutoReleasePointer<ID3D10Blob> m_vertexShaderBuffer;
     CAutoReleasePointer<ID3D10Blob> m_pixelShaderBuffer;

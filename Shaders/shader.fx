@@ -1,15 +1,6 @@
 #include "ShaderTypes.h"
 
-/////////////
-// GLOBALS //
-/////////////
-
-SamplerState SampleType;
-
-//////////////
-// TYPEDEFS //
-//////////////
-
+//----------------------------------------------------------------------------
 struct PixelInputType
 {
     float4 position : SV_POSITION;
@@ -17,9 +8,7 @@ struct PixelInputType
     float2 uv : TEXCOORD0;
 };
 
-////////////////////////////////////////////////////////////////////////////////
-// Vertex Shader
-////////////////////////////////////////////////////////////////////////////////
+//----------------------------------------------------------------------------
 PixelInputType vs_main (PosColorUV input)
 {
     PixelInputType output;
@@ -34,10 +23,8 @@ PixelInputType vs_main (PosColorUV input)
     return output;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Pixel Shader
-////////////////////////////////////////////////////////////////////////////////
+//----------------------------------------------------------------------------
 float4 ps_main (PixelInputType input) : SV_TARGET
 {
-    return input.color * rwtexture.Sample(SampleType, input.uv) + stone.Sample(SampleType, input.uv) * 0.5f;
+    return input.color * rwtexture.Sample(SamplerLinearWrap, input.uv) + stone.Sample(SamplerLinearWrap, input.uv) * 0.5f;
 }

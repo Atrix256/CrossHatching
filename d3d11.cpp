@@ -6,9 +6,6 @@
 #pragma comment(lib, "dxguid.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 
-// TODO: should we clean this up to use auto release pointers? i think so. make a class that holds all this stuff.
-// TODO: make this use the render target class?
-
 bool CD3D11::Init (
     size_t screenWidth,
     size_t screenHeight,
@@ -284,6 +281,29 @@ bool CD3D11::Init (
 
     // Create the viewport.
     m_deviceContext.m_ptr->RSSetViewports(1, &viewport);
+
+    // Create a texture sampler state description.
+    D3D11_SAMPLER_DESC samplerDesc;
+    samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+    samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+    samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+    samplerDesc.MipLODBias = 0.0f;
+    samplerDesc.MaxAnisotropy = 1;
+    samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+    samplerDesc.BorderColor[0] = 0;
+    samplerDesc.BorderColor[1] = 0;
+    samplerDesc.BorderColor[2] = 0;
+    samplerDesc.BorderColor[3] = 0;
+    samplerDesc.MinLOD = 0;
+    samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+    // Create the texture sampler state.
+    result = m_device.m_ptr->CreateSamplerState(&samplerDesc, &m_samplerLinearWrap.m_ptr);
+    if (FAILED(result))
+    {
+        return false;
+    }
 
     return true;
 }

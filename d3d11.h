@@ -22,6 +22,8 @@ public:
     ID3D11Device* Device() { return m_device.m_ptr; }
     ID3D11DeviceContext* Context () { return m_deviceContext.m_ptr; }
 
+    ID3D11SamplerState* SamplerLinearWrap () { return m_samplerLinearWrap.m_ptr; }
+
     ~CD3D11 ();
 
 private:
@@ -34,4 +36,6 @@ private:
     CAutoReleasePointer<ID3D11DepthStencilState> m_depthStencilState;
     CAutoReleasePointer<ID3D11DepthStencilView> m_depthStencilView;
     CAutoReleasePointer<ID3D11RasterizerState> m_rasterState;
+
+    CAutoReleasePointer<ID3D11SamplerState> m_samplerLinearWrap;
 };

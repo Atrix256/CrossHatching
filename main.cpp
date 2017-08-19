@@ -66,29 +66,39 @@ bool WriteShaderTypesHLSL (void)
     if (!file)
         return false;
 
+    // hard coded sampler states
+    fprintf(file, "//----------------------------------------------------------------------------\n//Samplers\n//----------------------------------------------------------------------------\n");
+    fprintf(file, "SamplerState SamplerLinearWrap;\n\n");
+
     // write the texture declarations
+    fprintf(file, "//----------------------------------------------------------------------------\n//Textures\n//----------------------------------------------------------------------------\n");
     #define TEXTURE(NAME, FILENAME) fprintf(file, "Texture2D " #NAME ";\nRWTexture2D<float4> " #NAME "_rw;\n\n");
+    #include "ShaderTypesList.h"
 
     // write the cbuffer declarations
+    fprintf(file, "//----------------------------------------------------------------------------\n//Constant Buffers\n//----------------------------------------------------------------------------\n");
     #define CONSTANT_BUFFER_BEGIN(NAME) fprintf(file, "cbuffer " #NAME "\n{\n");
     #define CONSTANT_BUFFER_FIELD(NAME, TYPE) fprintf(file,"  " #TYPE " " #NAME ";\n");
     #define CONSTANT_BUFFER_END fprintf(file, "};\n\n");
-
-    // write the struct declarations for structured buffers
-    #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT) fprintf(file, "struct " #TYPENAME "\n{\n");
-    #define STRUCTURED_BUFFER_FIELD(NAME, TYPE) fprintf(file,"  " #TYPE " " #NAME ";\n");
-    #define STRUCTURED_BUFFER_END fprintf(file, "};\n\n");
+    #include "ShaderTypesList.h"
 
     // write the vertex formats
+    fprintf(file, "//----------------------------------------------------------------------------\n//Vertex Formats\n//----------------------------------------------------------------------------\n");
     #define VERTEX_FORMAT_BEGIN(NAME) fprintf(file, "struct " #NAME "\n{\n");
     #define VERTEX_FORMAT_FIELD(NAME, SEMANTIC, INDEX, TYPE, FORMAT) fprintf(file, "  " #TYPE " " #NAME " : " #SEMANTIC #INDEX ";\n");
     #define VERTEX_FORMAT_END fprintf(file, "};\n\n");
+    #include "ShaderTypesList.h"
 
+    // write the struct declarations for structured buffers
+    fprintf(file, "//----------------------------------------------------------------------------\n//Structured Buffer Types\n//----------------------------------------------------------------------------\n");
+    #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT) fprintf(file, "struct " #TYPENAME "\n{\n");
+    #define STRUCTURED_BUFFER_FIELD(NAME, TYPE) fprintf(file,"  " #TYPE " " #NAME ";\n");
+    #define STRUCTURED_BUFFER_END fprintf(file, "};\n\n");
     #include "ShaderTypesList.h"
 
     // write the structured buffer declarations
+    fprintf(file, "//----------------------------------------------------------------------------\n//Structured Buffers\n//----------------------------------------------------------------------------\n");
     #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT) fprintf(file, "StructuredBuffer<" #TYPENAME "> " #NAME ";\n\n");
-
     #include "ShaderTypesList.h"
 
     fclose(file);
@@ -177,13 +187,20 @@ void FillShaderParams (ID3D11DeviceContext* deviceContext, ID3D11ShaderReflectio
         }
 
     #include "ShaderTypesList.h"
+
+    // hard coded samplers
+    result = reflector->GetResourceBindingDescByName("SamplerLinearWrap", &desc);
+    if (!FAILED(result))
+    {
+        ID3D11SamplerState* sampler = g_d3d.SamplerLinearWrap();
+        deviceContext->PSSetSamplers(desc.BindPoint, 1, &sampler);
+    }
 }
 
 bool init ()
 {
     WindowInit(c_width, c_height, c_fullScreen);
 
-    // TODO: if anything fails, report why to a log or something. Or maybe show a message box
     if (!g_d3d.Init(c_width, c_height, c_vsync, WindowGetHWND(), c_fullScreen, 100.0f, 0.01f, c_d3ddebug))
         return false;
 

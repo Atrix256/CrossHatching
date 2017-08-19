@@ -1,7 +1,6 @@
 #include "Shader.h"
 
 #include <d3d11.h>
-#include <directxmath.h>
 #include <fstream>
 
 static void OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shaderFilename)
@@ -42,8 +41,6 @@ bool CShader::Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, D3D11_IN
 {
     HRESULT result;
     ID3D10Blob* errorMessage;
-
-    D3D11_SAMPLER_DESC samplerDesc;
 
     // Initialize the pointers this function will use to null.
     errorMessage = 0;
@@ -111,29 +108,6 @@ bool CShader::Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, D3D11_IN
         return false;
     }
 
-    // Create a texture sampler state description.
-    samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-    samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-    samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-    samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-    samplerDesc.MipLODBias = 0.0f;
-    samplerDesc.MaxAnisotropy = 1;
-    samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
-    samplerDesc.BorderColor[0] = 0;
-    samplerDesc.BorderColor[1] = 0;
-    samplerDesc.BorderColor[2] = 0;
-    samplerDesc.BorderColor[3] = 0;
-    samplerDesc.MinLOD = 0;
-    samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
-
-    // Create the texture sampler state.
-    result = device->CreateSamplerState(&samplerDesc, &m_sampleState.m_ptr);
-    if (FAILED(result))
-    {
-        return false;
-    }
-
-    // TODO: temp!
     result = D3DReflect(m_pixelShaderBuffer.m_ptr->GetBufferPointer(), m_pixelShaderBuffer.m_ptr->GetBufferSize(), IID_ID3D11ShaderReflection, (void**)&m_psReflector.m_ptr);
     if (FAILED(result))
     {
@@ -157,9 +131,6 @@ void CShader::Draw (ID3D11DeviceContext* deviceContext, size_t indexCount)
     // Set the vertex and pixel shaders that will be used to render this triangle.
     deviceContext->VSSetShader(m_vertexShader.m_ptr, NULL, 0);
     deviceContext->PSSetShader(m_pixelShader.m_ptr, NULL, 0);
-
-    // Set the sampler state in the pixel shader.
-    deviceContext->PSSetSamplers(0, 1, &m_sampleState.m_ptr);
 
     // Render the triangle.
     deviceContext->DrawIndexed((UINT)indexCount, 0, 0);
