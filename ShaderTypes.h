@@ -25,4 +25,13 @@ namespace ShaderTypes
         #define STRUCTURED_BUFFER_END };
         #include "ShaderTypesList.h"
     };
+
+    // define the vertex format structs
+    namespace VertexFormats
+    {
+        #define VERTEX_FROMAT_BEGIN(NAME) struct NAME {
+        #define VERTEX_FORMAT_FIELD(NAME, SEMANTIC, INDEX, TYPE, FORMAT) TYPE NAME;
+        #define VERTEX_FROMAT_END(NAME) };
+        #include "ShaderTypesList.h"
+    };
 };

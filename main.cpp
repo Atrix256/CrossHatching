@@ -9,7 +9,8 @@
 #include "ShaderTypes.h"
 #include "ConstantBuffer.h"
 #include "StructuredBuffer.h"
-#include "VertexFormat.h"
+
+// TODO: make the model use the vertex format as a template parameter? maybe need a "write" function to fill it in.
 
 namespace ShaderData
 {
@@ -28,6 +29,18 @@ namespace ShaderData
     namespace Textures
     {
         #define TEXTURE(NAME, FILENAME) CTexture NAME;
+        #include "ShaderTypesList.h"
+    }
+
+    namespace VertexFormats
+    {
+        #define VERTEX_FORMAT_BEGIN(NAME) D3D11_INPUT_ELEMENT_DESC NAME [] = {
+        #define VERTEX_FORMAT_FIELD(NAME, SEMANTIC, INDEX, TYPE, FORMAT) \
+            {#SEMANTIC, INDEX, FORMAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        #define VERTEX_FORMAT_END };
+        #include "ShaderTypesList.h"
+
+        #define VERTEX_FORMAT_BEGIN(NAME) size_t NAME##Elements = sizeof(NAME) / sizeof(NAME[0]);
         #include "ShaderTypesList.h"
     }
 };
@@ -53,7 +66,7 @@ bool WriteShaderTypesHLSL (void)
 
     // write the vertex formats
     #define VERTEX_FORMAT_BEGIN(NAME) fprintf(file, "struct " #NAME "\n{\n");
-    #define VERTEX_FORMAT_FIELD(NAME, SEMANTIC, TYPE) fprintf(file, "  " #TYPE " " #NAME " : " #SEMANTIC ";\n");
+    #define VERTEX_FORMAT_FIELD(NAME, SEMANTIC, INDEX, TYPE, FORMAT) fprintf(file, "  " #TYPE " " #NAME " : " #SEMANTIC #INDEX ";\n");
     #define VERTEX_FORMAT_END fprintf(file, "};\n\n");
 
     #include "ShaderTypesList.h"
@@ -176,13 +189,6 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
 
     // TODO: move the automatic init stuff into it's own function to declutter main. Maybe move all init stuff there?
 
-    // TODO: there may be problems because we are giving "TEXCOORD0" but should just give "TEXCOORD". maybe has to do with semantic index.
-    CVertexFormat<3> vertexFormat;
-    const char* names[3] = { "POSITION", "COLOR", "TEXCOORD0" };
-    UINT indices[3] = { 0, 0, 0 };
-    if (!vertexFormat.Create(names, indices))
-        done = true;
-
     // create constant buffers
     #define CONSTANT_BUFFER_BEGIN(NAME) if (!ShaderData::ConstantBuffers::NAME.Create(D3D11GetDevice())) done = true;
     #include "ShaderTypesList.h"
@@ -229,7 +235,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
         done = true;
 
     CShader shader;
-    if (!shader.Load(D3D11GetDevice(), WindowGetHWND(), L"Shaders/shader.fx", shaderDebug))
+    if (!shader.Load(D3D11GetDevice(), WindowGetHWND(), L"Shaders/shader.fx", ShaderData::VertexFormats::PosColorUV, ShaderData::VertexFormats::PosColorUVElements, shaderDebug))
         done = true;
 
     // TODO: delete when working

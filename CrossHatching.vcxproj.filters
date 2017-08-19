@@ -30,7 +30,6 @@
     </ClInclude>
     <ClInclude Include="ConstantBuffer.h" />
     <ClInclude Include="StructuredBuffer.h" />
-    <ClInclude Include="VertexFormat.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\shader.fx">

@@ -19,7 +19,7 @@ enum class EShaderType
 class CShader
 {
 public:
-    bool Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, bool debug);
+    bool Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, D3D11_INPUT_ELEMENT_DESC* vertexFormat, size_t vertexFormatElements, bool debug);
 
     void Draw (ID3D11DeviceContext* deviceContext, size_t indexCount);
 

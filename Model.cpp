@@ -1,6 +1,7 @@
 #include "model.h"
 #include <vector>
 
+// TODO: use the passed in vertex buffer type!
 struct VertexType
 {
     DirectX::XMFLOAT3 position;

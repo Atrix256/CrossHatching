@@ -38,10 +38,12 @@ STRUCTURED_BUFFER_END() : ends a structured buffer definition
 VERTEX_FORMAT_BEGIN(Name)
   Name - the name of the vertex format in both c++ and shader code
 
-VERTEX_FORMAT_FIELD(Name, Semantic, Type)
+VERTEX_FORMAT_FIELD(Name, Semantic, Index, Type, Format)
   Name - the name of the field
   Semantic - the shader semantic
+  Index - the semantic index
   Type - the data type
+  Format - the format
 
 VERTEX_FORMAT_END
 
@@ -87,7 +89,7 @@ TEXTURE(Name, FileName)
 #endif
 
 #ifndef VERTEX_FORMAT_FIELD
-#define VERTEX_FORMAT_FIELD(NAME, SEMANTIC, TYPE)
+#define VERTEX_FORMAT_FIELD(NAME, SEMANTIC, INDEX, TYPE, FORMAT)
 #endif
 
 #ifndef VERTEX_FORMAT_END
@@ -123,9 +125,9 @@ STRUCTURED_BUFFER_END
 //=================================================================
 
 VERTEX_FORMAT_BEGIN(PosColorUV)
-    VERTEX_FORMAT_FIELD(position, POSITION, float4)
-    VERTEX_FORMAT_FIELD(color, COLOR, float4)
-    VERTEX_FORMAT_FIELD(uv, TEXCOORD0, float2)
+    VERTEX_FORMAT_FIELD(position, POSITION, 0, float4, DXGI_FORMAT_R32G32B32_FLOAT)
+    VERTEX_FORMAT_FIELD(color, COLOR, 0, float4, DXGI_FORMAT_R32G32B32A32_FLOAT)
+    VERTEX_FORMAT_FIELD(uv, TEXCOORD, 0, float2, DXGI_FORMAT_R32G32_FLOAT)
 VERTEX_FORMAT_END
 
 //=================================================================

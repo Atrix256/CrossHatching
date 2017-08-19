@@ -15,8 +15,8 @@ struct SBufferItem
 
 struct PosColorUV
 {
-  float4 position : POSITION;
-  float4 color : COLOR;
+  float4 position : POSITION0;
+  float4 color : COLOR0;
   float2 uv : TEXCOORD0;
 };
 

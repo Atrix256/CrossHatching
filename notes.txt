@@ -3,6 +3,8 @@ get a compute shader taking a structured buffer as input
 
 * make it auto-clear the reference to textures from both compute shaders and vs/[s]
 
+? maybe label the sections of ShaderTypes.h (shader code) with comments?
+
 may not need render target class, we may only need the single render target, and just have compute shaders read/write to default usage textures?
  probably, but maybe the main render target could use the class i dunno
 
