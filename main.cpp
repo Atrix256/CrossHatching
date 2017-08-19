@@ -10,6 +10,21 @@
 #include "ConstantBuffer.h"
 #include "StructuredBuffer.h"
 
+// settings
+const size_t c_width = 800;
+const size_t c_height = 600;
+const bool c_fullScreen = false;
+const bool c_vsync = true;
+const bool c_shaderDebug = true;
+const bool c_d3ddebug = true;
+
+// globals
+CShader g_shader;
+CComputeShader g_computeShader;
+CModel<ShaderTypes::VertexFormats::PosColorUV> g_model;
+CRenderTarget g_testBuffer;
+
+// automatically reflected things for shaders
 namespace ShaderData
 {
     namespace ConstantBuffers
@@ -43,6 +58,7 @@ namespace ShaderData
     }
 };
 
+// generate shader code ShaderTypes.h
 bool WriteShaderTypesHLSL (void)
 {
     FILE *file = fopen("Shaders/ShaderTypes.h", "w+t");
@@ -160,47 +176,34 @@ void FillShaderParams (ID3D11DeviceContext* deviceContext, ID3D11ShaderReflectio
         }
 
     #include "ShaderTypesList.h"
-
 }
 
-int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow)
+bool init ()
 {
-    MSG msg;
-    bool done = false;
+    WindowInit(c_width, c_height, c_fullScreen);
 
-    // settings
-    size_t width = 800;
-    size_t height = 600;
-    bool fullScreen = false;
-    bool vsync = true;
-    bool shaderDebug = true;
-    bool d3ddebug = true;
-
-    WindowInit(width, height, fullScreen);
+    // TODO: if anything fails, report why to a log or something. Or maybe show a message box
+    if (!D3D11Init(c_width, c_height, c_vsync, WindowGetHWND(), c_fullScreen, 100.0f, 0.01f, c_d3ddebug))
+        return false;
 
     if (!WriteShaderTypesHLSL())
-        done = true;
-
-    // TODO: if it fails, report why to a log or something. Or maybe show a message box
-    if (!D3D11Init(width, height, vsync, WindowGetHWND(), fullScreen, 100.0f, 0.01f, d3ddebug))
-        done = true;
-
-    // TODO: move the automatic init stuff into it's own function to declutter main. Maybe move all init stuff there?
+        return false;
 
     // create constant buffers
-    #define CONSTANT_BUFFER_BEGIN(NAME) if (!ShaderData::ConstantBuffers::NAME.Create(D3D11GetDevice())) done = true;
+    #define CONSTANT_BUFFER_BEGIN(NAME) if (!ShaderData::ConstantBuffers::NAME.Create(D3D11GetDevice())) return false;
     #include "ShaderTypesList.h"
 
     // create structured buffers
-    #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT) if (!ShaderData::StructuredBuffers::NAME.Create(D3D11GetDevice())) done = true;
+    #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT) if (!ShaderData::StructuredBuffers::NAME.Create(D3D11GetDevice())) return false;
     #include "ShaderTypesList.h"
 
     // create textures
     #define TEXTURE(NAME, FILENAME) \
-        if (FILENAME == nullptr) \
-            done = ShaderData::Textures::NAME.Create(D3D11GetDevice(), D3D11GetContext(), width, height) && done; \
-        else \
-            done = ShaderData::Textures::NAME.LoadTGA(D3D11GetDevice(), D3D11GetContext(), FILENAME) && done; 
+        if (FILENAME == nullptr) { \
+            if(!ShaderData::Textures::NAME.Create(D3D11GetDevice(), D3D11GetContext(), c_width, c_height)) return false; \
+        } else { \
+            if(!ShaderData::Textures::NAME.LoadTGA(D3D11GetDevice(), D3D11GetContext(), FILENAME)) return false; \
+        }
     #include "ShaderTypesList.h"
 
     // write some triangles
@@ -217,7 +220,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
         }
     );
     if (!writeOK)
-        done = true;
+        return false;
 
     writeOK = ShaderData::StructuredBuffers::Input.Write(
         D3D11GetContext(),
@@ -230,21 +233,16 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
         }
     );
     if (!writeOK)
-        done = true;
+        return false;
 
-    CShader shader;
-    if (!shader.Load(D3D11GetDevice(), WindowGetHWND(), L"Shaders/shader.fx", ShaderData::VertexFormats::PosColorUV, ShaderData::VertexFormats::PosColorUVElements, shaderDebug))
-        done = true;
+    if (!g_shader.Load(D3D11GetDevice(), WindowGetHWND(), L"Shaders/shader.fx", ShaderData::VertexFormats::PosColorUV, ShaderData::VertexFormats::PosColorUVElements, c_shaderDebug))
+        return false;
 
-    // TODO: delete when working
-    // compute shader info: http://recreationstudios.blogspot.com/2010/04/simple-compute-shader-example.html
-    CComputeShader computeShader;
-    if (!computeShader.Load(D3D11GetDevice(), WindowGetHWND(), L"Shaders/computeshader.fx", shaderDebug))
-        done = true;
+    if (!g_computeShader.Load(D3D11GetDevice(), WindowGetHWND(), L"Shaders/computeshader.fx", c_shaderDebug))
+        return false;
 
     // create a simple triangle model
-    CModel<ShaderTypes::VertexFormats::PosColorUV> model;
-    writeOK = model.Create(
+    writeOK = g_model.Create(
         D3D11GetDevice(),
         [] (std::vector<ShaderTypes::VertexFormats::PosColorUV>& vertexData, std::vector<unsigned long>& indexData)
         {
@@ -275,22 +273,29 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
     );
 
     if (!writeOK)
-        done = true;
+        return false;
 
-    CRenderTarget testBuffer;
-    if (!testBuffer.Create(D3D11GetDevice(), D3D11GetContext(), width, height))
-        done = true;
+    if (!g_testBuffer.Create(D3D11GetDevice(), D3D11GetContext(), c_width, c_height))
+        return false;
 
-    // TODO: temp! write to test buffer render target
-    //testBuffer.SetAsRenderTarget(D3D11GetContext());
+    return true;
+}
 
-    size_t dispatchX = 1 + width / 32;
-    size_t dispatchY = 1 + height / 32;
+int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow)
+{
+    bool done = !init();
+
+    // TODO: remove if we don't need to ever change render targets
+    //g_testBuffer.SetAsRenderTarget(D3D11GetContext());
+
+    const size_t dispatchX = 1 + c_width / 32;
+    const size_t dispatchY = 1 + c_height / 32;
 
     size_t frameNumber = 0; // TODO: temp!
     while (!done)
     {
         // Handle the windows messages.
+        MSG msg;
         if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
         {
             TranslateMessage(&msg);
@@ -319,18 +324,18 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
                 done = true;
 
             // compute shader
-            FillShaderParams<EShaderType::compute>(D3D11GetContext(), computeShader.GetReflector());
-            computeShader.Dispatch(D3D11GetContext(), dispatchX, dispatchY, 1);
-            UnbindShaderTextures<EShaderType::compute>(D3D11GetContext(), computeShader.GetReflector());
+            FillShaderParams<EShaderType::compute>(D3D11GetContext(), g_computeShader.GetReflector());
+            g_computeShader.Dispatch(D3D11GetContext(), dispatchX, dispatchY, 1);
+            UnbindShaderTextures<EShaderType::compute>(D3D11GetContext(), g_computeShader.GetReflector());
 
             // vs & ps
             D3D11BeginScene(0.4f, 0.0f, 0.4f, 1.0f);
-            FillShaderParams<EShaderType::vertex>(D3D11GetContext(), shader.GetVSReflector());
-            FillShaderParams<EShaderType::pixel>(D3D11GetContext(), shader.GetPSReflector());
-            model.Render(D3D11GetContext());
-            shader.Draw(D3D11GetContext(), model.GetIndexCount());
-            UnbindShaderTextures<EShaderType::vertex>(D3D11GetContext(), shader.GetVSReflector());
-            UnbindShaderTextures<EShaderType::pixel>(D3D11GetContext(), shader.GetPSReflector());
+            FillShaderParams<EShaderType::vertex>(D3D11GetContext(), g_shader.GetVSReflector());
+            FillShaderParams<EShaderType::pixel>(D3D11GetContext(), g_shader.GetPSReflector());
+            g_model.Render(D3D11GetContext());
+            g_shader.Draw(D3D11GetContext(), g_model.GetIndexCount());
+            UnbindShaderTextures<EShaderType::vertex>(D3D11GetContext(), g_shader.GetVSReflector());
+            UnbindShaderTextures<EShaderType::pixel>(D3D11GetContext(), g_shader.GetPSReflector());
             D3D11EndScene();
 
             ++frameNumber;
