@@ -5,7 +5,7 @@
 #include "Utils.h"
 
 // TODO: how to handle sampler states? wrap, clamp, linear interp etc
-// TODO: look for anything else that needs reflection or cleanup before moving on to ray marching stuff
+// TODO: look for anything else that needs reflection or cleanup before moving on to path tracing stuff
 
 enum class EShaderType
 {

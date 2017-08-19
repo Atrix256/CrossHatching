@@ -5,6 +5,9 @@
 #pragma comment(lib, "dxguid.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 
+// TODO: should we clean this up to use auto release pointers? i think so. make a class that holds all this stuff.
+// TODO: make this use the render target class?
+
 
 bool m_vsync_enabled;
 int m_videoCardMemory;
