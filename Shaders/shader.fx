@@ -24,8 +24,7 @@ PixelInputType vs_main (PosColorUV input)
 {
     PixelInputType output;
 
-    input.position.w = 1.0f;
-    output.position = input.position;
+    output.position.xyz = input.position;
     output.position.w = 2.0f;
 
     output.color = input.color * pixelColor;

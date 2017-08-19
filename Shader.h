@@ -4,10 +4,8 @@
 #include <d3dcompiler.h>
 #include "Utils.h"
 
-
-// TODO: how to handle vertex format? or don't deal with it as you only have full screen quads? Yeah we should, will be nicer
 // TODO: how to handle sampler states? wrap, clamp, linear interp etc
-// TODO: look for anything else that needs reflection!
+// TODO: look for anything else that needs reflection or cleanup before moving on to ray marching stuff
 
 enum class EShaderType
 {

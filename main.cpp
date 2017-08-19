@@ -10,8 +10,6 @@
 #include "ConstantBuffer.h"
 #include "StructuredBuffer.h"
 
-// TODO: make the model use the vertex format as a template parameter? maybe need a "write" function to fill it in.
-
 namespace ShaderData
 {
     namespace ConstantBuffers
@@ -244,8 +242,39 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
     if (!computeShader.Load(D3D11GetDevice(), WindowGetHWND(), L"Shaders/computeshader.fx", shaderDebug))
         done = true;
 
-    CModel model;
-    if (!model.Load(D3D11GetDevice()))
+    // create a simple triangle model
+    CModel<ShaderTypes::VertexFormats::PosColorUV> model;
+    writeOK = model.Create(
+        D3D11GetDevice(),
+        [] (std::vector<ShaderTypes::VertexFormats::PosColorUV>& vertexData, std::vector<unsigned long>& indexData)
+        {
+            // Create the vertex array.
+            vertexData.resize(3);
+
+            // Create the index array.
+            indexData.resize(3);
+
+            // Load the vertex array with data.
+            vertexData[0].position = { -1.0f, -1.0f, 0.0f };  // Bottom left.
+            vertexData[0].color = { 1.0f, 1.0f, 0.0f, 1.0f };
+            vertexData[0].uv = { 0.0f, 0.0f };
+
+            vertexData[1].position = { 0.0f, 1.0f, 0.0f };  // Top middle.
+            vertexData[1].color = { 0.0f, 1.0f, 1.0f, 1.0f };
+            vertexData[1].uv = { 0.5f, 1.0f };
+
+            vertexData[2].position = { 1.0f, -1.0f, 0.0f };  // Bottom right.
+            vertexData[2].color = { 1.0f, 0.0f, 1.0f, 1.0f };
+            vertexData[2].uv = { 1.0f, 0.0f };
+
+            // Load the index array with data.
+            indexData[0] = 0;  // Bottom left.
+            indexData[1] = 1;  // Top middle.
+            indexData[2] = 2;  // Bottom right.
+        }
+    );
+
+    if (!writeOK)
         done = true;
 
     CRenderTarget testBuffer;
