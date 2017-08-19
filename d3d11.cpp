@@ -1,4 +1,5 @@
 #include "d3d11.h"
+#include <vector>
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -8,20 +9,7 @@
 // TODO: should we clean this up to use auto release pointers? i think so. make a class that holds all this stuff.
 // TODO: make this use the render target class?
 
-
-bool m_vsync_enabled;
-int m_videoCardMemory;
-char m_videoCardDescription[128];
-IDXGISwapChain* m_swapChain;
-ID3D11Device* m_device;
-ID3D11DeviceContext* m_deviceContext;
-ID3D11RenderTargetView* m_renderTargetView;
-ID3D11Texture2D* m_depthStencilBuffer;
-ID3D11DepthStencilState* m_depthStencilState;
-ID3D11DepthStencilView* m_depthStencilView;
-ID3D11RasterizerState* m_rasterState;
-
-bool D3D11Init (
+bool CD3D11::Init (
     size_t screenWidth,
     size_t screenHeight,
     bool vsync,
@@ -29,68 +17,60 @@ bool D3D11Init (
     bool fullscreen,
     float screenDepth,
     float screenNear,
-    bool debug
-)
+    bool debug)
 {
     HRESULT result;
-    IDXGIFactory* factory;
-    IDXGIAdapter* adapter;
-    IDXGIOutput* adapterOutput;
+    CAutoReleasePointer<IDXGIFactory> factory;
+    CAutoReleasePointer<IDXGIAdapter> adapter;
+    CAutoReleasePointer<IDXGIOutput> adapterOutput;
     unsigned int numModes, i, numerator, denominator;
-    DXGI_MODE_DESC* displayModeList;
+    std::vector<DXGI_MODE_DESC> displayModeList;
     DXGI_ADAPTER_DESC adapterDesc;
     DXGI_SWAP_CHAIN_DESC swapChainDesc;
     D3D_FEATURE_LEVEL featureLevel;
-    ID3D11Texture2D* backBufferPtr;
+    CAutoReleasePointer<ID3D11Texture2D> backBufferPtr;
     D3D11_TEXTURE2D_DESC depthBufferDesc;
     D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
     D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
     D3D11_RASTERIZER_DESC rasterDesc;
     D3D11_VIEWPORT viewport;
-    float fieldOfView, screenAspect;
-
 
     // Store the vsync setting.
     m_vsync_enabled = vsync;
 
-
     // Create a DirectX graphics interface factory.
-    result = CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)&factory);
+    result = CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)&factory.m_ptr);
     if (FAILED(result))
     {
         return false;
     }
 
     // Use the factory to create an adapter for the primary graphics interface (video card).
-    result = factory->EnumAdapters(0, &adapter);
+    result = factory.m_ptr->EnumAdapters(0, &adapter.m_ptr);
     if (FAILED(result))
     {
         return false;
     }
 
     // Enumerate the primary adapter output (monitor).
-    result = adapter->EnumOutputs(0, &adapterOutput);
+    result = adapter.m_ptr->EnumOutputs(0, &adapterOutput.m_ptr);
     if (FAILED(result))
     {
         return false;
     }
 
     // Get the number of modes that fit the DXGI_FORMAT_R8G8B8A8_UNORM display format for the adapter output (monitor).
-    result = adapterOutput->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_ENUM_MODES_INTERLACED, &numModes, NULL);
+    result = adapterOutput.m_ptr->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_ENUM_MODES_INTERLACED, &numModes, NULL);
     if (FAILED(result))
     {
         return false;
     }
 
     // Create a list to hold all the possible display modes for this monitor/video card combination.
-    displayModeList = new DXGI_MODE_DESC[numModes];
-    if (!displayModeList)
-    {
-        return false;
-    }
+    displayModeList.resize(numModes);
 
     // Now fill the display mode list structures.
-    result = adapterOutput->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_ENUM_MODES_INTERLACED, &numModes, displayModeList);
+    result = adapterOutput.m_ptr->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_ENUM_MODES_INTERLACED, &numModes, &displayModeList[0]);
     if (FAILED(result))
     {
         return false;
@@ -111,30 +91,11 @@ bool D3D11Init (
     }
 
     // Get the adapter (video card) description.
-    result = adapter->GetDesc(&adapterDesc);
+    result = adapter.m_ptr->GetDesc(&adapterDesc);
     if (FAILED(result))
     {
         return false;
     }
-
-    // Store the dedicated video card memory in megabytes.
-    m_videoCardMemory = (int)(adapterDesc.DedicatedVideoMemory / 1024 / 1024);
-
-    // Release the display mode list.
-    delete[] displayModeList;
-    displayModeList = 0;
-
-    // Release the adapter output.
-    adapterOutput->Release();
-    adapterOutput = 0;
-
-    // Release the adapter.
-    adapter->Release();
-    adapter = 0;
-
-    // Release the factory.
-    factory->Release();
-    factory = 0;
 
     // Initialize the swap chain description.
     ZeroMemory(&swapChainDesc, sizeof(swapChainDesc));
@@ -196,30 +157,25 @@ bool D3D11Init (
 
     // Create the swap chain, Direct3D device, and Direct3D device context.
     result = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, debug ? D3D11_CREATE_DEVICE_DEBUG : 0, &featureLevel, 1,
-        D3D11_SDK_VERSION, &swapChainDesc, &m_swapChain, &m_device, NULL, &m_deviceContext);
+        D3D11_SDK_VERSION, &swapChainDesc, &m_swapChain.m_ptr, &m_device.m_ptr, NULL, &m_deviceContext.m_ptr);
     if (FAILED(result))
     {
         return false;
     }
 
     // Get the pointer to the back buffer.
-    result = m_swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&backBufferPtr);
+    result = m_swapChain.m_ptr->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&backBufferPtr.m_ptr);
     if (FAILED(result))
     {
         return false;
     }
 
     // Create the render target view with the back buffer pointer.
-    result = m_device->CreateRenderTargetView(backBufferPtr, NULL, &m_renderTargetView);
+    result = m_device.m_ptr->CreateRenderTargetView(backBufferPtr.m_ptr, NULL, &m_renderTargetView.m_ptr);
     if (FAILED(result))
     {
         return false;
     }
-
-    // Release pointer to the back buffer as we no longer need it.
-    backBufferPtr->Release();
-    backBufferPtr = 0;
-
 
     // Initialize the description of the depth buffer.
     ZeroMemory(&depthBufferDesc, sizeof(depthBufferDesc));
@@ -238,7 +194,7 @@ bool D3D11Init (
     depthBufferDesc.MiscFlags = 0;
 
     // Create the texture for the depth buffer using the filled out description.
-    result = m_device->CreateTexture2D(&depthBufferDesc, NULL, &m_depthStencilBuffer);
+    result = m_device.m_ptr->CreateTexture2D(&depthBufferDesc, NULL, &m_depthStencilBuffer.m_ptr);
     if (FAILED(result))
     {
         return false;
@@ -269,14 +225,14 @@ bool D3D11Init (
     depthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
 
     // Create the depth stencil state.
-    result = m_device->CreateDepthStencilState(&depthStencilDesc, &m_depthStencilState);
+    result = m_device.m_ptr->CreateDepthStencilState(&depthStencilDesc, &m_depthStencilState.m_ptr);
     if (FAILED(result))
     {
         return false;
     }
 
     // Set the depth stencil state.
-    m_deviceContext->OMSetDepthStencilState(m_depthStencilState, 1);
+    m_deviceContext.m_ptr->OMSetDepthStencilState(m_depthStencilState.m_ptr, 1);
 
     // Initialize the depth stencil view.
     ZeroMemory(&depthStencilViewDesc, sizeof(depthStencilViewDesc));
@@ -287,14 +243,14 @@ bool D3D11Init (
     depthStencilViewDesc.Texture2D.MipSlice = 0;
 
     // Create the depth stencil view.
-    result = m_device->CreateDepthStencilView(m_depthStencilBuffer, &depthStencilViewDesc, &m_depthStencilView);
+    result = m_device.m_ptr->CreateDepthStencilView(m_depthStencilBuffer.m_ptr, &depthStencilViewDesc, &m_depthStencilView.m_ptr);
     if (FAILED(result))
     {
         return false;
     }
 
     // Bind the render target view and depth stencil buffer to the output render pipeline.
-    m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
+    m_deviceContext.m_ptr->OMSetRenderTargets(1, &m_renderTargetView.m_ptr, m_depthStencilView.m_ptr);
 
     // Setup the raster description which will determine how and what polygons will be drawn.
     rasterDesc.AntialiasedLineEnable = false;
@@ -309,14 +265,14 @@ bool D3D11Init (
     rasterDesc.SlopeScaledDepthBias = 0.0f;
 
     // Create the rasterizer state from the description we just filled out.
-    result = m_device->CreateRasterizerState(&rasterDesc, &m_rasterState);
+    result = m_device.m_ptr->CreateRasterizerState(&rasterDesc, &m_rasterState.m_ptr);
     if (FAILED(result))
     {
         return false;
     }
 
     // Now set the rasterizer state.
-    m_deviceContext->RSSetState(m_rasterState);
+    m_deviceContext.m_ptr->RSSetState(m_rasterState.m_ptr);
 
     // Setup the viewport for rendering.
     viewport.Width = (float)screenWidth;
@@ -327,74 +283,21 @@ bool D3D11Init (
     viewport.TopLeftY = 0.0f;
 
     // Create the viewport.
-    m_deviceContext->RSSetViewports(1, &viewport);
-
-    // Setup the projection matrix.
-    fieldOfView = 3.141592654f / 4.0f;
-    screenAspect = (float)screenWidth / (float)screenHeight;
+    m_deviceContext.m_ptr->RSSetViewports(1, &viewport);
 
     return true;
 }
 
-void D3D11Shutdown()
+CD3D11::~CD3D11()
 {
-
     // Before shutting down set to windowed mode or when you release the swap chain it will throw an exception.
-    if (m_swapChain)
+    if (m_swapChain.m_ptr)
     {
-        m_swapChain->SetFullscreenState(false, NULL);
-    }
-
-    if (m_rasterState)
-    {
-        m_rasterState->Release();
-        m_rasterState = 0;
-    }
-
-    if (m_depthStencilView)
-    {
-        m_depthStencilView->Release();
-        m_depthStencilView = 0;
-    }
-
-    if (m_depthStencilState)
-    {
-        m_depthStencilState->Release();
-        m_depthStencilState = 0;
-    }
-
-    if (m_depthStencilBuffer)
-    {
-        m_depthStencilBuffer->Release();
-        m_depthStencilBuffer = 0;
-    }
-
-    if (m_renderTargetView)
-    {
-        m_renderTargetView->Release();
-        m_renderTargetView = 0;
-    }
-
-    if (m_deviceContext)
-    {
-        m_deviceContext->Release();
-        m_deviceContext = 0;
-    }
-
-    if (m_device)
-    {
-        m_device->Release();
-        m_device = 0;
-    }
-
-    if (m_swapChain)
-    {
-        m_swapChain->Release();
-        m_swapChain = 0;
+        m_swapChain.m_ptr->SetFullscreenState(false, NULL);
     }
 }
 
-void D3D11BeginScene (float red, float green, float blue, float alpha)
+void CD3D11::BeginScene (float red, float green, float blue, float alpha)
 {
     float color[4];
 
@@ -405,33 +308,23 @@ void D3D11BeginScene (float red, float green, float blue, float alpha)
     color[3] = alpha;
 
     // Clear the back buffer.
-    m_deviceContext->ClearRenderTargetView(m_renderTargetView, color);
+    m_deviceContext.m_ptr->ClearRenderTargetView(m_renderTargetView.m_ptr, color);
 
     // Clear the depth buffer.
-    m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+    m_deviceContext.m_ptr->ClearDepthStencilView(m_depthStencilView.m_ptr, D3D11_CLEAR_DEPTH, 1.0f, 0);
 }
 
-void D3D11EndScene ()
+void CD3D11::EndScene ()
 {
     // Present the back buffer to the screen since rendering is complete.
     if (m_vsync_enabled)
     {
         // Lock to screen refresh rate.
-        m_swapChain->Present(1, 0);
+        m_swapChain.m_ptr->Present(1, 0);
     }
     else
     {
         // Present as fast as possible.
-        m_swapChain->Present(0, 0);
+        m_swapChain.m_ptr->Present(0, 0);
     }
-}
-
-ID3D11Device* D3D11GetDevice()
-{
-    return m_device;
-}
-
-ID3D11DeviceContext* D3D11GetContext ()
-{
-    return m_deviceContext;
 }
