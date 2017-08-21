@@ -24,6 +24,9 @@ SPixelInput vs_main(Pos2D input)
 //----------------------------------------------------------------------------
 float4 ps_main(SPixelInput input) : SV_TARGET
 {
-    return stone.Sample(SamplerLinearWrap, input.uv);
-    //return rwtexture.Sample(SamplerLinearWrap, input.uv);
+    //return pathTraceOutput_rw[input.uv * float2(800, 600)].rgba;
+    
+    //= float4(frac(threadID.xy / 100.0f), 0, 1) * incolor * pixelColor;
+
+    return pathTraceOutput.Sample(SamplerLinearWrap, input.uv);
 }

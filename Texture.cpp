@@ -203,7 +203,7 @@ bool CTexture::Create (ID3D11Device* device, ID3D11DeviceContext* deviceContext,
     srvDesc.Format = textureDesc.Format;
     srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
     srvDesc.Texture2D.MostDetailedMip = 0;
-    srvDesc.Texture2D.MipLevels = -1;
+    srvDesc.Texture2D.MipLevels = 1;
 
     // Create the shader resource view for the texture.
     hResult = device->CreateShaderResourceView(m_texture.m_ptr, &srvDesc, &m_textureSRV.m_ptr);

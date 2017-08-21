@@ -40,6 +40,12 @@
     <FxCompile Include="Shaders\CopyTexture.fx">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="Shaders\ShowPathTrace.fx">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\PathTrace.fx">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Shaders">
