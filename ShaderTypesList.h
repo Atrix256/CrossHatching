@@ -130,6 +130,10 @@ VERTEX_FORMAT_BEGIN(PosColorUV)
     VERTEX_FORMAT_FIELD(uv, TEXCOORD, 0, float2, DXGI_FORMAT_R32G32_FLOAT)
 VERTEX_FORMAT_END
 
+VERTEX_FORMAT_BEGIN(Pos2D)
+    VERTEX_FORMAT_FIELD(position, POSITION, 0, float2, DXGI_FORMAT_R32G32_FLOAT)
+VERTEX_FORMAT_END
+
 //=================================================================
 //                       Textures
 //=================================================================

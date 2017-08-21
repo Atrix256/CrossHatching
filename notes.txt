@@ -1,3 +1,4 @@
+* get rid of depth, depth test, and back face culling
 
 i think i'll need a deferred renderer type setup? I'll have an intermediary buffer that has uv and intensity that i will then process with the shader.
 
@@ -28,6 +29,8 @@ clean up code (spaces after function names etc)
 ? I'm thinking we probably want window borders / close button on this window.
 
 ? do we need render target stuff? maybe make the d3d class use it for the main render target?
+
+* get rid of un-needed shaders etc when things are working well!
 
 ================================= HIGH LEVEL GOALS =================================
 

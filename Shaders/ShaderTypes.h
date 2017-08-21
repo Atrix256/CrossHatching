@@ -30,6 +30,11 @@ struct PosColorUV
   float2 uv : TEXCOORD0;
 };
 
+struct Pos2D
+{
+  float2 position : POSITION0;
+};
+
 //----------------------------------------------------------------------------
 //Structured Buffer Types
 //----------------------------------------------------------------------------

@@ -25,6 +25,9 @@ CComputeShader g_computeShader;
 CModel<ShaderTypes::VertexFormats::PosColorUV> g_model;
 CRenderTarget g_testBuffer;
 
+CModel<ShaderTypes::VertexFormats::Pos2D> g_fullScreenQuad;
+CShader g_shaderCopyTexture;
+
 // automatically reflected things for shaders
 namespace ShaderData
 {
@@ -253,11 +256,36 @@ bool init ()
     if (!writeOK)
         return false;
 
+    if (!g_shaderCopyTexture.Load(g_d3d.Device(), WindowGetHWND(), L"Shaders/CopyTexture.fx", ShaderData::VertexFormats::PosColorUV, ShaderData::VertexFormats::PosColorUVElements, c_shaderDebug))
+        return false;
+
     if (!g_shader.Load(g_d3d.Device(), WindowGetHWND(), L"Shaders/shader.fx", ShaderData::VertexFormats::PosColorUV, ShaderData::VertexFormats::PosColorUVElements, c_shaderDebug))
         return false;
 
     if (!g_computeShader.Load(g_d3d.Device(), WindowGetHWND(), L"Shaders/computeshader.fx", c_shaderDebug))
         return false;
+
+    // make a full screen quad
+    writeOK = g_fullScreenQuad.Create(
+        g_d3d.Device(),
+        [] (std::vector<ShaderTypes::VertexFormats::Pos2D>& vertexData, std::vector<unsigned long>& indexData)
+        {
+            vertexData.resize(4);
+            indexData.resize(4);
+
+            vertexData[0] = { -1.0f, -1.0f };
+            vertexData[1] = {  1.0f, -1.0f };
+            vertexData[2] = {  1.0f,  1.0f };
+            vertexData[3] = { -1.0f,  1.0f };
+
+            indexData[0] = 0;
+            indexData[1] = 1;
+            indexData[2] = 2;
+            indexData[3] = 3;
+
+            // TODO: this model isn't working as a full screen quad. It renders "triangle list" so need every triangle called out explicitly!
+        }
+    );
 
     // create a simple triangle model
     writeOK = g_model.Create(
@@ -347,14 +375,28 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
             UnbindShaderTextures<EShaderType::compute>(g_d3d.Context(), g_computeShader.GetReflector());
 
             // vs & ps
-            g_d3d.BeginScene(0.4f, 0.0f, 0.4f, 1.0f);
-            FillShaderParams<EShaderType::vertex>(g_d3d.Context(), g_shader.GetVSReflector());
-            FillShaderParams<EShaderType::pixel>(g_d3d.Context(), g_shader.GetPSReflector());
-            g_model.Render(g_d3d.Context());
-            g_shader.Draw(g_d3d.Context(), g_model.GetIndexCount());
-            UnbindShaderTextures<EShaderType::vertex>(g_d3d.Context(), g_shader.GetVSReflector());
-            UnbindShaderTextures<EShaderType::pixel>(g_d3d.Context(), g_shader.GetPSReflector());
-            g_d3d.EndScene();
+            #if 0
+                g_d3d.BeginScene(0.4f, 0.0f, 0.4f, 1.0f);
+                FillShaderParams<EShaderType::vertex>(g_d3d.Context(), g_shader.GetVSReflector());
+                FillShaderParams<EShaderType::pixel>(g_d3d.Context(), g_shader.GetPSReflector());
+                g_model.Render(g_d3d.Context());
+                g_shader.Draw(g_d3d.Context(), g_model.GetIndexCount());
+                UnbindShaderTextures<EShaderType::vertex>(g_d3d.Context(), g_shader.GetVSReflector());
+                UnbindShaderTextures<EShaderType::pixel>(g_d3d.Context(), g_shader.GetPSReflector());
+                g_d3d.EndScene();
+            #else
+                g_d3d.BeginScene(0.4f, 0.0f, 0.4f, 1.0f);
+                FillShaderParams<EShaderType::vertex>(g_d3d.Context(), g_shader.GetVSReflector());
+                FillShaderParams<EShaderType::pixel>(g_d3d.Context(), g_shader.GetPSReflector());
+
+                g_fullScreenQuad.Render(g_d3d.Context());
+
+                g_shaderCopyTexture.Draw(g_d3d.Context(), g_fullScreenQuad.GetIndexCount());
+
+                UnbindShaderTextures<EShaderType::vertex>(g_d3d.Context(), g_shader.GetVSReflector());
+                UnbindShaderTextures<EShaderType::pixel>(g_d3d.Context(), g_shader.GetPSReflector());
+                g_d3d.EndScene();
+            #endif
 
             ++frameNumber;
         }
