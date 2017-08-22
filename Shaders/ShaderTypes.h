@@ -9,13 +9,13 @@ SamplerState SamplerLinearWrap;
 //Textures
 //----------------------------------------------------------------------------
 Texture2D stone;
-globallycoherent RWTexture2D<float4> stone_rw;
+RWTexture2D<float4> stone_rw;
 
 Texture2D rwtexture;
-globallycoherent RWTexture2D<float4> rwtexture_rw;
+RWTexture2D<float4> rwtexture_rw;
 
 Texture2D pathTraceOutput;
-globallycoherent RWTexture2D<float4> pathTraceOutput_rw;
+RWTexture2D<float4> pathTraceOutput_rw;
 
 //----------------------------------------------------------------------------
 //Constant Buffers

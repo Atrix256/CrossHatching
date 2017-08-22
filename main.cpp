@@ -81,7 +81,7 @@ bool WriteShaderTypesHLSL (void)
 
     // write the texture declarations
     fprintf(file, "//----------------------------------------------------------------------------\n//Textures\n//----------------------------------------------------------------------------\n");
-    #define TEXTURE(NAME, FILENAME) fprintf(file, "Texture2D " #NAME ";\ngloballycoherent RWTexture2D<float4> " #NAME "_rw;\n\n");
+    #define TEXTURE(NAME, FILENAME) fprintf(file, "Texture2D " #NAME ";\nRWTexture2D<float4> " #NAME "_rw;\n\n");
     #include "ShaderTypesList.h"
 
     // write the cbuffer declarations
@@ -202,7 +202,12 @@ void FillShaderParams (ID3D11DeviceContext* deviceContext, ID3D11ShaderReflectio
     if (!FAILED(result))
     {
         ID3D11SamplerState* sampler = g_d3d.SamplerLinearWrap();
-        deviceContext->PSSetSamplers(desc.BindPoint, 1, &sampler);
+        if (SHADER_TYPE == EShaderType::vertex)
+            deviceContext->VSSetSamplers(desc.BindPoint, 1, &sampler);
+        else if (SHADER_TYPE == EShaderType::pixel)
+            deviceContext->PSSetSamplers(desc.BindPoint, 1, &sampler);
+        else
+            deviceContext->CSSetSamplers(desc.BindPoint, 1, &sampler);
     }
 }
 
@@ -378,17 +383,13 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
             if (!writeOk)
                 done = true;
 
-            // compute shader
-            //FillShaderParams<EShaderType::compute>(g_d3d.Context(), g_computeShader.GetReflector());
-            //g_computeShader.Dispatch(g_d3d.Context(), dispatchX, dispatchY, 1);
-            //UnbindShaderTextures<EShaderType::compute>(g_d3d.Context(), g_computeShader.GetReflector());
-
-            FillShaderParams<EShaderType::compute>(g_d3d.Context(), g_pathTrace.GetReflector());
-            g_pathTrace.Dispatch(g_d3d.Context(), dispatchX, dispatchY, 1);
-            UnbindShaderTextures<EShaderType::compute>(g_d3d.Context(), g_pathTrace.GetReflector());
-
-            // vs & ps
             #if 0
+                // compute
+                FillShaderParams<EShaderType::compute>(g_d3d.Context(), g_computeShader.GetReflector());
+                g_computeShader.Dispatch(g_d3d.Context(), dispatchX, dispatchY, 1);
+                UnbindShaderTextures<EShaderType::compute>(g_d3d.Context(), g_computeShader.GetReflector());
+
+                // vs & ps
                 g_d3d.BeginScene(0.4f, 0.0f, 0.4f, 1.0f);
                 FillShaderParams<EShaderType::vertex>(g_d3d.Context(), g_shader.GetVSReflector());
                 FillShaderParams<EShaderType::pixel>(g_d3d.Context(), g_shader.GetPSReflector());
@@ -398,16 +399,19 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
                 UnbindShaderTextures<EShaderType::pixel>(g_d3d.Context(), g_shader.GetPSReflector());
                 g_d3d.EndScene();
             #else
+                // compute
+                FillShaderParams<EShaderType::compute>(g_d3d.Context(), g_pathTrace.GetReflector());
+                g_pathTrace.Dispatch(g_d3d.Context(), dispatchX, dispatchY, 1);
+                UnbindShaderTextures<EShaderType::compute>(g_d3d.Context(), g_pathTrace.GetReflector());
+
+                // vs & ps
                 g_d3d.BeginScene(0.4f, 0.0f, 0.4f, 1.0f);
-                FillShaderParams<EShaderType::vertex>(g_d3d.Context(), g_shader.GetVSReflector());
-                FillShaderParams<EShaderType::pixel>(g_d3d.Context(), g_shader.GetPSReflector());
-
+                FillShaderParams<EShaderType::vertex>(g_d3d.Context(), g_shaderShowPathTrace.GetVSReflector());
+                FillShaderParams<EShaderType::pixel>(g_d3d.Context(), g_shaderShowPathTrace.GetPSReflector());
                 g_fullScreenMesh.Render(g_d3d.Context());
-
                 g_shaderShowPathTrace.Draw(g_d3d.Context(), g_fullScreenMesh.GetIndexCount());
-
-                UnbindShaderTextures<EShaderType::vertex>(g_d3d.Context(), g_shader.GetVSReflector());
-                UnbindShaderTextures<EShaderType::pixel>(g_d3d.Context(), g_shader.GetPSReflector());
+                UnbindShaderTextures<EShaderType::vertex>(g_d3d.Context(), g_shaderShowPathTrace.GetVSReflector());
+                UnbindShaderTextures<EShaderType::pixel>(g_d3d.Context(), g_shaderShowPathTrace.GetPSReflector());
                 g_d3d.EndScene();
             #endif
 
