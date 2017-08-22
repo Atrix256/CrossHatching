@@ -27,7 +27,9 @@ cbuffer Constants
 
 cbuffer Scene
 {
-  float4 numSpheres;
+  float4 cameraPos_FOVX;
+  float4 cameraAt_FOVY;
+  float4 numSpheres_near;
 };
 
 //----------------------------------------------------------------------------

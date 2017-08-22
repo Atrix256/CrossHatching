@@ -1,26 +1,24 @@
+* set up a cornel box scene to start out.
+* objects need emissive and diffuse (single float) to do basic shading.
+
 * get rid of depth, depth test, and back face culling
+i don't think we need a depth buffer since it'll all be path traced, so remove that (eventually)
 
 i think i'll need a deferred renderer type setup? I'll have an intermediary buffer that has uv and intensity that i will then process with the shader.
 
-i don't think we need a depth buffer since it'll all be path traced, so remove that (eventually)
+a way to specify a scene? list spheres and meshes. they get loaded and passed through to the scene. Or have them hard coded
 
-a way to specify a scene? list spheres and meshes. they get loaded and passed through to the scene.
-
-allow a way to specify screen w/h and fullscreen. Command line?
+allow a way to specify screen w/h and fullscreen. Command line? or just leave it like it is.
 
 show fps / mspf
 
 test x64 and release
 
-TODO's
+TODO's in code
 
 Figure out how to get labels that show up in renderdoc
 
 Sean said he'd be willing to give me textures.
-
-Work with sean for the franklin booth technioque?
-
-? how do we make sure we don't write outside of the bounds in the compute shaders?
 
 clean up code (spaces after function names etc)
 
@@ -31,6 +29,15 @@ clean up code (spaces after function names etc)
 ? do we need render target stuff? maybe make the d3d class use it for the main render target?
 
 * get rid of un-needed shaders etc when things are working well!
+
+* sRGB correction
+
+================================= LATER IDEAS =================================
+
+* could do a lens and get depth of field effect.
+* reflections.
+* caustics and refraction could be interesting
+* Work with sean for the franklin booth technioque?
 
 ================================= HIGH LEVEL GOALS =================================
 

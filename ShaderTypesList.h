@@ -109,7 +109,9 @@ CONSTANT_BUFFER_BEGIN(Constants)
 CONSTANT_BUFFER_END
 
 CONSTANT_BUFFER_BEGIN(Scene)
-    CONSTANT_BUFFER_FIELD(numSpheres, float4)
+    CONSTANT_BUFFER_FIELD(cameraPos_FOVX, float4)
+    CONSTANT_BUFFER_FIELD(cameraAt_FOVY, float4)
+    CONSTANT_BUFFER_FIELD(numSpheres_near, float4)
 CONSTANT_BUFFER_END
 
 //=================================================================

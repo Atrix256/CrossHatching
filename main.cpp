@@ -17,6 +17,11 @@ const bool c_fullScreen = false;
 const bool c_vsync = true;
 const bool c_shaderDebug = true;
 const bool c_d3ddebug = true;
+const float c_fovX = 0.698132f; // 40 degrees
+const float c_fovY = c_fovX * float(c_height) / float(c_width);
+const float c_nearPlane = 0.1f;
+const float3 c_cameraPos = { 0.0f, 0.0f, -10.0f };
+const float3 c_cameraAt = { 0.0f, 0.0f, 0.0f };
 
 // globals
 CD3D11 g_d3d;
@@ -340,10 +345,13 @@ bool init ()
         g_d3d.Context(),
         [] (ShaderTypes::ConstantBuffers::Scene& scene)
         {
-            scene.numSpheres[0] = 3.0f;
-            scene.numSpheres[1] = 0.0f;
-            scene.numSpheres[2] = 0.0f;
-            scene.numSpheres[3] = 0.0f;
+            scene.numSpheres_near[0] = 3.0f;
+            scene.numSpheres_near[1] = c_nearPlane;
+            scene.numSpheres_near[2] = 0.0f;
+            scene.numSpheres_near[3] = 0.0f;
+
+            scene.cameraPos_FOVX = { c_cameraPos[0], c_cameraPos[1], c_cameraPos[2], c_fovX };
+            scene.cameraAt_FOVY = { c_cameraAt[0], c_cameraAt[1], c_cameraAt[2], c_fovY };
         }
     );
     if (!writeOK)
