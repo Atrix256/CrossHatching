@@ -335,6 +335,32 @@ bool init ()
     if (!writeOK)
         return false;
 
+    // TODO: temp scene data!
+    writeOK = ShaderData::ConstantBuffers::Scene.Write(
+        g_d3d.Context(),
+        [] (ShaderTypes::ConstantBuffers::Scene& scene)
+        {
+            scene.numSpheres[0] = 3.0f;
+            scene.numSpheres[1] = 0.0f;
+            scene.numSpheres[2] = 0.0f;
+            scene.numSpheres[3] = 0.0f;
+        }
+    );
+    if (!writeOK)
+        return false;
+
+    writeOK = ShaderData::StructuredBuffers::Spheres.Write(
+        g_d3d.Context(),
+        [] (std::array<ShaderTypes::StructuredBuffers::Sphere, 10>& spheres)
+        {
+            spheres[0].posRadius = { 0.0f, 0.0f, 0.0f, 1.0f };
+            spheres[1].posRadius = { 3.0f, 1.0f, 2.0f, 1.0f };
+            spheres[2].posRadius = { -2.0f, 3.0f, -1.0f, 1.0f };
+        }
+    );
+    if (!writeOK)
+        return false;
+
     if (!g_testBuffer.Create(g_d3d.Device(), g_d3d.Context(), c_width, c_height))
         return false;
 

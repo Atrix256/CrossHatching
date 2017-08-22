@@ -25,6 +25,11 @@ cbuffer Constants
   float4 pixelColor;
 };
 
+cbuffer Scene
+{
+  float4 numSpheres;
+};
+
 //----------------------------------------------------------------------------
 //Vertex Formats
 //----------------------------------------------------------------------------
@@ -43,6 +48,11 @@ struct Pos2D
 //----------------------------------------------------------------------------
 //Structured Buffer Types
 //----------------------------------------------------------------------------
+struct Sphere
+{
+  float4 posRadius;
+};
+
 struct Triangle
 {
   float3 position;
@@ -56,6 +66,8 @@ struct SBufferItem
 //----------------------------------------------------------------------------
 //Structured Buffers
 //----------------------------------------------------------------------------
+StructuredBuffer<Sphere> Spheres;
+
 StructuredBuffer<Triangle> Triangles;
 
 StructuredBuffer<SBufferItem> Input;

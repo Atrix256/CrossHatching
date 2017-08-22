@@ -108,9 +108,17 @@ CONSTANT_BUFFER_BEGIN(Constants)
     CONSTANT_BUFFER_FIELD(pixelColor, float4)
 CONSTANT_BUFFER_END
 
+CONSTANT_BUFFER_BEGIN(Scene)
+    CONSTANT_BUFFER_FIELD(numSpheres, float4)
+CONSTANT_BUFFER_END
+
 //=================================================================
 //                    Structured Buffers
 //=================================================================
+
+STRUCTURED_BUFFER_BEGIN(Spheres, Sphere, 10)
+    STRUCTURED_BUFFER_FIELD(posRadius, float4)
+STRUCTURED_BUFFER_END
 
 STRUCTURED_BUFFER_BEGIN(Triangles, Triangle, 10)
     STRUCTURED_BUFFER_FIELD(position, float3)
