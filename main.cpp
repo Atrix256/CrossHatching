@@ -11,8 +11,8 @@
 #include "StructuredBuffer.h"
 
 // settings
-const size_t c_width = 800;
-const size_t c_height = 600;
+const size_t c_width = 1500;
+const size_t c_height = 1000;
 const bool c_fullScreen = false;
 const bool c_vsync = true;
 const bool c_shaderDebug = true;
@@ -32,7 +32,6 @@ CRenderTarget g_testBuffer;
 
 CModel<ShaderTypes::VertexFormats::Pos2D> g_fullScreenMesh;
 CShader g_shaderCopyTexture;
-
 
 CComputeShader g_pathTrace;
 CShader g_shaderShowPathTrace;
@@ -250,9 +249,9 @@ bool init ()
         {
             for (size_t i = 0; i < 10; ++i)
             {
-                data[i].position[0] = float(i);
-                data[i].position[1] = float(i) + 0.1f;
-                data[i].position[2] = float(i) + 0.2f;
+                data[i].position_w[0] = float(i);
+                data[i].position_w[1] = float(i) + 0.1f;
+                data[i].position_w[2] = float(i) + 0.2f;
             }
         }
     );
@@ -345,10 +344,10 @@ bool init ()
         g_d3d.Context(),
         [] (ShaderTypes::ConstantBuffers::Scene& scene)
         {
-            scene.numSpheres_near[0] = 3.0f;
-            scene.numSpheres_near[1] = c_nearPlane;
-            scene.numSpheres_near[2] = 0.0f;
-            scene.numSpheres_near[3] = 0.0f;
+            scene.numSpheres_near_rngSeed_w[0] = 3.0f;
+            scene.numSpheres_near_rngSeed_w[1] = c_nearPlane;
+            scene.numSpheres_near_rngSeed_w[2] = 1.253461f;  // TODO: make this change every frame. could maybe even be time in seconds? dunno
+            scene.numSpheres_near_rngSeed_w[3] = 0.0f;
 
             scene.cameraPos_FOVX = { c_cameraPos[0], c_cameraPos[1], c_cameraPos[2], c_fovX };
             scene.cameraAt_FOVY = { c_cameraAt[0], c_cameraAt[1], c_cameraAt[2], c_fovY };
@@ -361,9 +360,13 @@ bool init ()
         g_d3d.Context(),
         [] (std::array<ShaderTypes::StructuredBuffers::Sphere, 10>& spheres)
         {
-            spheres[0].posRadius = { 0.0f, 0.0f, 0.0f, 1.0f };
-            spheres[1].posRadius = { 3.0f, 1.0f, 2.0f, 1.0f };
-            spheres[2].posRadius = { -2.0f, 3.0f, -1.0f, 1.0f };
+            spheres[0].position_Radius = { 0.0f, 0.0f, 0.0f, 1.0f };
+            spheres[1].position_Radius = { 3.0f, 1.0f, 2.0f, 1.0f };
+            spheres[2].position_Radius = { -2.0f, 3.0f, -1.0f, 1.0f };
+
+            spheres[0].albedo_Emissive_zw = { 0.0f, 1.0f, 0.0f, 0.0f };
+            spheres[1].albedo_Emissive_zw = { 1.0f, 0.1f, 0.0f, 0.0f };
+            spheres[2].albedo_Emissive_zw = { 1.0f, 0.1f, 0.0f, 0.0f };
         }
     );
     if (!writeOK)

@@ -29,7 +29,7 @@ cbuffer Scene
 {
   float4 cameraPos_FOVX;
   float4 cameraAt_FOVY;
-  float4 numSpheres_near;
+  float4 numSpheres_near_rngSeed_w;
 };
 
 //----------------------------------------------------------------------------
@@ -52,12 +52,13 @@ struct Pos2D
 //----------------------------------------------------------------------------
 struct Sphere
 {
-  float4 posRadius;
+  float4 position_Radius;
+  float4 albedo_Emissive_zw;
 };
 
 struct Triangle
 {
-  float3 position;
+  float4 position_w;
 };
 
 struct SBufferItem

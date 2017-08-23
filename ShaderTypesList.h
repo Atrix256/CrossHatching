@@ -111,7 +111,7 @@ CONSTANT_BUFFER_END
 CONSTANT_BUFFER_BEGIN(Scene)
     CONSTANT_BUFFER_FIELD(cameraPos_FOVX, float4)
     CONSTANT_BUFFER_FIELD(cameraAt_FOVY, float4)
-    CONSTANT_BUFFER_FIELD(numSpheres_near, float4)
+    CONSTANT_BUFFER_FIELD(numSpheres_near_rngSeed_w, float4)
 CONSTANT_BUFFER_END
 
 //=================================================================
@@ -119,11 +119,12 @@ CONSTANT_BUFFER_END
 //=================================================================
 
 STRUCTURED_BUFFER_BEGIN(Spheres, Sphere, 10)
-    STRUCTURED_BUFFER_FIELD(posRadius, float4)
+    STRUCTURED_BUFFER_FIELD(position_Radius, float4)
+    STRUCTURED_BUFFER_FIELD(albedo_Emissive_zw, float4)
 STRUCTURED_BUFFER_END
 
 STRUCTURED_BUFFER_BEGIN(Triangles, Triangle, 10)
-    STRUCTURED_BUFFER_FIELD(position, float3)
+    STRUCTURED_BUFFER_FIELD(position_w, float4)
 STRUCTURED_BUFFER_END
 
 STRUCTURED_BUFFER_BEGIN(Input, SBufferItem, 1)

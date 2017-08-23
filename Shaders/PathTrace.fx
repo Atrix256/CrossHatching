@@ -1,14 +1,66 @@
 #include "ShaderTypes.h"
 
-bool RayIntersectsSphere (in float3 rayPos, in float3 rayDir, in float4 spherePosRadius, inout float intersectTime, out float3 intersectNormal)
+static const float c_pi = 3.14159265359f;
+static const float c_rayEpsilon = 0.01f;
+
+// TODO: make rngseed have a different value every frame! (maybe pass time through instead or something...)
+// TODO: incrementally average samples
+// TODO: convert the repeated faked recursive functions into a for loop and then make a constant for number of iterations again.
+
+//----------------------------------------------------------------------------
+struct SRayHitInfo
+{
+    float  m_intersectTime;
+    float3 m_surfaceNormal;
+    float  m_albedo;
+    float  m_emissive;
+};
+
+//----------------------------------------------------------------------------
+// this is hash12() from the "Hash without Sine" shadertoy by Dave_Hoskins.
+// https://www.shadertoy.com/view/4djSRW
+
+float RandomFloat (float2 seed)
+{
+    float3 p3 = frac(float3(seed.xyx) * 443.8975);
+    p3 += dot(p3, p3.yzx + 19.19);
+    return frac((p3.x + p3.y) * p3.z);
+}
+
+//----------------------------------------------------------------------------
+float3 CosineSampleHemisphere (in float3 normal)
+{
+    // from smallpt path tracer: http://www.kevinbeason.com/smallpt/
+
+    float r1 = 2.0f * c_pi * RandomFloat(float2(numSpheres_near_rngSeed_w.z, 0.2435f));
+    float r2 = RandomFloat(float2(numSpheres_near_rngSeed_w.z, 0.8941f));
+    float r2s = sqrt(r2);
+
+    float3 w = normal;
+    float3 u;
+    if (abs(w[0]) > 0.1f)
+        u = cross(float3(0.0f, 1.0f, 0.0f), w);
+    else
+        u = cross(float3(1.0f, 0.0f, 0.0f), w);
+
+    u = normalize(u);
+    float3 v = cross(w, u);
+    float3 d = (u*cos(r1)*r2s + v*sin(r1)*r2s + w*sqrt(1.0f - r2));
+    d = normalize(d);
+
+    return d;
+}
+
+//----------------------------------------------------------------------------
+bool RayIntersectsSphere (in float3 rayPos, in float3 rayDir, in Sphere sphere, inout SRayHitInfo rayHitInfo)
 {
     //get the vector from the center of this circle to where the ray begins.
-    float3 m = rayPos - spherePosRadius.xyz;
+    float3 m = rayPos - sphere.position_Radius.xyz;
 
     //get the dot product of the above vector and the ray's vector
     float b = dot(m, rayDir);
 
-    float c = dot(m, m) - spherePosRadius.w * spherePosRadius.w;
+    float c = dot(m, m) - sphere.position_Radius.w * sphere.position_Radius.w;
 
     //exit if r's origin outside s (c > 0) and r pointing away from s (b > 0)
     if (c > 0.0 && b > 0.0)
@@ -29,36 +81,138 @@ bool RayIntersectsSphere (in float3 rayPos, in float3 rayDir, in float4 spherePo
         collisionTime = -b + sqrt(discr);
 
     //enforce a max distance if we should
-    if (intersectTime >= 0.0 && collisionTime > intersectTime)
+    if (rayHitInfo.m_intersectTime >= 0.0 && collisionTime > rayHitInfo.m_intersectTime)
         return false;
 
-    float3 normal = normalize((rayPos + rayDir * collisionTime) - spherePosRadius.xyz);
+    float3 normal = normalize((rayPos + rayDir * collisionTime) - sphere.position_Radius.xyz);
 
     // make sure normal is facing opposite of ray direction.
     // this is for if we are hitting the object from the inside / back side.
     if (dot(normal, rayDir) > 0.0f)
         normal *= -1.0f;
 
-    intersectTime = collisionTime;
-    intersectNormal = normal;
+    rayHitInfo.m_intersectTime = collisionTime;
+    rayHitInfo.m_surfaceNormal = normal;
+    rayHitInfo.m_albedo = sphere.albedo_Emissive_zw.x;
+    rayHitInfo.m_emissive = sphere.albedo_Emissive_zw.y;
     return true;
 }
 
-float4 PathTrace (in float3 rayPos, in float3 rayDir)
+//----------------------------------------------------------------------------
+SRayHitInfo ClosestIntersection (in float3 rayPos, in float3 rayDir)
 {
-    float intersectTime = -1.0f;
-    float3 intersectNormal = float3(0.0f, 0.0f, 0.0f);
+    SRayHitInfo rayHitInfo;
+    rayHitInfo.m_intersectTime = -1.0f;
 
-    int numSpheres = numSpheres_near.x;
+    int numSpheres = numSpheres_near_rngSeed_w.x;
     for (int i = 0; i < numSpheres; ++i)
-    {
-        RayIntersectsSphere(rayPos, rayDir, Spheres[i].posRadius, intersectTime, intersectNormal);
-    }
+        RayIntersectsSphere(rayPos, rayDir, Spheres[i], rayHitInfo);
 
-    if (intersectTime >= 0.0f)
-        return float4(0.0f, 1.0f, 0.0f, 1.0f);
-    else
-        return float4(1.0f, 0.0f, 0.0f, 1.0f);
+    return rayHitInfo;
+}
+
+//----------------------------------------------------------------------------
+float Light_Outgoing_0 (in SRayHitInfo rayHitInfo, in float3 rayHitPos, in float3 outDir)
+{
+    // start with emissive lighting
+    float light = rayHitInfo.m_emissive;
+
+    // return our recursively calculated light amount
+    return light;
+}
+
+//----------------------------------------------------------------------------
+float Light_Outgoing_1 (in SRayHitInfo rayHitInfo, in float3 rayHitPos, in float3 outDir)
+{
+    // start with emissive lighting
+    float light = rayHitInfo.m_emissive;
+
+    // add in a random recursive sample for global illumination
+    float3 newRayDir = CosineSampleHemisphere(rayHitInfo.m_surfaceNormal);
+    SRayHitInfo newRayHitInfo = ClosestIntersection(rayHitPos, newRayDir);
+    if (newRayHitInfo.m_intersectTime >= 0.0f)
+        light += Light_Outgoing_0(newRayHitInfo, rayHitPos + newRayDir * newRayHitInfo.m_intersectTime + -newRayDir * c_rayEpsilon, -newRayDir);
+
+    // return our recursively calculated light amount
+    return light;
+}
+
+//----------------------------------------------------------------------------
+float Light_Outgoing_2 (in SRayHitInfo rayHitInfo, in float3 rayHitPos, in float3 outDir)
+{
+    // start with emissive lighting
+    float light = rayHitInfo.m_emissive;
+
+    // add in a random recursive sample for global illumination
+    float3 newRayDir = CosineSampleHemisphere(rayHitInfo.m_surfaceNormal);
+    SRayHitInfo newRayHitInfo = ClosestIntersection(rayHitPos, newRayDir);
+    if (newRayHitInfo.m_intersectTime >= 0.0f)
+        light += Light_Outgoing_1(newRayHitInfo, rayHitPos + newRayDir * newRayHitInfo.m_intersectTime + -newRayDir * c_rayEpsilon, -newRayDir);
+
+    // return our recursively calculated light amount
+    return light;
+}
+
+//----------------------------------------------------------------------------
+float Light_Outgoing_3 (in SRayHitInfo rayHitInfo, in float3 rayHitPos, in float3 outDir)
+{
+    // start with emissive lighting
+    float light = rayHitInfo.m_emissive;
+
+    // add in a random recursive sample for global illumination
+    float3 newRayDir = CosineSampleHemisphere(rayHitInfo.m_surfaceNormal);
+    SRayHitInfo newRayHitInfo = ClosestIntersection(rayHitPos, newRayDir);
+    if (newRayHitInfo.m_intersectTime >= 0.0f)
+        light += Light_Outgoing_2(newRayHitInfo, rayHitPos + newRayDir * newRayHitInfo.m_intersectTime + -newRayDir * c_rayEpsilon, -newRayDir);
+
+    // return our recursively calculated light amount
+    return light;
+}
+
+//----------------------------------------------------------------------------
+float Light_Outgoing_4 (in SRayHitInfo rayHitInfo, in float3 rayHitPos, in float3 outDir)
+{
+    // start with emissive lighting
+    float light = rayHitInfo.m_emissive;
+
+    // add in a random recursive sample for global illumination
+    float3 newRayDir = CosineSampleHemisphere(rayHitInfo.m_surfaceNormal);
+    SRayHitInfo newRayHitInfo = ClosestIntersection(rayHitPos, newRayDir);
+    if (newRayHitInfo.m_intersectTime >= 0.0f)
+        light += Light_Outgoing_3(newRayHitInfo, rayHitPos + newRayDir * newRayHitInfo.m_intersectTime + -newRayDir * c_rayEpsilon, -newRayDir);
+
+    // return our recursively calculated light amount
+    return light;
+}
+
+//----------------------------------------------------------------------------
+float Light_Outgoing_5 (in SRayHitInfo rayHitInfo, in float3 rayHitPos, in float3 outDir)
+{
+    // start with emissive lighting
+    float light = rayHitInfo.m_emissive;
+
+    // add in a random recursive sample for global illumination
+    float3 newRayDir = CosineSampleHemisphere(rayHitInfo.m_surfaceNormal);
+    SRayHitInfo newRayHitInfo = ClosestIntersection(rayHitPos, newRayDir);
+    if (newRayHitInfo.m_intersectTime >= 0.0f)
+        light += Light_Outgoing_4(newRayHitInfo, rayHitPos + newRayDir * newRayHitInfo.m_intersectTime + -newRayDir * c_rayEpsilon, -newRayDir);
+
+    // return our recursively calculated light amount
+    return light;
+}
+
+//----------------------------------------------------------------------------
+float Light_Incoming (in float3 rayPos, in float3 rayDir)
+{
+    // find out what our ray hit first
+    SRayHitInfo rayHitInfo = ClosestIntersection(rayPos, rayDir);
+
+    // if it missed, return darkness
+    if (rayHitInfo.m_intersectTime < 0.0f)
+        return 0.0f;
+
+    // else, return the amount of light coming towards us from that point on the object we hit
+    return Light_Outgoing_5(rayHitInfo, rayPos + rayDir * rayHitInfo.m_intersectTime + -rayDir * c_rayEpsilon, -rayDir);
 }
 
 //----------------------------------------------------------------------------
@@ -84,12 +238,12 @@ void cs_main (
     float3 cameraUp = normalize(cross(cameraFwd, cameraRight));
 
     // calculate view window dimensions in world space
-    float windowRight = tan(cameraPos_FOVX.w) * numSpheres_near.y;
-    float windowTop = tan(cameraAt_FOVY.w) * numSpheres_near.y;
+    float windowRight = tan(cameraPos_FOVX.w) * numSpheres_near_rngSeed_w.y;
+    float windowTop = tan(cameraAt_FOVY.w) * numSpheres_near_rngSeed_w.y;
 
     // calculate pixel position in world space
     // start at the camera, go down the forward vector to the near plane, then move right and up based on pixelClipSpace
-    float3 pixelPos = cameraPos_FOVX.xyz + cameraFwd * numSpheres_near.y;
+    float3 pixelPos = cameraPos_FOVX.xyz + cameraFwd * numSpheres_near_rngSeed_w.y;
     pixelPos += pixelClipSpace.x * cameraRight * windowRight;
     pixelPos += pixelClipSpace.y * cameraUp * windowTop;
 
@@ -97,14 +251,6 @@ void cs_main (
     float3 rayDir = normalize(pixelPos - cameraPos_FOVX.xyz);
 
     // path trace!
-    pathTraceOutput_rw[dispatchThreadID.xy] = PathTrace(pixelPos, rayDir);
-
-
-    //float4 incolor = float4(Input[0].c[0], Input[1].c[0], Input[0].c[2], Input[0].c[3]);
-    //incolor.rgb *= Triangles[1].position;
-
-    //pathTraceOutput_rw[dispatchThreadID.xy] = float4(pixelClipSpace, 0, 1);
-
-    //pathTraceOutput_rw[dispatchThreadID.xy] = float4(frac(dispatchThreadID.xy / 100.0f), 0, 1) * incolor * pixelColor;
-
+    float light = Light_Incoming(pixelPos, rayDir);
+    pathTraceOutput_rw[dispatchThreadID.xy] = float4(light, light, light, light);
 }
