@@ -3,9 +3,9 @@
 static const float c_pi = 3.14159265359f;
 static const float c_rayEpsilon = 0.01f;
 
-// TODO: make rngseed have a different value every frame! (maybe pass time through instead or something...)
-// TODO: incrementally average samples
 // TODO: convert the repeated faked recursive functions into a for loop and then make a constant for number of iterations again.
+// TODO: for seed, use thread id, and some index that increments with each call i think.
+// TODO: incrementally average samples from frame to frame
 
 //----------------------------------------------------------------------------
 struct SRayHitInfo
@@ -17,23 +17,21 @@ struct SRayHitInfo
 };
 
 //----------------------------------------------------------------------------
-// this is hash12() from the "Hash without Sine" shadertoy by Dave_Hoskins.
+// this is hash13() from the "Hash without Sine" shadertoy by Dave_Hoskins.
 // https://www.shadertoy.com/view/4djSRW
-
-float RandomFloat (float2 seed)
+float RandomFloat (float3 seed)
 {
-    float3 p3 = frac(float3(seed.xyx) * 443.8975);
+    float3 p3 = frac(seed * 443.8975);
     p3 += dot(p3, p3.yzx + 19.19);
     return frac((p3.x + p3.y) * p3.z);
 }
 
 //----------------------------------------------------------------------------
+// from smallpt path tracer: http://www.kevinbeason.com/smallpt/
 float3 CosineSampleHemisphere (in float3 normal)
 {
-    // from smallpt path tracer: http://www.kevinbeason.com/smallpt/
-
-    float r1 = 2.0f * c_pi * RandomFloat(float2(numSpheres_near_rngSeed_w.z, 0.2435f));
-    float r2 = RandomFloat(float2(numSpheres_near_rngSeed_w.z, 0.8941f));
+    float r1 = 2.0f * c_pi * RandomFloat(float3(numSpheres_near_appTime_w.z, 0.2435f, 0.1238f));
+    float r2 = RandomFloat(float3(numSpheres_near_appTime_w.z, 0.8941f, 0.3167f));
     float r2s = sqrt(r2);
 
     float3 w = normal;
@@ -104,7 +102,7 @@ SRayHitInfo ClosestIntersection (in float3 rayPos, in float3 rayDir)
     SRayHitInfo rayHitInfo;
     rayHitInfo.m_intersectTime = -1.0f;
 
-    int numSpheres = numSpheres_near_rngSeed_w.x;
+    int numSpheres = numSpheres_near_appTime_w.x;
     for (int i = 0; i < numSpheres; ++i)
         RayIntersectsSphere(rayPos, rayDir, Spheres[i], rayHitInfo);
 
@@ -238,12 +236,12 @@ void cs_main (
     float3 cameraUp = normalize(cross(cameraFwd, cameraRight));
 
     // calculate view window dimensions in world space
-    float windowRight = tan(cameraPos_FOVX.w) * numSpheres_near_rngSeed_w.y;
-    float windowTop = tan(cameraAt_FOVY.w) * numSpheres_near_rngSeed_w.y;
+    float windowRight = tan(cameraPos_FOVX.w) * numSpheres_near_appTime_w.y;
+    float windowTop = tan(cameraAt_FOVY.w) * numSpheres_near_appTime_w.y;
 
     // calculate pixel position in world space
     // start at the camera, go down the forward vector to the near plane, then move right and up based on pixelClipSpace
-    float3 pixelPos = cameraPos_FOVX.xyz + cameraFwd * numSpheres_near_rngSeed_w.y;
+    float3 pixelPos = cameraPos_FOVX.xyz + cameraFwd * numSpheres_near_appTime_w.y;
     pixelPos += pixelClipSpace.x * cameraRight * windowRight;
     pixelPos += pixelClipSpace.y * cameraUp * windowTop;
 

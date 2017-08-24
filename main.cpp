@@ -1,5 +1,6 @@
 #define _CRT_SECURE_NO_WARNINGS
 
+#include <chrono>
 #include "d3d11.h"
 #include "Shader.h"
 #include "Model.h"
@@ -11,8 +12,8 @@
 #include "StructuredBuffer.h"
 
 // settings
-const size_t c_width = 1500;
-const size_t c_height = 1000;
+const size_t c_width = 800;
+const size_t c_height = 600;
 const bool c_fullScreen = false;
 const bool c_vsync = true;
 const bool c_shaderDebug = true;
@@ -344,10 +345,10 @@ bool init ()
         g_d3d.Context(),
         [] (ShaderTypes::ConstantBuffers::Scene& scene)
         {
-            scene.numSpheres_near_rngSeed_w[0] = 3.0f;
-            scene.numSpheres_near_rngSeed_w[1] = c_nearPlane;
-            scene.numSpheres_near_rngSeed_w[2] = 1.253461f;  // TODO: make this change every frame. could maybe even be time in seconds? dunno
-            scene.numSpheres_near_rngSeed_w[3] = 0.0f;
+            scene.numSpheres_near_appTime_w[0] = 3.0f;
+            scene.numSpheres_near_appTime_w[1] = c_nearPlane;
+            scene.numSpheres_near_appTime_w[2] = 1.253461f;
+            scene.numSpheres_near_appTime_w[3] = 0.0f;
 
             scene.cameraPos_FOVX = { c_cameraPos[0], c_cameraPos[1], c_cameraPos[2], c_fovX };
             scene.cameraAt_FOVY = { c_cameraAt[0], c_cameraAt[1], c_cameraAt[2], c_fovY };
@@ -380,6 +381,8 @@ bool init ()
 
 int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow)
 {
+    std::chrono::high_resolution_clock::time_point appStart = std::chrono::high_resolution_clock::now();
+
     bool done = !init();
 
     // TODO: remove if we don't need to ever change render targets
@@ -406,8 +409,20 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
         }
         else
         {
+            // update frame time
+            std::chrono::duration<float> appTimeSeconds = std::chrono::high_resolution_clock::now() - appStart;
+            bool writeOK = ShaderData::ConstantBuffers::Scene.Write(
+                g_d3d.Context(),
+                [&appTimeSeconds] (ShaderTypes::ConstantBuffers::Scene& scene)
+            {
+                scene.numSpheres_near_appTime_w[2] = appTimeSeconds.count();
+            }
+            );
+            if (!writeOK)
+                done = true;
+
             // update the constant buffer
-            bool writeOk = ShaderData::ConstantBuffers::Constants.Write(
+            writeOK = ShaderData::ConstantBuffers::Constants.Write(
                 g_d3d.Context(),
                 [frameNumber] (ShaderTypes::ConstantBuffers::Constants& constants)
                 {
@@ -417,7 +432,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
                     constants.pixelColor[3] = 3.0f;
                 }
             );
-            if (!writeOk)
+            if (!writeOK)
                 done = true;
 
             #if 0

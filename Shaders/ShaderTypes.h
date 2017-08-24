@@ -29,7 +29,7 @@ cbuffer Scene
 {
   float4 cameraPos_FOVX;
   float4 cameraAt_FOVY;
-  float4 numSpheres_near_rngSeed_w;
+  float4 numSpheres_near_appTime_w;
 };
 
 //----------------------------------------------------------------------------
