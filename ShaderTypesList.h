@@ -111,7 +111,7 @@ CONSTANT_BUFFER_END
 CONSTANT_BUFFER_BEGIN(Scene)
     CONSTANT_BUFFER_FIELD(cameraPos_FOVX, float4)
     CONSTANT_BUFFER_FIELD(cameraAt_FOVY, float4)
-    CONSTANT_BUFFER_FIELD(numSpheres_numTris_nearPlaneDist_w, float4)
+    CONSTANT_BUFFER_FIELD(numSpheres_numTris_nearPlaneDist_missColor, float4)
     CONSTANT_BUFFER_FIELD(frameRnd_appTime_sampleCount_w, float4)
 CONSTANT_BUFFER_END
 

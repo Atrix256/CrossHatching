@@ -37,6 +37,12 @@ clean up code (spaces after function names etc)
 * it doesn't seem like my image is converging. the random number quality may be low? maybe look at what other gpu path tracers do for rng?
  * could also see if the sample count is getting too large or something? doesn't make sense but....
 
+* we might want to add quad support since it's as fast as a single triangle.
+
+* get rid of original test scene. not useful now that we are getting real scenes
+
+* store the xyz position of first hit, as well as averaged luminance in pathtracer: x,y,z is position. w is shaded color.
+
 ================================= LATER IDEAS =================================
 
 * could do a lens and get depth of field effect.

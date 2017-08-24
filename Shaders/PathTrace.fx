@@ -1,7 +1,7 @@
 #include "ShaderTypes.h"
 
 static const float c_pi = 3.14159265359f;
-static const float c_rayEpsilon = 0.01f;
+static const float c_rayEpsilon = 0.001f;
 
 //----------------------------------------------------------------------------
 struct SRayHitInfo
@@ -148,13 +148,19 @@ SRayHitInfo ClosestIntersection (in float3 rayPos, in float3 rayDir)
     SRayHitInfo rayHitInfo;
     rayHitInfo.m_intersectTime = -1.0f;
 
-    int numSpheres = numSpheres_numTris_nearPlaneDist_w.x;
-    for (int i = 0; i < numSpheres; ++i)
-        RayIntersectsSphere(rayPos, rayDir, Spheres[i], rayHitInfo);
+    // spheres
+    {
+        int numSpheres = numSpheres_numTris_nearPlaneDist_missColor.x;
+        for (int i = 0; i < numSpheres; ++i)
+            RayIntersectsSphere(rayPos, rayDir, Spheres[i], rayHitInfo);
+    }
 
-    int numTris = numSpheres_numTris_nearPlaneDist_w.y;
-    for (int i = 0; i < numTris; ++i)
-        RayIntersectsTriangle(rayPos, rayDir, Triangles[i], rayHitInfo);
+    // triangles
+    {
+        int numTris = numSpheres_numTris_nearPlaneDist_missColor.y;
+        for (int i = 0; i < numTris; ++i)
+            RayIntersectsTriangle(rayPos, rayDir, Triangles[i], rayHitInfo);
+    }
 
     return rayHitInfo;
 }
@@ -164,6 +170,9 @@ float Light_Outgoing_0 (in SRayHitInfo rayHitInfo, in float3 rayHitPos, in float
 {
     // start with emissive lighting
     float light = rayHitInfo.m_emissive;
+
+    // add in albedo * miss color
+    light += rayHitInfo.m_albedo * numSpheres_numTris_nearPlaneDist_missColor.w;
 
     // return our recursively calculated light amount
     return light;
@@ -179,7 +188,9 @@ float Light_Outgoing_1 (in SRayHitInfo rayHitInfo, in float3 rayHitPos, in float
     float3 newRayDir = CosineSampleHemisphere(rayHitInfo.m_surfaceNormal, pixelIndex, 1.0f);
     SRayHitInfo newRayHitInfo = ClosestIntersection(rayHitPos, newRayDir);
     if (newRayHitInfo.m_intersectTime >= 0.0f)
-        light += newRayHitInfo.m_albedo * Light_Outgoing_0(newRayHitInfo, rayHitPos + newRayDir * newRayHitInfo.m_intersectTime + -newRayDir * c_rayEpsilon, -newRayDir, pixelIndex);
+        light += rayHitInfo.m_albedo * Light_Outgoing_0(newRayHitInfo, rayHitPos + newRayDir * newRayHitInfo.m_intersectTime + -newRayDir * c_rayEpsilon, -newRayDir, pixelIndex);
+    else
+        light += rayHitInfo.m_albedo * numSpheres_numTris_nearPlaneDist_missColor.w;
 
     // return our recursively calculated light amount
     return light;
@@ -195,7 +206,9 @@ float Light_Outgoing_2 (in SRayHitInfo rayHitInfo, in float3 rayHitPos, in float
     float3 newRayDir = CosineSampleHemisphere(rayHitInfo.m_surfaceNormal, pixelIndex, 2.0f);
     SRayHitInfo newRayHitInfo = ClosestIntersection(rayHitPos, newRayDir);
     if (newRayHitInfo.m_intersectTime >= 0.0f)
-        light += newRayHitInfo.m_albedo * Light_Outgoing_1(newRayHitInfo, rayHitPos + newRayDir * newRayHitInfo.m_intersectTime + -newRayDir * c_rayEpsilon, -newRayDir, pixelIndex);
+        light += rayHitInfo.m_albedo * Light_Outgoing_1(newRayHitInfo, rayHitPos + newRayDir * newRayHitInfo.m_intersectTime + -newRayDir * c_rayEpsilon, -newRayDir, pixelIndex);
+    else
+        light += rayHitInfo.m_albedo * numSpheres_numTris_nearPlaneDist_missColor.w;
 
     // return our recursively calculated light amount
     return light;
@@ -211,7 +224,9 @@ float Light_Outgoing_3 (in SRayHitInfo rayHitInfo, in float3 rayHitPos, in float
     float3 newRayDir = CosineSampleHemisphere(rayHitInfo.m_surfaceNormal, pixelIndex, 3.0f);
     SRayHitInfo newRayHitInfo = ClosestIntersection(rayHitPos, newRayDir);
     if (newRayHitInfo.m_intersectTime >= 0.0f)
-        light += newRayHitInfo.m_albedo * Light_Outgoing_2(newRayHitInfo, rayHitPos + newRayDir * newRayHitInfo.m_intersectTime + -newRayDir * c_rayEpsilon, -newRayDir, pixelIndex);
+        light += rayHitInfo.m_albedo * Light_Outgoing_2(newRayHitInfo, rayHitPos + newRayDir * newRayHitInfo.m_intersectTime + -newRayDir * c_rayEpsilon, -newRayDir, pixelIndex);
+    else
+        light += rayHitInfo.m_albedo * numSpheres_numTris_nearPlaneDist_missColor.w;
 
     // return our recursively calculated light amount
     return light;
@@ -227,7 +242,9 @@ float Light_Outgoing_4 (in SRayHitInfo rayHitInfo, in float3 rayHitPos, in float
     float3 newRayDir = CosineSampleHemisphere(rayHitInfo.m_surfaceNormal, pixelIndex, 4.0f);
     SRayHitInfo newRayHitInfo = ClosestIntersection(rayHitPos, newRayDir);
     if (newRayHitInfo.m_intersectTime >= 0.0f)
-        light += newRayHitInfo.m_albedo * Light_Outgoing_3(newRayHitInfo, rayHitPos + newRayDir * newRayHitInfo.m_intersectTime + -newRayDir * c_rayEpsilon, -newRayDir, pixelIndex);
+        light += rayHitInfo.m_albedo * Light_Outgoing_3(newRayHitInfo, rayHitPos + newRayDir * newRayHitInfo.m_intersectTime + -newRayDir * c_rayEpsilon, -newRayDir, pixelIndex);
+    else
+        light += rayHitInfo.m_albedo * numSpheres_numTris_nearPlaneDist_missColor.w;
 
     // return our recursively calculated light amount
     return light;
@@ -243,7 +260,9 @@ float Light_Outgoing_5 (in SRayHitInfo rayHitInfo, in float3 rayHitPos, in float
     float3 newRayDir = CosineSampleHemisphere(rayHitInfo.m_surfaceNormal, pixelIndex, 5.0f);
     SRayHitInfo newRayHitInfo = ClosestIntersection(rayHitPos, newRayDir);
     if (newRayHitInfo.m_intersectTime >= 0.0f)
-        light += newRayHitInfo.m_albedo * Light_Outgoing_4(newRayHitInfo, rayHitPos + newRayDir * newRayHitInfo.m_intersectTime + -newRayDir * c_rayEpsilon, -newRayDir, pixelIndex);
+        light += rayHitInfo.m_albedo * Light_Outgoing_4(newRayHitInfo, rayHitPos + newRayDir * newRayHitInfo.m_intersectTime + -newRayDir * c_rayEpsilon, -newRayDir, pixelIndex);
+    else
+        light += rayHitInfo.m_albedo * numSpheres_numTris_nearPlaneDist_missColor.w;
 
     // return our recursively calculated light amount
     return light;
@@ -255,9 +274,9 @@ float Light_Incoming (in float3 rayPos, in float3 rayDir, in uint pixelIndex)
     // find out what our ray hit first
     SRayHitInfo rayHitInfo = ClosestIntersection(rayPos, rayDir);
 
-    // if it missed, return darkness
+    // if it missed, return the miss color
     if (rayHitInfo.m_intersectTime < 0.0f)
-        return 0.0f;
+        return numSpheres_numTris_nearPlaneDist_missColor.w;
 
     // else, return the amount of light coming towards us from that point on the object we hit
     return Light_Outgoing_5(rayHitInfo, rayPos + rayDir * rayHitInfo.m_intersectTime + -rayDir * c_rayEpsilon, -rayDir, pixelIndex);
@@ -280,6 +299,7 @@ void cs_main (
 
     // calculate coordinate of pixel on the screen in [-1,1]
     float2 pixelClipSpace = 2.0f * float2(dispatchThreadID.xy) / float2(dimsX, dimsY) - 1.0f;
+    pixelClipSpace *= -1.0f;
 
     // calculate camera vectors
     float3 cameraFwd = normalize(cameraAt_FOVY.xyz - cameraPos_FOVX.xyz);
@@ -287,12 +307,12 @@ void cs_main (
     float3 cameraUp = normalize(cross(cameraFwd, cameraRight));
 
     // calculate view window dimensions in world space
-    float windowRight = tan(cameraPos_FOVX.w) * numSpheres_numTris_nearPlaneDist_w.z;
-    float windowTop = tan(cameraAt_FOVY.w) * numSpheres_numTris_nearPlaneDist_w.z;
+    float windowRight = tan(cameraPos_FOVX.w) * numSpheres_numTris_nearPlaneDist_missColor.z;
+    float windowTop = tan(cameraAt_FOVY.w) * numSpheres_numTris_nearPlaneDist_missColor.z;
 
     // calculate pixel position in world space
     // start at the camera, go down the forward vector to the near plane, then move right and up based on pixelClipSpace
-    float3 pixelPos = cameraPos_FOVX.xyz + cameraFwd * numSpheres_numTris_nearPlaneDist_w.z;
+    float3 pixelPos = cameraPos_FOVX.xyz + cameraFwd * numSpheres_numTris_nearPlaneDist_missColor.z;
     pixelPos += pixelClipSpace.x * cameraRight * windowRight;
     pixelPos += pixelClipSpace.y * cameraUp * windowTop;
 
@@ -303,3 +323,6 @@ void cs_main (
     float light = Light_Incoming(pixelPos, rayDir, pixelIndex);
     pathTraceOutput_rw[dispatchThreadID.xy] = lerp(pathTraceOutput_rw[dispatchThreadID.xy], float4(light, light, light, light), 1.0f / frameRnd_appTime_sampleCount_w.z);
 }
+
+
+// TODO: make a "miss color". this is a solid color emissive sky box. Have it sent in as a constant in the scene data.

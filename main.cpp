@@ -11,6 +11,7 @@
 #include "ShaderTypes.h"
 #include "ConstantBuffer.h"
 #include "StructuredBuffer.h"
+#include "Scenes.h"
 
 // settings
 const size_t c_width = 800;
@@ -24,7 +25,6 @@ const float c_fovY = c_fovX * float(c_height) / float(c_width);
 const float c_nearPlane = 0.1f;
 const float3 c_cameraPos = { 0.0f, 0.0f, -10.0f };
 const float3 c_cameraAt = { 0.0f, 0.0f, 0.0f };
-const size_t c_maxRayBounces = 5;
 
 // globals
 CD3D11 g_d3d;
@@ -366,15 +366,17 @@ bool init ()
     if (!writeOK)
         return false;
 
+    // TODO: maybe separate scene data from other stuff (frameRnd_appTime_sampleCount_w) since it doesn't need to be updated every frame. maybe just seperate "set infrequently" from "set frequently"
+    // TODO: make this an initialization of scene data to sane values / defaults (like for near place).
     // TODO: temp scene data!
     writeOK = ShaderData::ConstantBuffers::Scene.Write(
         g_d3d.Context(),
         [] (ShaderTypes::ConstantBuffers::Scene& scene)
         {
-            scene.numSpheres_numTris_nearPlaneDist_w[0] = 3.0f;
-            scene.numSpheres_numTris_nearPlaneDist_w[1] = 1.0f;
-            scene.numSpheres_numTris_nearPlaneDist_w[2] = c_nearPlane;
-            scene.numSpheres_numTris_nearPlaneDist_w[3] = 0.0f;
+            scene.numSpheres_numTris_nearPlaneDist_missColor[0] = 3.0f;
+            scene.numSpheres_numTris_nearPlaneDist_missColor[1] = 1.0f;
+            scene.numSpheres_numTris_nearPlaneDist_missColor[2] = c_nearPlane;
+            scene.numSpheres_numTris_nearPlaneDist_missColor[3] = 0.0f;
 
             scene.frameRnd_appTime_sampleCount_w[0] = 0.0f;
             scene.frameRnd_appTime_sampleCount_w[1] = 0.0f;
@@ -432,8 +434,13 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
     // TODO: remove if we don't need to ever change render targets
     //g_testBuffer.SetAsRenderTarget(g_d3d.Context());
 
+    // TODO: remove unused old shaders!
+    // TODO: make it switch scene on key press!
+
     const size_t dispatchX = 1 + c_width / 32;
     const size_t dispatchY = 1 + c_height / 32;
+
+    FillSceneData(EScene::SphereOnPlane_LowLight, g_d3d.Context());
 
     size_t frameNumber = 0; // TODO: temp!
     while (!done)

@@ -29,7 +29,7 @@ cbuffer Scene
 {
   float4 cameraPos_FOVX;
   float4 cameraAt_FOVY;
-  float4 numSpheres_numTris_nearPlaneDist_w;
+  float4 numSpheres_numTris_nearPlaneDist_missColor;
   float4 frameRnd_appTime_sampleCount_w;
 };
 

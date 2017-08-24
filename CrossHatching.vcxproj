@@ -145,6 +145,7 @@
     <ClCompile Include="d3d11.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="RenderTarget.cpp" />
+    <ClCompile Include="Scenes.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Window.cpp" />
@@ -163,6 +164,7 @@
     <ClInclude Include="d3d11.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="RenderTarget.h" />
+    <ClInclude Include="Scenes.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Shaders\ShaderTypes.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>

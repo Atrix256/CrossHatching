@@ -1,5 +1,8 @@
 #pragma once
 
+#include <d3d11.h>
+#include "Utils.h"
+
 template <typename T>
 class CConstantBuffer
 {

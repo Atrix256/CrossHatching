@@ -7,6 +7,7 @@
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Window.cpp" />
     <ClCompile Include="RenderTarget.cpp" />
+    <ClCompile Include="Scenes.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="notes.txt" />
@@ -29,6 +30,7 @@
     </ClInclude>
     <ClInclude Include="ConstantBuffer.h" />
     <ClInclude Include="StructuredBuffer.h" />
+    <ClInclude Include="Scenes.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\shader.fx">
