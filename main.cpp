@@ -226,9 +226,25 @@ void FillShaderParams (ID3D11DeviceContext* deviceContext, ID3D11ShaderReflectio
     }
 }
 
+void OnKeyPress (unsigned char key, bool pressed)
+{
+    // only do actions on key release right now
+    if (pressed)
+        return;
+
+    switch (key)
+    {
+        case '1': FillSceneData(EScene::SphereOnPlane_LowLight, g_d3d.Context()); break;
+        case '2': FillSceneData(EScene::SphereOnPlane_RegularLight, g_d3d.Context()); break;
+        case '3': FillSceneData(EScene::SpheresInBox_LowLight, g_d3d.Context()); break;
+        case '4': FillSceneData(EScene::SpheresInBox_RegularLight, g_d3d.Context()); break;
+        case '5': FillSceneData(EScene::FurnaceTest, g_d3d.Context()); break;
+    }
+}
+
 bool init ()
 {
-    WindowInit(c_width, c_height, c_fullScreen);
+    WindowInit(c_width, c_height, c_fullScreen, OnKeyPress);
 
     if (!g_d3d.Init(c_width, c_height, c_vsync, WindowGetHWND(), c_fullScreen, 100.0f, 0.01f, c_d3ddebug))
         return false;

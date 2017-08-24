@@ -4,6 +4,8 @@
 
 static HWND s_hWnd = nullptr;
 
+static TKeyPressCallback s_keyPressCallback = nullptr;
+
 LRESULT CALLBACK MessageHandler (HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam)
 {
     switch (umsg)
@@ -29,12 +31,14 @@ LRESULT CALLBACK MessageHandler (HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lpa
             {
                 PostQuitMessage(0);
             }
+            s_keyPressCallback((unsigned char)wparam, true);
             return 0;
         }
 
         // Check if a key has been released on the keyboard.
         case WM_KEYUP:
         {
+            s_keyPressCallback((unsigned char)wparam, false);
             return 0;
         }
 
@@ -46,11 +50,14 @@ LRESULT CALLBACK MessageHandler (HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lpa
     }
 }
 
-void WindowInit (size_t screenWidth, size_t screenHeight, bool fullScreen)
+void WindowInit (size_t screenWidth, size_t screenHeight, bool fullScreen, TKeyPressCallback keyPressCallback)
 {
     WNDCLASSEX wc;
     DEVMODE dmScreenSettings;
     int posX, posY;
+
+    // store off the keypress callback
+    s_keyPressCallback = keyPressCallback;
 
     // Get the instance of this application.
     HMODULE hinstance = GetModuleHandle(NULL);

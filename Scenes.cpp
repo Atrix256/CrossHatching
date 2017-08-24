@@ -6,6 +6,15 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
 {
     bool ret = true;
 
+    // reset the sample count back to 0
+    ret &= ShaderData::ConstantBuffers::Scene.Write(
+        context,
+        [](ShaderTypes::ConstantBuffers::Scene& scene)
+        {
+            scene.frameRnd_appTime_sampleCount_w[2] = 0.0f;
+        }
+    );
+
     switch (scene)
     {
         case EScene::SphereOnPlane_LowLight:
@@ -26,8 +35,6 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                     scene.cameraAt_FOVY[0] = 0.0f;
                     scene.cameraAt_FOVY[1] = 0.0f;
                     scene.cameraAt_FOVY[2] = 0.0f;
-
-                    scene.frameRnd_appTime_sampleCount_w[2] = 0.0f; // reset the sample count back to 0!
                 }
             );
 
@@ -82,7 +89,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                     scene.numSpheres_numTris_nearPlaneDist_missColor[0] = 2.0f;
                     scene.numSpheres_numTris_nearPlaneDist_missColor[1] = 4.0f;
                     scene.numSpheres_numTris_nearPlaneDist_missColor[2] = 0.1f;
-                    scene.numSpheres_numTris_nearPlaneDist_missColor[3] = 0.4f;
+                    scene.numSpheres_numTris_nearPlaneDist_missColor[3] = 0.1f;
 
                     scene.cameraPos_FOVX[0] = 0.0f;
                     scene.cameraPos_FOVX[1] = 0.0f;
@@ -91,8 +98,6 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                     scene.cameraAt_FOVY[0] = 0.0f;
                     scene.cameraAt_FOVY[1] = 0.0f;
                     scene.cameraAt_FOVY[2] = 0.0f;
-
-                    scene.frameRnd_appTime_sampleCount_w[2] = 0.0f; // reset the sample count back to 0!
                 }
             );
 
