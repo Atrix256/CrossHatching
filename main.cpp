@@ -1,6 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <chrono>
+#include <random>
 #include "d3d11.h"
 #include "Shader.h"
 #include "Model.h"
@@ -23,6 +24,7 @@ const float c_fovY = c_fovX * float(c_height) / float(c_width);
 const float c_nearPlane = 0.1f;
 const float3 c_cameraPos = { 0.0f, 0.0f, -10.0f };
 const float3 c_cameraAt = { 0.0f, 0.0f, 0.0f };
+const size_t c_maxRayBounces = 5;
 
 // globals
 CD3D11 g_d3d;
@@ -36,6 +38,14 @@ CShader g_shaderCopyTexture;
 
 CComputeShader g_pathTrace;
 CShader g_shaderShowPathTrace;
+
+float RandomFloat (float min, float max)
+{
+    static std::random_device rd;
+    static std::mt19937 mt(rd());
+    std::uniform_real_distribution<float> dist(min, max);
+    return dist(mt);
+}
 
 // automatically reflected things for shaders
 namespace ShaderData
@@ -246,13 +256,29 @@ bool init ()
     // write some triangles
     bool writeOK = ShaderData::StructuredBuffers::Triangles.Write(
         g_d3d.Context(),
-        [] (std::array<ShaderTypes::StructuredBuffers::Triangle, 10>& data)
+        [] (std::array<ShaderTypes::StructuredBuffers::TrianglePrim, 10>& data)
         {
             for (size_t i = 0; i < 10; ++i)
             {
-                data[i].position_w[0] = float(i);
-                data[i].position_w[1] = float(i) + 0.1f;
-                data[i].position_w[2] = float(i) + 0.2f;
+                data[i].positionA_Albedo[0] = 0.0f;
+                data[i].positionA_Albedo[1] = 0.0f;
+                data[i].positionA_Albedo[2] = 0.0f;
+                data[i].positionA_Albedo[3] = 0.0f;
+
+                data[i].positionB_Emissive[0] = 0.0f;
+                data[i].positionB_Emissive[1] = 0.0f;
+                data[i].positionB_Emissive[2] = 0.0f;
+                data[i].positionB_Emissive[3] = 0.0f;
+
+                data[i].positionC_w[0] = 0.0f;
+                data[i].positionC_w[1] = 0.0f;
+                data[i].positionC_w[2] = 0.0f;
+                data[i].positionC_w[3] = 0.0f;
+
+                data[i].normal_w[0] = 0.0f;
+                data[i].normal_w[1] = 0.0f;
+                data[i].normal_w[2] = 0.0f;
+                data[i].normal_w[3] = 0.0f;
             }
         }
     );
@@ -345,10 +371,15 @@ bool init ()
         g_d3d.Context(),
         [] (ShaderTypes::ConstantBuffers::Scene& scene)
         {
-            scene.numSpheres_near_appTime_w[0] = 3.0f;
-            scene.numSpheres_near_appTime_w[1] = c_nearPlane;
-            scene.numSpheres_near_appTime_w[2] = 1.253461f;
-            scene.numSpheres_near_appTime_w[3] = 0.0f;
+            scene.numSpheres_numTris_nearPlaneDist_w[0] = 3.0f;
+            scene.numSpheres_numTris_nearPlaneDist_w[1] = 1.0f;
+            scene.numSpheres_numTris_nearPlaneDist_w[2] = c_nearPlane;
+            scene.numSpheres_numTris_nearPlaneDist_w[3] = 0.0f;
+
+            scene.frameRnd_appTime_sampleCount_w[0] = 0.0f;
+            scene.frameRnd_appTime_sampleCount_w[1] = 0.0f;
+            scene.frameRnd_appTime_sampleCount_w[2] = 0.0f;
+            scene.frameRnd_appTime_sampleCount_w[3] = 0.0f;
 
             scene.cameraPos_FOVX = { c_cameraPos[0], c_cameraPos[1], c_cameraPos[2], c_fovX };
             scene.cameraAt_FOVY = { c_cameraAt[0], c_cameraAt[1], c_cameraAt[2], c_fovY };
@@ -359,15 +390,28 @@ bool init ()
 
     writeOK = ShaderData::StructuredBuffers::Spheres.Write(
         g_d3d.Context(),
-        [] (std::array<ShaderTypes::StructuredBuffers::Sphere, 10>& spheres)
+        [] (std::array<ShaderTypes::StructuredBuffers::SpherePrim, 10>& spheres)
         {
             spheres[0].position_Radius = { 0.0f, 0.0f, 0.0f, 1.0f };
             spheres[1].position_Radius = { 3.0f, 1.0f, 2.0f, 1.0f };
             spheres[2].position_Radius = { -2.0f, 3.0f, -1.0f, 1.0f };
 
             spheres[0].albedo_Emissive_zw = { 0.0f, 1.0f, 0.0f, 0.0f };
-            spheres[1].albedo_Emissive_zw = { 1.0f, 0.1f, 0.0f, 0.0f };
+            spheres[1].albedo_Emissive_zw = { 1.0f, 0.0f, 0.0f, 0.0f };
             spheres[2].albedo_Emissive_zw = { 1.0f, 0.1f, 0.0f, 0.0f };
+        }
+    );
+    if (!writeOK)
+        return false;
+
+    writeOK = ShaderData::StructuredBuffers::Triangles.Write(
+        g_d3d.Context(),
+        [] (std::array<ShaderTypes::StructuredBuffers::TrianglePrim, 10>& triangles)
+        {
+            triangles[0].positionA_Albedo = { 2.0f, -5.0f, 5.0f, 1.0f };
+            triangles[0].positionB_Emissive = { 12.0f, -5.0f, 5.0f, 0.0f };
+            triangles[0].positionC_w = { 2.0f, 5.0f, 5.0f, 0.0f };
+            triangles[0].normal_w = { 0.0f, 0.0f, -1.0f, 0.0f };
         }
     );
     if (!writeOK)
@@ -409,13 +453,16 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
         }
         else
         {
-            // update frame time
+            // update frame specific values
             std::chrono::duration<float> appTimeSeconds = std::chrono::high_resolution_clock::now() - appStart;
             bool writeOK = ShaderData::ConstantBuffers::Scene.Write(
                 g_d3d.Context(),
                 [&appTimeSeconds] (ShaderTypes::ConstantBuffers::Scene& scene)
             {
-                scene.numSpheres_near_appTime_w[2] = appTimeSeconds.count();
+                scene.frameRnd_appTime_sampleCount_w[0] = RandomFloat(0.0f, 1.0f);
+                scene.frameRnd_appTime_sampleCount_w[1] = appTimeSeconds.count();
+                scene.frameRnd_appTime_sampleCount_w[2] += 1.0f;
+                
             }
             );
             if (!writeOK)

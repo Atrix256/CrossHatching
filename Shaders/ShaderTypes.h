@@ -29,7 +29,8 @@ cbuffer Scene
 {
   float4 cameraPos_FOVX;
   float4 cameraAt_FOVY;
-  float4 numSpheres_near_appTime_w;
+  float4 numSpheres_numTris_nearPlaneDist_w;
+  float4 frameRnd_appTime_sampleCount_w;
 };
 
 //----------------------------------------------------------------------------
@@ -50,15 +51,18 @@ struct Pos2D
 //----------------------------------------------------------------------------
 //Structured Buffer Types
 //----------------------------------------------------------------------------
-struct Sphere
+struct SpherePrim
 {
   float4 position_Radius;
   float4 albedo_Emissive_zw;
 };
 
-struct Triangle
+struct TrianglePrim
 {
-  float4 position_w;
+  float4 positionA_Albedo;
+  float4 positionB_Emissive;
+  float4 positionC_w;
+  float4 normal_w;
 };
 
 struct SBufferItem
@@ -69,9 +73,9 @@ struct SBufferItem
 //----------------------------------------------------------------------------
 //Structured Buffers
 //----------------------------------------------------------------------------
-StructuredBuffer<Sphere> Spheres;
+StructuredBuffer<SpherePrim> Spheres;
 
-StructuredBuffer<Triangle> Triangles;
+StructuredBuffer<TrianglePrim> Triangles;
 
 StructuredBuffer<SBufferItem> Input;
 

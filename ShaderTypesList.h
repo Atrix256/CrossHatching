@@ -111,20 +111,24 @@ CONSTANT_BUFFER_END
 CONSTANT_BUFFER_BEGIN(Scene)
     CONSTANT_BUFFER_FIELD(cameraPos_FOVX, float4)
     CONSTANT_BUFFER_FIELD(cameraAt_FOVY, float4)
-    CONSTANT_BUFFER_FIELD(numSpheres_near_appTime_w, float4)
+    CONSTANT_BUFFER_FIELD(numSpheres_numTris_nearPlaneDist_w, float4)
+    CONSTANT_BUFFER_FIELD(frameRnd_appTime_sampleCount_w, float4)
 CONSTANT_BUFFER_END
 
 //=================================================================
 //                    Structured Buffers
 //=================================================================
 
-STRUCTURED_BUFFER_BEGIN(Spheres, Sphere, 10)
+STRUCTURED_BUFFER_BEGIN(Spheres, SpherePrim, 10)
     STRUCTURED_BUFFER_FIELD(position_Radius, float4)
     STRUCTURED_BUFFER_FIELD(albedo_Emissive_zw, float4)
 STRUCTURED_BUFFER_END
 
-STRUCTURED_BUFFER_BEGIN(Triangles, Triangle, 10)
-    STRUCTURED_BUFFER_FIELD(position_w, float4)
+STRUCTURED_BUFFER_BEGIN(Triangles, TrianglePrim, 10)
+    STRUCTURED_BUFFER_FIELD(positionA_Albedo, float4)
+    STRUCTURED_BUFFER_FIELD(positionB_Emissive, float4)
+    STRUCTURED_BUFFER_FIELD(positionC_w, float4)
+    STRUCTURED_BUFFER_FIELD(normal_w, float4)
 STRUCTURED_BUFFER_END
 
 STRUCTURED_BUFFER_BEGIN(Input, SBufferItem, 1)
