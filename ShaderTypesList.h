@@ -112,7 +112,7 @@ CONSTANT_BUFFER_BEGIN(Scene)
     CONSTANT_BUFFER_FIELD(cameraPos_FOVX, float4)
     CONSTANT_BUFFER_FIELD(cameraAt_FOVY, float4)
     CONSTANT_BUFFER_FIELD(numSpheres_numTris_nearPlaneDist_missColor, float4)
-    CONSTANT_BUFFER_FIELD(frameRnd_appTime_sampleCount_w, float4)
+    CONSTANT_BUFFER_FIELD(frameRnd_appTime_sampleCount_numQuads, float4)
 CONSTANT_BUFFER_END
 
 //=================================================================
@@ -128,6 +128,14 @@ STRUCTURED_BUFFER_BEGIN(Triangles, TrianglePrim, 10)
     STRUCTURED_BUFFER_FIELD(positionA_Albedo, float4)
     STRUCTURED_BUFFER_FIELD(positionB_Emissive, float4)
     STRUCTURED_BUFFER_FIELD(positionC_w, float4)
+    STRUCTURED_BUFFER_FIELD(normal_w, float4)
+STRUCTURED_BUFFER_END
+
+STRUCTURED_BUFFER_BEGIN(Quads, QuadPrim, 10)
+    STRUCTURED_BUFFER_FIELD(positionA_Albedo, float4)
+    STRUCTURED_BUFFER_FIELD(positionB_Emissive, float4)
+    STRUCTURED_BUFFER_FIELD(positionC_w, float4)
+    STRUCTURED_BUFFER_FIELD(positionD_w, float4)
     STRUCTURED_BUFFER_FIELD(normal_w, float4)
 STRUCTURED_BUFFER_END
 

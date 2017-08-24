@@ -394,10 +394,10 @@ bool init ()
             scene.numSpheres_numTris_nearPlaneDist_missColor[2] = c_nearPlane;
             scene.numSpheres_numTris_nearPlaneDist_missColor[3] = 0.0f;
 
-            scene.frameRnd_appTime_sampleCount_w[0] = 0.0f;
-            scene.frameRnd_appTime_sampleCount_w[1] = 0.0f;
-            scene.frameRnd_appTime_sampleCount_w[2] = 0.0f;
-            scene.frameRnd_appTime_sampleCount_w[3] = 0.0f;
+            scene.frameRnd_appTime_sampleCount_numQuads[0] = 0.0f;
+            scene.frameRnd_appTime_sampleCount_numQuads[1] = 0.0f;
+            scene.frameRnd_appTime_sampleCount_numQuads[2] = 0.0f;
+            scene.frameRnd_appTime_sampleCount_numQuads[3] = 0.0f;
 
             scene.cameraPos_FOVX = { c_cameraPos[0], c_cameraPos[1], c_cameraPos[2], c_fovX };
             scene.cameraAt_FOVY = { c_cameraAt[0], c_cameraAt[1], c_cameraAt[2], c_fovY };
@@ -482,9 +482,9 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
                 g_d3d.Context(),
                 [&appTimeSeconds] (ShaderTypes::ConstantBuffers::Scene& scene)
             {
-                scene.frameRnd_appTime_sampleCount_w[0] = RandomFloat(0.0f, 1.0f);
-                scene.frameRnd_appTime_sampleCount_w[1] = appTimeSeconds.count();
-                scene.frameRnd_appTime_sampleCount_w[2] += 1.0f;
+                scene.frameRnd_appTime_sampleCount_numQuads[0] = RandomFloat(0.0f, 1.0f);
+                scene.frameRnd_appTime_sampleCount_numQuads[1] = appTimeSeconds.count();
+                scene.frameRnd_appTime_sampleCount_numQuads[2] += 1.0f;
                 
             }
             );

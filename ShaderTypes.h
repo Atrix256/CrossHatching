@@ -121,3 +121,15 @@ inline void CalculateTriangleNormal (ShaderTypes::StructuredBuffers::TrianglePri
     triangle.normal_w[1] = norm[1];
     triangle.normal_w[2] = norm[2];
 }
+
+inline void CalculateQuadNormal (ShaderTypes::StructuredBuffers::QuadPrim& quad)
+{
+    float3 AB = XYZ(quad.positionB_Emissive) - XYZ(quad.positionA_Albedo);
+    float3 AC = XYZ(quad.positionC_w) - XYZ(quad.positionA_Albedo);
+
+    float3 norm = Cross(AB, AC);
+    Normalize(norm);
+    quad.normal_w[0] = norm[0];
+    quad.normal_w[1] = norm[1];
+    quad.normal_w[2] = norm[2];
+}

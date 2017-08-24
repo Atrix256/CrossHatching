@@ -27,8 +27,8 @@ float RandomFloat (float3 seed)
 // from smallpt path tracer: http://www.kevinbeason.com/smallpt/
 float3 CosineSampleHemisphere (in float3 normal, in float pixelIndex, in float depth)
 {
-    float r1 = 2.0f * c_pi * RandomFloat(float3(frameRnd_appTime_sampleCount_w.x, pixelIndex, depth + 0.1238f));
-    float r2 = RandomFloat(float3(frameRnd_appTime_sampleCount_w.x, pixelIndex, depth + 0.3167f));
+    float r1 = 2.0f * c_pi * RandomFloat(float3(frameRnd_appTime_sampleCount_numQuads.x, pixelIndex, depth + 0.1238f));
+    float r2 = RandomFloat(float3(frameRnd_appTime_sampleCount_numQuads.x, pixelIndex, depth + 0.3167f));
     float r2s = sqrt(r2);
 
     float3 w = normal;
@@ -44,6 +44,83 @@ float3 CosineSampleHemisphere (in float3 normal, in float pixelIndex, in float d
     d = normalize(d);
 
     return d;
+}
+
+//----------------------------------------------------------------------------
+float ScalarTriple (in float3 a, in float3 b, in float3 c)
+{
+    return dot(cross(a, b), c);
+}
+
+//----------------------------------------------------------------------------
+void RayIntersectsQuad (in float3 rayPos, in float3 rayDir, in QuadPrim quad, inout SRayHitInfo rayHitInfo)
+{
+    // This function adapted from "Real Time Collision Detection" 5.3.5 Intersecting Line Against Quadrilateral
+    // IntersectLineQuad()
+    float3 pa = quad.positionA_Albedo.xyz - rayPos;
+    float3 pb = quad.positionB_Emissive.xyz - rayPos;
+    float3 pc = quad.positionC_w.xyz - rayPos;
+    // Determine which triangle to test against by testing against diagonal first
+    float3 m = cross(pc, rayDir);
+    float3 r;
+    float v = dot(pa, m); // ScalarTriple(pq, pa, pc);
+    if (v >= 0.0f) {
+        // Test intersection against triangle abc
+        float u = -dot(pb, m); // ScalarTriple(pq, pc, pb);
+        if (u < 0.0f) return;
+        float w = ScalarTriple(rayDir, pb, pa);
+        if (w < 0.0f) return;
+        // Compute r, r = u*a + v*b + w*c, from barycentric coordinates (u, v, w)
+        float denom = 1.0f / (u + v + w);
+        u *= denom;
+        v *= denom;
+        w *= denom; // w = 1.0f - u - v;
+        r = u*quad.positionA_Albedo.xyz + v*quad.positionB_Emissive.xyz + w*quad.positionC_w.xyz;
+    }
+    else {
+        // Test intersection against triangle dac
+        float3 pd = quad.positionD_w.xyz - rayPos;
+        float u = dot(pd, m); // ScalarTriple(pq, pd, pc);
+        if (u < 0.0f) return;
+        float w = ScalarTriple(rayDir, pa, pd);
+        if (w < 0.0f) return;
+        v = -v;
+        // Compute r, r = u*a + v*d + w*c, from barycentric coordinates (u, v, w)
+        float denom = 1.0f / (u + v + w);
+        u *= denom;
+        v *= denom;
+        w *= denom; // w = 1.0f - u - v;
+        r = u*quad.positionA_Albedo.xyz + v*quad.positionD_w + w*quad.positionC_w.xyz;
+    }
+
+    // make sure normal is facing opposite of ray direction.
+    // this is for if we are hitting the object from the inside / back side.
+    float3 normal = quad.normal_w.xyz;
+    if (dot(quad.normal_w.xyz, rayDir) > 0.0f)
+        normal *= -1.0f;
+
+    // figure out the time t that we hit the plane (quad)
+    float t;
+    if (abs(rayDir[0]) > 0.0f)
+        t = (r[0] - rayPos[0]) / rayDir[0];
+    else if (abs(rayDir[1]) > 0.0f)
+        t = (r[1] - rayPos[1]) / rayDir[1];
+    else if (abs(rayDir[2]) > 0.0f)
+        t = (r[2] - rayPos[2]) / rayDir[2];
+
+    // only positive time hits allowed!
+    if (t < 0.0f)
+        return;
+
+    //enforce a max distance if we should
+    if (rayHitInfo.m_intersectTime >= 0.0 && t > rayHitInfo.m_intersectTime)
+        return;
+
+    rayHitInfo.m_intersectTime = t;
+    rayHitInfo.m_surfaceNormal = normal;
+    rayHitInfo.m_albedo = quad.positionA_Albedo.w;
+    rayHitInfo.m_emissive = quad.positionB_Emissive.w;
+    return;
 }
 
 //----------------------------------------------------------------------------
@@ -160,6 +237,13 @@ SRayHitInfo ClosestIntersection (in float3 rayPos, in float3 rayDir)
         int numTris = numSpheres_numTris_nearPlaneDist_missColor.y;
         for (int i = 0; i < numTris; ++i)
             RayIntersectsTriangle(rayPos, rayDir, Triangles[i], rayHitInfo);
+    }
+
+    // quads
+    {
+        int numQuads = frameRnd_appTime_sampleCount_numQuads.w;
+        for (int i = 0; i < numQuads; ++i)
+            RayIntersectsQuad(rayPos, rayDir, Quads[i], rayHitInfo);
     }
 
     return rayHitInfo;
@@ -321,7 +405,7 @@ void cs_main (
 
     // path trace!
     float light = Light_Incoming(pixelPos, rayDir, pixelIndex);
-    pathTraceOutput_rw[dispatchThreadID.xy] = lerp(pathTraceOutput_rw[dispatchThreadID.xy], float4(light, light, light, light), 1.0f / frameRnd_appTime_sampleCount_w.z);
+    pathTraceOutput_rw[dispatchThreadID.xy] = lerp(pathTraceOutput_rw[dispatchThreadID.xy], float4(light, light, light, light), 1.0f / frameRnd_appTime_sampleCount_numQuads.z);
 }
 
 

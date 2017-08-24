@@ -30,7 +30,7 @@ cbuffer Scene
   float4 cameraPos_FOVX;
   float4 cameraAt_FOVY;
   float4 numSpheres_numTris_nearPlaneDist_missColor;
-  float4 frameRnd_appTime_sampleCount_w;
+  float4 frameRnd_appTime_sampleCount_numQuads;
 };
 
 //----------------------------------------------------------------------------
@@ -65,6 +65,15 @@ struct TrianglePrim
   float4 normal_w;
 };
 
+struct QuadPrim
+{
+  float4 positionA_Albedo;
+  float4 positionB_Emissive;
+  float4 positionC_w;
+  float4 positionD_w;
+  float4 normal_w;
+};
+
 struct SBufferItem
 {
   float4 c;
@@ -76,6 +85,8 @@ struct SBufferItem
 StructuredBuffer<SpherePrim> Spheres;
 
 StructuredBuffer<TrianglePrim> Triangles;
+
+StructuredBuffer<QuadPrim> Quads;
 
 StructuredBuffer<SBufferItem> Input;
 
