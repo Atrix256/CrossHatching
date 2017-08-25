@@ -29,8 +29,6 @@ const float3 c_cameraAt = { 0.0f, 0.0f, 0.0f };
 // globals
 CD3D11 g_d3d;
 
-CRenderTarget g_testBuffer;
-
 CModel<ShaderTypes::VertexFormats::Pos2D> g_fullScreenMesh;
 
 CComputeShader g_pathTrace;
@@ -304,7 +302,6 @@ bool init ()
     if (!g_shaderShowPathTrace.Load(g_d3d.Device(), WindowGetHWND(), L"Shaders/ShowPathTrace.fx", ShaderData::VertexFormats::Pos2D, ShaderData::VertexFormats::Pos2DElements, c_shaderDebug))
         return false;
 
-
     // make a full screen triangle
     writeOK = g_fullScreenMesh.Create(
         g_d3d.Device(),
@@ -325,14 +322,13 @@ bool init ()
 
     // TODO: maybe separate scene data from other stuff (frameRnd_appTime_sampleCount_w) since it doesn't need to be updated every frame. maybe just seperate "set infrequently" from "set frequently"
     // TODO: make this an initialization of scene data to sane values / defaults (like for near place).
-    // TODO: temp scene data!
     writeOK = ShaderData::ConstantBuffers::Scene.Write(
         g_d3d.Context(),
         [] (ShaderTypes::ConstantBuffers::Scene& scene)
         {
-            scene.numSpheres_numTris_nearPlaneDist_missColor[0] = 3.0f;
-            scene.numSpheres_numTris_nearPlaneDist_missColor[1] = 1.0f;
-            scene.numSpheres_numTris_nearPlaneDist_missColor[2] = c_nearPlane;
+            scene.numSpheres_numTris_nearPlaneDist_missColor[0] = 0.0f;
+            scene.numSpheres_numTris_nearPlaneDist_missColor[1] = 0.0f;
+            scene.numSpheres_numTris_nearPlaneDist_missColor[2] = 0.0f;
             scene.numSpheres_numTris_nearPlaneDist_missColor[3] = 0.0f;
 
             scene.frameRnd_appTime_sampleCount_numQuads[0] = 0.0f;
@@ -340,43 +336,11 @@ bool init ()
             scene.frameRnd_appTime_sampleCount_numQuads[2] = 0.0f;
             scene.frameRnd_appTime_sampleCount_numQuads[3] = 0.0f;
 
-            scene.cameraPos_FOVX = { c_cameraPos[0], c_cameraPos[1], c_cameraPos[2], c_fovX };
-            scene.cameraAt_FOVY = { c_cameraAt[0], c_cameraAt[1], c_cameraAt[2], c_fovY };
+            scene.cameraPos_FOVX = { 0.0f, 0.0f, 0.0f, c_fovX };
+            scene.cameraAt_FOVY = { 0.0f, 0.0f, 0.0f, c_fovY };
         }
     );
     if (!writeOK)
-        return false;
-
-    writeOK = ShaderData::StructuredBuffers::Spheres.Write(
-        g_d3d.Context(),
-        [] (std::array<ShaderTypes::StructuredBuffers::SpherePrim, 10>& spheres)
-        {
-            spheres[0].position_Radius = { 0.0f, 0.0f, 0.0f, 1.0f };
-            spheres[1].position_Radius = { 3.0f, 1.0f, 2.0f, 1.0f };
-            spheres[2].position_Radius = { -2.0f, 3.0f, -1.0f, 1.0f };
-
-            spheres[0].albedo_Emissive_zw = { 0.0f, 1.0f, 0.0f, 0.0f };
-            spheres[1].albedo_Emissive_zw = { 1.0f, 0.0f, 0.0f, 0.0f };
-            spheres[2].albedo_Emissive_zw = { 1.0f, 0.1f, 0.0f, 0.0f };
-        }
-    );
-    if (!writeOK)
-        return false;
-
-    writeOK = ShaderData::StructuredBuffers::Triangles.Write(
-        g_d3d.Context(),
-        [] (std::array<ShaderTypes::StructuredBuffers::TrianglePrim, 10>& triangles)
-        {
-            triangles[0].positionA_Albedo = { 2.0f, -5.0f, 5.0f, 1.0f };
-            triangles[0].positionB_Emissive = { 12.0f, -5.0f, 5.0f, 0.0f };
-            triangles[0].positionC_w = { 2.0f, 5.0f, 5.0f, 0.0f };
-            triangles[0].normal_w = { 0.0f, 0.0f, -1.0f, 0.0f };
-        }
-    );
-    if (!writeOK)
-        return false;
-
-    if (!g_testBuffer.Create(g_d3d.Device(), g_d3d.Context(), c_width, c_height))
         return false;
 
     return true;
@@ -386,17 +350,15 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
 {
     std::chrono::high_resolution_clock::time_point appStart = std::chrono::high_resolution_clock::now();
 
-    bool done = !init();
-
-    // TODO: remove if we don't need to ever change render targets
-    //g_testBuffer.SetAsRenderTarget(g_d3d.Context());
+    if (!init())
+        return 0;
 
     const size_t dispatchX = 1 + c_width / 32;
     const size_t dispatchY = 1 + c_height / 32;
 
     FillSceneData(EScene::SphereOnPlane_LowLight, g_d3d.Context());
 
-    size_t frameNumber = 0; // TODO: temp!
+    bool done = false;
     while (!done)
     {
         // Handle the windows messages.
@@ -443,8 +405,6 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
             UnbindShaderTextures<EShaderType::vertex>(g_d3d.Context(), g_shaderShowPathTrace.GetVSReflector());
             UnbindShaderTextures<EShaderType::pixel>(g_d3d.Context(), g_shaderShowPathTrace.GetPSReflector());
             g_d3d.EndScene();
-
-            ++frameNumber;
         }
     }
 
