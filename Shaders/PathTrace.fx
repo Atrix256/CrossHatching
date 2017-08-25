@@ -2,6 +2,7 @@
 
 static const float c_pi = 3.14159265359f;
 static const float c_rayEpsilon = 0.001f;
+static const float FLT_MAX = 3.402823466e+38F;
 
 //----------------------------------------------------------------------------
 struct SRayHitInfo
@@ -51,6 +52,133 @@ float ScalarTriple (in float3 a, in float3 b, in float3 c)
 {
     return dot(cross(a, b), c);
 }
+
+//----------------------------------------------------------------------------
+float3 ChangeBasis(in float3 v, in float3 xAxis, in float3 yAxis, in float3 zAxis)
+{
+    return float3
+    (
+        dot(v, float3(xAxis[0], yAxis[0], zAxis[0])),
+        dot(v, float3(xAxis[1], yAxis[1], zAxis[1])),
+        dot(v, float3(xAxis[2], yAxis[2], zAxis[2]))
+    );
+}
+
+//----------------------------------------------------------------------------
+float3 UndoChangeBasis(in float3 v, in float3 xAxis, in float3 yAxis, in float3 zAxis)
+{
+    return float3
+    (
+        dot(v, xAxis),
+        dot(v, yAxis),
+        dot(v, zAxis)
+    );
+}
+
+//----------------------------------------------------------------------------
+void RayIntersectsOBB (in float3 rayPos, in float3 rayDir, in OBBPrim obb, inout SRayHitInfo rayHitInfo)
+{
+    // put the ray into local space of the obb
+    rayPos = ChangeBasis(rayPos - obb.position_Albedo.xyz, obb.XAxis_w.xyz, obb.YAxis_w.xyz, obb.ZAxis_w.xyz) + obb.position_Albedo.xyz;
+    rayDir = ChangeBasis(rayDir, obb.XAxis_w.xyz, obb.YAxis_w.xyz, obb.ZAxis_w.xyz);
+
+    // do ray vs aabb intersection
+    float rayMinTime = 0.0;
+    float rayMaxTime = FLT_MAX;
+
+    // find the intersection of the intersection times of each axis to see if / where the
+    // ray hits.
+    int axis = 0;
+    for (axis = 0; axis < 3; ++axis)
+    {
+        //calculate the min and max of the box on this axis
+        float axisMin = obb.position_Albedo[axis] - obb.position_Albedo[axis];
+        float axisMax = obb.position_Albedo[axis] + obb.position_Albedo[axis];
+
+        //if the ray is paralel with this axis
+        if (abs(rayDir[axis]) < 0.0001f)
+        {
+            //if the ray isn't in the box, bail out we know there's no intersection
+            if (rayPos[axis] < axisMin || rayPos[axis] > axisMax)
+                return;
+        }
+        else
+        {
+            //figure out the intersection times of the ray with the 2 values of this axis
+            float axisMinTime = (axisMin - rayPos[axis]) / rayDir[axis];
+            float axisMaxTime = (axisMax - rayPos[axis]) / rayDir[axis];
+
+            //make sure min < max
+            if (axisMinTime > axisMaxTime)
+            {
+                float temp = axisMinTime;
+                axisMinTime = axisMaxTime;
+                axisMaxTime = temp;
+            }
+
+            //union this time slice with our running total time slice
+            if (axisMinTime > rayMinTime)
+                rayMinTime = axisMinTime;
+
+            if (axisMaxTime < rayMaxTime)
+                rayMaxTime = axisMaxTime;
+
+            //if our time slice shrinks to below zero of a time window, we don't intersect
+            if (rayMinTime > rayMaxTime)
+                return;
+        }
+    }
+
+    //if we got here, we do intersect, return our collision info
+    bool fromInside = (rayMinTime == 0.0);
+    float collisionTime;
+    if (fromInside)
+        collisionTime = rayMaxTime;
+    else
+        collisionTime = rayMinTime;
+
+    //enforce a max distance if we should
+    if (rayHitInfo.m_intersectTime >= 0.0 && collisionTime > rayHitInfo.m_intersectTime)
+        return;
+
+    float3 intersectionPoint = rayPos + rayDir * collisionTime;
+
+    // figure out the surface normal by figuring out which axis we are closest to
+    float closestDist = FLT_MAX;
+    float3 normal;
+    float u = 0.0f;
+    float v = 0.0f;
+    for (axis = 0; axis < 3; ++axis)
+    {
+        float distFromPos = abs(obb.position_Albedo[axis] - intersectionPoint[axis]);
+        float distFromEdge = abs(distFromPos - obb.radius_Emissive[axis]);
+
+        if (distFromEdge < closestDist)
+        {
+            closestDist = distFromEdge;
+            normal = float3( 0.0f, 0.0f, 0.0f );
+            if (intersectionPoint[axis] < obb.position_Albedo[axis])
+                normal[axis] = -1.0;
+            else
+                normal[axis] = 1.0;
+        }
+    }
+
+    // make sure normal is facing opposite of ray direction.
+    // this is for if we are hitting the object from the inside / back side.
+    if (dot(normal, rayDir) > 0.0f)
+        normal *= -1.0f;
+
+    rayHitInfo.m_intersectTime = collisionTime;
+    rayHitInfo.m_surfaceNormal = normal;
+    rayHitInfo.m_albedo = obb.position_Albedo.w;
+    rayHitInfo.m_emissive = obb.radius_Emissive.w;
+
+    // convert surface normal back into world space
+    rayHitInfo.m_surfaceNormal = UndoChangeBasis(rayHitInfo.m_surfaceNormal, obb.XAxis_w.xyz, obb.YAxis_w.xyz, obb.ZAxis_w.xyz);
+}
+
+// TODO: something is wrong with intersect vs OBB.  Maybe break it up into AABB and OBB as a wrapper to AABB like in your CPU path tracer?  https://github.com/Atrix256/RandomCode/blob/master/PTBlogPost1/SOBB.h
 
 //----------------------------------------------------------------------------
 void RayIntersectsQuad (in float3 rayPos, in float3 rayDir, in QuadPrim quad, inout SRayHitInfo rayHitInfo)
@@ -120,7 +248,6 @@ void RayIntersectsQuad (in float3 rayPos, in float3 rayDir, in QuadPrim quad, in
     rayHitInfo.m_surfaceNormal = normal;
     rayHitInfo.m_albedo = quad.positionA_Albedo.w;
     rayHitInfo.m_emissive = quad.positionB_Emissive.w;
-    return;
 }
 
 //----------------------------------------------------------------------------
@@ -167,7 +294,6 @@ void RayIntersectsSphere (in float3 rayPos, in float3 rayDir, in SpherePrim sphe
     rayHitInfo.m_surfaceNormal = normal;
     rayHitInfo.m_albedo = sphere.albedo_Emissive_zw.x;
     rayHitInfo.m_emissive = sphere.albedo_Emissive_zw.y;
-    return;
 }
 
 //----------------------------------------------------------------------------
@@ -216,7 +342,6 @@ void RayIntersectsTriangle (in float3 rayPos, in float3 rayDir, in TrianglePrim 
     rayHitInfo.m_surfaceNormal = normal;
     rayHitInfo.m_albedo = trianglePrim.positionA_Albedo.w;
     rayHitInfo.m_emissive = trianglePrim.positionB_Emissive.w;
-    return;
 }
 
 //----------------------------------------------------------------------------
@@ -244,6 +369,13 @@ SRayHitInfo ClosestIntersection (in float3 rayPos, in float3 rayDir)
         int numQuads = frameRnd_appTime_sampleCount_numQuads.w;
         for (int i = 0; i < numQuads; ++i)
             RayIntersectsQuad(rayPos, rayDir, Quads[i], rayHitInfo);
+    }
+
+    // obbs
+    {
+        int numOBBs = numOBBs_yzw.x;
+        for (int i = 0; i < numOBBs; ++i)
+            RayIntersectsOBB(rayPos, rayDir, OBBs[i], rayHitInfo);
     }
 
     return rayHitInfo;

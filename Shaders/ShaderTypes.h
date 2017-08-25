@@ -26,6 +26,7 @@ cbuffer Scene
   float4 cameraAt_FOVY;
   float4 numSpheres_numTris_nearPlaneDist_missColor;
   float4 frameRnd_appTime_sampleCount_numQuads;
+  float4 numOBBs_yzw;
 };
 
 //----------------------------------------------------------------------------
@@ -62,6 +63,16 @@ struct QuadPrim
   float4 normal_w;
 };
 
+struct OBBPrim
+{
+  float4 position_Albedo;
+  float4 radius_Emissive;
+  float4 rotationAxis_rotationAngle;
+  float4 XAxis_w;
+  float4 YAxis_w;
+  float4 ZAxis_w;
+};
+
 //----------------------------------------------------------------------------
 //Structured Buffers
 //----------------------------------------------------------------------------
@@ -70,4 +81,6 @@ StructuredBuffer<SpherePrim> Spheres;
 StructuredBuffer<TrianglePrim> Triangles;
 
 StructuredBuffer<QuadPrim> Quads;
+
+StructuredBuffer<OBBPrim> OBBs;
 
