@@ -20,11 +20,6 @@ RWTexture2D<float4> pathTraceOutput_rw;
 //----------------------------------------------------------------------------
 //Constant Buffers
 //----------------------------------------------------------------------------
-cbuffer Constants
-{
-  float4 pixelColor;
-};
-
 cbuffer Scene
 {
   float4 cameraPos_FOVX;
@@ -36,13 +31,6 @@ cbuffer Scene
 //----------------------------------------------------------------------------
 //Vertex Formats
 //----------------------------------------------------------------------------
-struct PosColorUV
-{
-  float3 position : POSITION0;
-  float4 color : COLOR0;
-  float2 uv : TEXCOORD0;
-};
-
 struct Pos2D
 {
   float4 position : POSITION0;
@@ -74,11 +62,6 @@ struct QuadPrim
   float4 normal_w;
 };
 
-struct SBufferItem
-{
-  float4 c;
-};
-
 //----------------------------------------------------------------------------
 //Structured Buffers
 //----------------------------------------------------------------------------
@@ -87,6 +70,4 @@ StructuredBuffer<SpherePrim> Spheres;
 StructuredBuffer<TrianglePrim> Triangles;
 
 StructuredBuffer<QuadPrim> Quads;
-
-StructuredBuffer<SBufferItem> Input;
 

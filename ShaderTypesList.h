@@ -104,10 +104,6 @@ TEXTURE(Name, FileName)
 //                     Constant Buffers
 //=================================================================
 
-CONSTANT_BUFFER_BEGIN(Constants)
-    CONSTANT_BUFFER_FIELD(pixelColor, float4)
-CONSTANT_BUFFER_END
-
 CONSTANT_BUFFER_BEGIN(Scene)
     CONSTANT_BUFFER_FIELD(cameraPos_FOVX, float4)
     CONSTANT_BUFFER_FIELD(cameraAt_FOVY, float4)
@@ -139,19 +135,9 @@ STRUCTURED_BUFFER_BEGIN(Quads, QuadPrim, 10)
     STRUCTURED_BUFFER_FIELD(normal_w, float4)
 STRUCTURED_BUFFER_END
 
-STRUCTURED_BUFFER_BEGIN(Input, SBufferItem, 1)
-    STRUCTURED_BUFFER_FIELD(c, float4)
-STRUCTURED_BUFFER_END
-
 //=================================================================
 //                     Vertex Formats
 //=================================================================
-
-VERTEX_FORMAT_BEGIN(PosColorUV)
-    VERTEX_FORMAT_FIELD(position, POSITION, 0, float3, DXGI_FORMAT_R32G32B32_FLOAT)
-    VERTEX_FORMAT_FIELD(color, COLOR, 0, float4, DXGI_FORMAT_R32G32B32A32_FLOAT)
-    VERTEX_FORMAT_FIELD(uv, TEXCOORD, 0, float2, DXGI_FORMAT_R32G32_FLOAT)
-VERTEX_FORMAT_END
 
 VERTEX_FORMAT_BEGIN(Pos2D)
     VERTEX_FORMAT_FIELD(position, POSITION, 0, float4, DXGI_FORMAT_R32G32B32A32_FLOAT)

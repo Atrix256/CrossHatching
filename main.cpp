@@ -28,13 +28,10 @@ const float3 c_cameraAt = { 0.0f, 0.0f, 0.0f };
 
 // globals
 CD3D11 g_d3d;
-CShader g_shader;
-CComputeShader g_computeShader;
-CModel<ShaderTypes::VertexFormats::PosColorUV> g_model;
+
 CRenderTarget g_testBuffer;
 
 CModel<ShaderTypes::VertexFormats::Pos2D> g_fullScreenMesh;
-CShader g_shaderCopyTexture;
 
 CComputeShader g_pathTrace;
 CShader g_shaderShowPathTrace;
@@ -301,34 +298,12 @@ bool init ()
     if (!writeOK)
         return false;
 
-    writeOK = ShaderData::StructuredBuffers::Input.Write(
-        g_d3d.Context(),
-        [] (std::array<ShaderTypes::StructuredBuffers::SBufferItem, 1>& data)
-        {
-            data[0].c[0] = 0.4f;
-            data[0].c[1] = 0.6f;
-            data[0].c[2] = 0.8f;
-            data[0].c[3] = 1.0f;
-        }
-    );
-    if (!writeOK)
-        return false;
-
     if (!g_pathTrace.Load(g_d3d.Device(), WindowGetHWND(), L"Shaders/PathTrace.fx", c_shaderDebug))
         return false;
 
-    if (!g_shaderShowPathTrace.Load(g_d3d.Device(), WindowGetHWND(), L"Shaders/ShowPathTrace.fx", ShaderData::VertexFormats::PosColorUV, ShaderData::VertexFormats::PosColorUVElements, c_shaderDebug))
+    if (!g_shaderShowPathTrace.Load(g_d3d.Device(), WindowGetHWND(), L"Shaders/ShowPathTrace.fx", ShaderData::VertexFormats::Pos2D, ShaderData::VertexFormats::Pos2DElements, c_shaderDebug))
         return false;
 
-
-    if (!g_shaderCopyTexture.Load(g_d3d.Device(), WindowGetHWND(), L"Shaders/CopyTexture.fx", ShaderData::VertexFormats::PosColorUV, ShaderData::VertexFormats::PosColorUVElements, c_shaderDebug))
-        return false;
-
-    if (!g_shader.Load(g_d3d.Device(), WindowGetHWND(), L"Shaders/shader.fx", ShaderData::VertexFormats::PosColorUV, ShaderData::VertexFormats::PosColorUVElements, c_shaderDebug))
-        return false;
-
-    if (!g_computeShader.Load(g_d3d.Device(), WindowGetHWND(), L"Shaders/computeshader.fx", c_shaderDebug))
-        return false;
 
     // make a full screen triangle
     writeOK = g_fullScreenMesh.Create(
@@ -347,40 +322,6 @@ bool init ()
             indexData[2] = 2;
         }
     );
-
-    // create a simple triangle model
-    writeOK = g_model.Create(
-        g_d3d.Device(),
-        [] (std::vector<ShaderTypes::VertexFormats::PosColorUV>& vertexData, std::vector<unsigned long>& indexData)
-        {
-            // Create the vertex array.
-            vertexData.resize(3);
-
-            // Create the index array.
-            indexData.resize(3);
-
-            // Load the vertex array with data.
-            vertexData[0].position = { -1.0f, -1.0f, 0.0f };  // Bottom left.
-            vertexData[0].color = { 1.0f, 1.0f, 0.0f, 1.0f };
-            vertexData[0].uv = { 0.0f, 0.0f };
-
-            vertexData[1].position = { 0.0f, 1.0f, 0.0f };  // Top middle.
-            vertexData[1].color = { 0.0f, 1.0f, 1.0f, 1.0f };
-            vertexData[1].uv = { 0.5f, 1.0f };
-
-            vertexData[2].position = { 1.0f, -1.0f, 0.0f };  // Bottom right.
-            vertexData[2].color = { 1.0f, 0.0f, 1.0f, 1.0f };
-            vertexData[2].uv = { 1.0f, 0.0f };
-
-            // Load the index array with data.
-            indexData[0] = 0;  // Bottom left.
-            indexData[1] = 1;  // Top middle.
-            indexData[2] = 2;  // Bottom right.
-        }
-    );
-
-    if (!writeOK)
-        return false;
 
     // TODO: maybe separate scene data from other stuff (frameRnd_appTime_sampleCount_w) since it doesn't need to be updated every frame. maybe just seperate "set infrequently" from "set frequently"
     // TODO: make this an initialization of scene data to sane values / defaults (like for near place).
@@ -450,9 +391,6 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
     // TODO: remove if we don't need to ever change render targets
     //g_testBuffer.SetAsRenderTarget(g_d3d.Context());
 
-    // TODO: remove unused old shaders!
-    // TODO: make it switch scene on key press!
-
     const size_t dispatchX = 1 + c_width / 32;
     const size_t dispatchY = 1 + c_height / 32;
 
@@ -491,51 +429,20 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
             if (!writeOK)
                 done = true;
 
-            // update the constant buffer
-            writeOK = ShaderData::ConstantBuffers::Constants.Write(
-                g_d3d.Context(),
-                [frameNumber] (ShaderTypes::ConstantBuffers::Constants& constants)
-                {
-                    constants.pixelColor[0] = float(frameNumber % 4) / float(8.0f) + 0.5f;
-                    constants.pixelColor[1] = 1.0f;
-                    constants.pixelColor[2] = 2.0f;
-                    constants.pixelColor[3] = 3.0f;
-                }
-            );
-            if (!writeOK)
-                done = true;
+            // compute
+            FillShaderParams<EShaderType::compute>(g_d3d.Context(), g_pathTrace.GetReflector());
+            g_pathTrace.Dispatch(g_d3d.Context(), dispatchX, dispatchY, 1);
+            UnbindShaderTextures<EShaderType::compute>(g_d3d.Context(), g_pathTrace.GetReflector());
 
-            #if 0
-                // compute
-                FillShaderParams<EShaderType::compute>(g_d3d.Context(), g_computeShader.GetReflector());
-                g_computeShader.Dispatch(g_d3d.Context(), dispatchX, dispatchY, 1);
-                UnbindShaderTextures<EShaderType::compute>(g_d3d.Context(), g_computeShader.GetReflector());
-
-                // vs & ps
-                g_d3d.BeginScene(0.4f, 0.0f, 0.4f, 1.0f);
-                FillShaderParams<EShaderType::vertex>(g_d3d.Context(), g_shader.GetVSReflector());
-                FillShaderParams<EShaderType::pixel>(g_d3d.Context(), g_shader.GetPSReflector());
-                g_model.Render(g_d3d.Context());
-                g_shader.Draw(g_d3d.Context(), g_model.GetIndexCount());
-                UnbindShaderTextures<EShaderType::vertex>(g_d3d.Context(), g_shader.GetVSReflector());
-                UnbindShaderTextures<EShaderType::pixel>(g_d3d.Context(), g_shader.GetPSReflector());
-                g_d3d.EndScene();
-            #else
-                // compute
-                FillShaderParams<EShaderType::compute>(g_d3d.Context(), g_pathTrace.GetReflector());
-                g_pathTrace.Dispatch(g_d3d.Context(), dispatchX, dispatchY, 1);
-                UnbindShaderTextures<EShaderType::compute>(g_d3d.Context(), g_pathTrace.GetReflector());
-
-                // vs & ps
-                g_d3d.BeginScene(0.4f, 0.0f, 0.4f, 1.0f);
-                FillShaderParams<EShaderType::vertex>(g_d3d.Context(), g_shaderShowPathTrace.GetVSReflector());
-                FillShaderParams<EShaderType::pixel>(g_d3d.Context(), g_shaderShowPathTrace.GetPSReflector());
-                g_fullScreenMesh.Render(g_d3d.Context());
-                g_shaderShowPathTrace.Draw(g_d3d.Context(), g_fullScreenMesh.GetIndexCount());
-                UnbindShaderTextures<EShaderType::vertex>(g_d3d.Context(), g_shaderShowPathTrace.GetVSReflector());
-                UnbindShaderTextures<EShaderType::pixel>(g_d3d.Context(), g_shaderShowPathTrace.GetPSReflector());
-                g_d3d.EndScene();
-            #endif
+            // vs & ps
+            g_d3d.BeginScene(0.4f, 0.0f, 0.4f, 1.0f);
+            FillShaderParams<EShaderType::vertex>(g_d3d.Context(), g_shaderShowPathTrace.GetVSReflector());
+            FillShaderParams<EShaderType::pixel>(g_d3d.Context(), g_shaderShowPathTrace.GetPSReflector());
+            g_fullScreenMesh.Render(g_d3d.Context());
+            g_shaderShowPathTrace.Draw(g_d3d.Context(), g_fullScreenMesh.GetIndexCount());
+            UnbindShaderTextures<EShaderType::vertex>(g_d3d.Context(), g_shaderShowPathTrace.GetVSReflector());
+            UnbindShaderTextures<EShaderType::pixel>(g_d3d.Context(), g_shaderShowPathTrace.GetPSReflector());
+            g_d3d.EndScene();
 
             ++frameNumber;
         }
