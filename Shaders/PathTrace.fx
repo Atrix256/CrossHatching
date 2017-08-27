@@ -13,22 +13,44 @@ struct SRayHitInfo
     float  m_emissive;
 };
 //----------------------------------------------------------------------------
-// https://www.shadertoy.com/view/4tl3z4
-float hash1 (inout float seed)
-{
-    return frac(sin(seed += 0.1)*43758.5453123);
-}
+// These are from: https://www.shadertoy.com/view/4tl3z4
 // Links to other shader friendly prngs:
 // https://www.shadertoy.com/view/4djSRW "Hash Without Sine" by Dave_Hoskins
 // https://www.shadertoy.com/view/MsV3z3 2d Weyl Hash by MBR
 // https://github.com/gheshu/gputracer/blob/master/src/depth.glsl#L43 From Lauren @lh0xfb
+float hash1 (inout float seed)
+{
+    return frac(sin(seed += 0.1)*43758.5453123);
+}
+float2 hash2 (inout float seed)
+{
+    return frac(sin(float2(seed += 0.1, seed += 0.1))*float2(43758.5453123, 22578.1459123));
+}
+
+//----------------------------------------------------------------------------
+// for testing, from https://www.shadertoy.com/view/4tl3z4
+float3 UnformSampleSphere (inout float seed)
+{
+    float2 r = hash2(seed)*6.2831;
+	float3 dr= float3(sin(r.x)*float2(sin(r.y),cos(r.y)),cos(r.x));
+	return dr;
+}
+
+//----------------------------------------------------------------------------
+// for testing, from https://www.shadertoy.com/view/4tl3z4
+float3 UnformSampleHemiphere (const float3 n, inout float seed) {
+	float3 dr = UnformSampleSphere(seed);
+	return dot(dr,n) * dr;
+}
 
 //----------------------------------------------------------------------------
 // from smallpt path tracer: http://www.kevinbeason.com/smallpt/
 float3 CosineSampleHemisphere (in float3 normal, inout float rngSeed)
 {
-    float r1 = 2.0f * c_pi * hash1(rngSeed);
-    float r2 = hash1(rngSeed);
+    float2 rnd = hash2(rngSeed);
+
+    float r1 = 2.0f * c_pi * rnd.x;
+    float r2 = rnd.y;
     float r2s = sqrt(r2);
 
     float3 w = normal;
@@ -535,7 +557,13 @@ void cs_main (
     // calculate the direction
     float3 rayDir = normalize(pixelPos - cameraPos_FOVX.xyz);
 
-    // path trace!
+    // path trace
     float light = Light_Incoming(pixelPos, rayDir, rngSeed);
-    pathTraceOutput_rw[dispatchThreadID.xy] = lerp(pathTraceOutput_rw[dispatchThreadID.xy], float4(light, light, light, light), 1.0f / frameRnd_appTime_sampleCount_numQuads.z);
+
+    // lerp from the old value to the current
+    float4 output = pathTraceOutput_rw[dispatchThreadID.xy];
+    output.x = lerp(output.x, light, 1.0f / frameRnd_appTime_sampleCount_numQuads.z);
+
+    // write the output
+    pathTraceOutput_rw[dispatchThreadID.xy] = output;
 }

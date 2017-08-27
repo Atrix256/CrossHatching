@@ -24,6 +24,12 @@ SPixelInput vs_main(Pos2D input)
 //----------------------------------------------------------------------------
 float4 ps_main(SPixelInput input) : SV_TARGET
 {
+    // get the lit value
+    float light = pathTraceOutput.Sample(SamplerLinearWrap, input.uv);
+
     // apply sRGB correction
-    return pow(pathTraceOutput.Sample(SamplerLinearWrap, input.uv), float4(1.0f / 2.2f, 1.0f / 2.2f, 1.0f / 2.2f, 1.0f / 2.2f));
+    light = pow(light, 1.0f / 2.0f);
+
+    // return the value as greyscale
+    return float4(light, light, light, 1.0f);
 }
