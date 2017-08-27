@@ -75,7 +75,7 @@ float ScalarTriple (in float3 a, in float3 b, in float3 c)
 }
 
 //----------------------------------------------------------------------------
-float3 ChangeBasis(in float3 v, in float3 xAxis, in float3 yAxis, in float3 zAxis)
+float3 ChangeBasis (in float3 v, in float3 xAxis, in float3 yAxis, in float3 zAxis)
 {
     return float3
     (
@@ -86,7 +86,7 @@ float3 ChangeBasis(in float3 v, in float3 xAxis, in float3 yAxis, in float3 zAxi
 }
 
 //----------------------------------------------------------------------------
-float3 UndoChangeBasis(in float3 v, in float3 xAxis, in float3 yAxis, in float3 zAxis)
+float3 UndoChangeBasis (in float3 v, in float3 xAxis, in float3 yAxis, in float3 zAxis)
 {
     return float3
     (
@@ -97,13 +97,8 @@ float3 UndoChangeBasis(in float3 v, in float3 xAxis, in float3 yAxis, in float3 
 }
 
 //----------------------------------------------------------------------------
-void RayIntersectsOBB (in float3 rayPos, in float3 rayDir, in OBBPrim obb, inout SRayHitInfo rayHitInfo)
+void RayIntersectsAABB (in float3 rayPos, in float3 rayDir, in OBBPrim obb, inout SRayHitInfo rayHitInfo)
 {
-    // put the ray into local space of the obb
-    rayPos = ChangeBasis(rayPos - obb.position_Albedo.xyz, obb.XAxis_w.xyz, obb.YAxis_w.xyz, obb.ZAxis_w.xyz) + obb.position_Albedo.xyz;
-    rayDir = ChangeBasis(rayDir, obb.XAxis_w.xyz, obb.YAxis_w.xyz, obb.ZAxis_w.xyz);
-
-    // do ray vs aabb intersection
     float rayMinTime = 0.0;
     float rayMaxTime = FLT_MAX;
 
@@ -113,8 +108,8 @@ void RayIntersectsOBB (in float3 rayPos, in float3 rayDir, in OBBPrim obb, inout
     for (axis = 0; axis < 3; ++axis)
     {
         //calculate the min and max of the box on this axis
-        float axisMin = obb.position_Albedo[axis] - obb.position_Albedo[axis];
-        float axisMax = obb.position_Albedo[axis] + obb.position_Albedo[axis];
+        float axisMin = obb.position_Albedo[axis] - obb.radius_Emissive[axis];
+        float axisMax = obb.position_Albedo[axis] + obb.radius_Emissive[axis];
 
         //if the ray is paralel with this axis
         if (abs(rayDir[axis]) < 0.0001f)
@@ -194,9 +189,22 @@ void RayIntersectsOBB (in float3 rayPos, in float3 rayDir, in OBBPrim obb, inout
     rayHitInfo.m_surfaceNormal = normal;
     rayHitInfo.m_albedo = obb.position_Albedo.w;
     rayHitInfo.m_emissive = obb.radius_Emissive.w;
+}
 
-    // convert surface normal back into world space
-    rayHitInfo.m_surfaceNormal = UndoChangeBasis(rayHitInfo.m_surfaceNormal, obb.XAxis_w.xyz, obb.YAxis_w.xyz, obb.ZAxis_w.xyz);
+//----------------------------------------------------------------------------
+void RayIntersectsOBB (in float3 rayPos, in float3 rayDir, in OBBPrim obb, inout SRayHitInfo rayHitInfo)
+{
+    // put the ray into local space of the obb
+    float3 newRayPos = ChangeBasis(rayPos - obb.position_Albedo.xyz, obb.XAxis_w, obb.YAxis_w, obb.ZAxis_w) + obb.position_Albedo.xyz;
+    float3 newRayDir = ChangeBasis(rayDir, obb.XAxis_w, obb.YAxis_w, obb.ZAxis_w);
+
+    // do ray vs abb intersection
+    RayIntersectsAABB(newRayPos, newRayDir, obb, rayHitInfo);
+    if (rayHitInfo.m_intersectTime < 0.0f)
+        return;
+
+    // convert surface normal back to global space
+    rayHitInfo.m_surfaceNormal = UndoChangeBasis(rayHitInfo.m_surfaceNormal, obb.XAxis_w, obb.YAxis_w, obb.ZAxis_w);
 }
 
 // TODO: something is wrong with intersect vs OBB.  Maybe break it up into AABB and OBB as a wrapper to AABB like in your CPU path tracer?  https://github.com/Atrix256/RandomCode/blob/master/PTBlogPost1/SOBB.h
