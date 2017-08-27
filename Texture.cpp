@@ -184,7 +184,9 @@ bool CTexture::Create (ID3D11Device* device, ID3D11DeviceContext* deviceContext,
     textureDesc.Width = (UINT)width;
     textureDesc.MipLevels = 1;
     textureDesc.ArraySize = 1;
-    textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    // TODO: temp! make this a macro parameter or something!
+    //textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    textureDesc.Format = DXGI_FORMAT_R32_FLOAT;
     textureDesc.SampleDesc.Count = 1;
     textureDesc.SampleDesc.Quality = 0;
     textureDesc.Usage = D3D11_USAGE_DEFAULT;

@@ -1,3 +1,9 @@
+* something is wrong with one of the tests. maybe ray vs triangle. it has the black line in the center.
+ * could also be a problem w/ hemisphere sampling maybe.
+
+* Problem with convergance: texture is RGBA 8 bits per channel. lerp is doing nothing! need a full sized float to store the values!
+ * it's solved now but need to formalize texture declarations i think
+
 * set up a cornel box scene to start out.
 * objects need emissive and diffuse (single float) to do basic shading.
 

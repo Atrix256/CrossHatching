@@ -91,8 +91,10 @@ bool WriteShaderTypesHLSL (void)
 
     // write the texture declarations
     fprintf(file, "//----------------------------------------------------------------------------\n//Textures\n//----------------------------------------------------------------------------\n");
-    #define TEXTURE(NAME, FILENAME) fprintf(file, "Texture2D " #NAME ";\nRWTexture2D<float4> " #NAME "_rw;\n\n");
+    #define TEXTURE(NAME, FILENAME) fprintf(file, "Texture2D " #NAME ";\nRWTexture2D<float> " #NAME "_rw;\n\n");
     #include "ShaderTypesList.h"
+    // TODO: the above declares the texture as <float> but that should be based on texture type, so put it in macro!
+    // TODO: note the above happens for textures declared as null pointers and not. loaded files should be float4. others should vary.
 
     // write the cbuffer declarations
     fprintf(file, "//----------------------------------------------------------------------------\n//Constant Buffers\n//----------------------------------------------------------------------------\n");

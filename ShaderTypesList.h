@@ -161,7 +161,6 @@ VERTEX_FORMAT_END
 //=================================================================
 
 TEXTURE(stone, "Art/stone01.tga")
-TEXTURE(rwtexture, nullptr)
 TEXTURE(pathTraceOutput, nullptr)
 
 //=================================================================

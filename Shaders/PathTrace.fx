@@ -207,8 +207,6 @@ void RayIntersectsOBB (in float3 rayPos, in float3 rayDir, in OBBPrim obb, inout
     rayHitInfo.m_surfaceNormal = UndoChangeBasis(rayHitInfo.m_surfaceNormal, obb.XAxis_w, obb.YAxis_w, obb.ZAxis_w);
 }
 
-// TODO: something is wrong with intersect vs OBB.  Maybe break it up into AABB and OBB as a wrapper to AABB like in your CPU path tracer?  https://github.com/Atrix256/RandomCode/blob/master/PTBlogPost1/SOBB.h
-
 //----------------------------------------------------------------------------
 void RayIntersectsQuad (in float3 rayPos, in float3 rayDir, in QuadPrim quad, inout SRayHitInfo rayHitInfo)
 {
@@ -568,10 +566,7 @@ void cs_main (
     // path trace
     float light = Light_Incoming(pixelPos, rayDir, rngSeed);
 
-    // lerp from the old value to the current
-    float4 output = pathTraceOutput_rw[dispatchThreadID.xy];
-    output.x = lerp(output.x, light, 1.0f / frameRnd_appTime_sampleCount_numQuads.z);
-
-    // write the output
-    pathTraceOutput_rw[dispatchThreadID.xy] = output;
+    // use lerping for incremental averageing:  https://blog.demofox.org/2016/08/23/incremental-averaging/
+    // lerp from the old value to the current and write it back out
+    pathTraceOutput_rw[dispatchThreadID.xy] = lerp(pathTraceOutput_rw[dispatchThreadID.xy], light, 1.0f / frameRnd_appTime_sampleCount_numQuads.z);
 }

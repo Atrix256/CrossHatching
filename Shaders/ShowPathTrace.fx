@@ -33,3 +33,5 @@ float4 ps_main(SPixelInput input) : SV_TARGET
     // return the value as greyscale
     return float4(light, light, light, 1.0f);
 }
+
+// TODO: if we need more info like 3d position of hit, to do planar UV's etc, can easily recalculate location of first hit. Just put path tracer code in a shared header.
