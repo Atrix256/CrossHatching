@@ -12,24 +12,23 @@ struct SRayHitInfo
     float  m_albedo;
     float  m_emissive;
 };
-
 //----------------------------------------------------------------------------
-// this is hash13() from the "Hash without Sine" shadertoy by Dave_Hoskins.
-// https://www.shadertoy.com/view/4djSRW
-float RandomFloat (float3 seed)
+// https://www.shadertoy.com/view/4tl3z4
+float hash1 (inout float seed)
 {
-    // TODO:  443.8975f or 0.1031f?
-    float3 p3 = frac(seed * 0.1031f);
-    p3 += dot(p3, p3.yzx + 19.19);
-    return frac((p3.x + p3.y) * p3.z);
+    return frac(sin(seed += 0.1)*43758.5453123);
 }
+// Links to other shader friendly prngs:
+// https://www.shadertoy.com/view/4djSRW "Hash Without Sine" by Dave_Hoskins
+// https://www.shadertoy.com/view/MsV3z3 2d Weyl Hash by MBR
+// https://github.com/gheshu/gputracer/blob/master/src/depth.glsl#L43 From Lauren @lh0xfb
 
 //----------------------------------------------------------------------------
 // from smallpt path tracer: http://www.kevinbeason.com/smallpt/
-float3 CosineSampleHemisphere (in float3 normal, in float pixelIndex, in float depth)
+float3 CosineSampleHemisphere (in float3 normal, inout float rngSeed)
 {
-    float r1 = 2.0f * c_pi * RandomFloat(float3(frameRnd_appTime_sampleCount_numQuads.x, pixelIndex, depth + 0.1238f));
-    float r2 = RandomFloat(float3(frameRnd_appTime_sampleCount_numQuads.x, pixelIndex, depth + 0.3167f));
+    float r1 = 2.0f * c_pi * hash1(rngSeed);
+    float r2 = hash1(rngSeed);
     float r2s = sqrt(r2);
 
     float3 w = normal;
@@ -218,7 +217,7 @@ void RayIntersectsQuad (in float3 rayPos, in float3 rayDir, in QuadPrim quad, in
         u *= denom;
         v *= denom;
         w *= denom; // w = 1.0f - u - v;
-        r = u*quad.positionA_Albedo.xyz + v*quad.positionD_w + w*quad.positionC_w.xyz;
+        r = u*quad.positionA_Albedo.xyz + v*quad.positionD_w.xyz + w*quad.positionC_w.xyz;
     }
 
     // make sure normal is facing opposite of ray direction.
@@ -382,7 +381,7 @@ SRayHitInfo ClosestIntersection (in float3 rayPos, in float3 rayDir)
 }
 
 //----------------------------------------------------------------------------
-float Light_Outgoing_0 (in SRayHitInfo rayHitInfo, in float3 rayHitPos, in float3 outDir, in float pixelIndex)
+float Light_Outgoing_0 (in SRayHitInfo rayHitInfo, in float3 rayHitPos, in float3 outDir, inout float rngSeed)
 {
     // start with emissive lighting
     float light = rayHitInfo.m_emissive;
@@ -395,16 +394,16 @@ float Light_Outgoing_0 (in SRayHitInfo rayHitInfo, in float3 rayHitPos, in float
 }
 
 //----------------------------------------------------------------------------
-float Light_Outgoing_1 (in SRayHitInfo rayHitInfo, in float3 rayHitPos, in float3 outDir, in float pixelIndex)
+float Light_Outgoing_1 (in SRayHitInfo rayHitInfo, in float3 rayHitPos, in float3 outDir, inout float rngSeed)
 {
     // start with emissive lighting
     float light = rayHitInfo.m_emissive;
 
     // add in a random recursive sample for global illumination
-    float3 newRayDir = CosineSampleHemisphere(rayHitInfo.m_surfaceNormal, pixelIndex, 1.0f);
+    float3 newRayDir = CosineSampleHemisphere(rayHitInfo.m_surfaceNormal, rngSeed);
     SRayHitInfo newRayHitInfo = ClosestIntersection(rayHitPos, newRayDir);
     if (newRayHitInfo.m_intersectTime >= 0.0f)
-        light += rayHitInfo.m_albedo * Light_Outgoing_0(newRayHitInfo, rayHitPos + newRayDir * newRayHitInfo.m_intersectTime + -newRayDir * c_rayEpsilon, -newRayDir, pixelIndex);
+        light += rayHitInfo.m_albedo * Light_Outgoing_0(newRayHitInfo, rayHitPos + newRayDir * newRayHitInfo.m_intersectTime + -newRayDir * c_rayEpsilon, -newRayDir, rngSeed);
     else
         light += rayHitInfo.m_albedo * numSpheres_numTris_nearPlaneDist_missColor.w;
 
@@ -413,16 +412,16 @@ float Light_Outgoing_1 (in SRayHitInfo rayHitInfo, in float3 rayHitPos, in float
 }
 
 //----------------------------------------------------------------------------
-float Light_Outgoing_2 (in SRayHitInfo rayHitInfo, in float3 rayHitPos, in float3 outDir, in float pixelIndex)
+float Light_Outgoing_2 (in SRayHitInfo rayHitInfo, in float3 rayHitPos, in float3 outDir, inout float rngSeed)
 {
     // start with emissive lighting
     float light = rayHitInfo.m_emissive;
 
     // add in a random recursive sample for global illumination
-    float3 newRayDir = CosineSampleHemisphere(rayHitInfo.m_surfaceNormal, pixelIndex, 2.0f);
+    float3 newRayDir = CosineSampleHemisphere(rayHitInfo.m_surfaceNormal, rngSeed);
     SRayHitInfo newRayHitInfo = ClosestIntersection(rayHitPos, newRayDir);
     if (newRayHitInfo.m_intersectTime >= 0.0f)
-        light += rayHitInfo.m_albedo * Light_Outgoing_1(newRayHitInfo, rayHitPos + newRayDir * newRayHitInfo.m_intersectTime + -newRayDir * c_rayEpsilon, -newRayDir, pixelIndex);
+        light += rayHitInfo.m_albedo * Light_Outgoing_1(newRayHitInfo, rayHitPos + newRayDir * newRayHitInfo.m_intersectTime + -newRayDir * c_rayEpsilon, -newRayDir, rngSeed);
     else
         light += rayHitInfo.m_albedo * numSpheres_numTris_nearPlaneDist_missColor.w;
 
@@ -431,16 +430,16 @@ float Light_Outgoing_2 (in SRayHitInfo rayHitInfo, in float3 rayHitPos, in float
 }
 
 //----------------------------------------------------------------------------
-float Light_Outgoing_3 (in SRayHitInfo rayHitInfo, in float3 rayHitPos, in float3 outDir, in float pixelIndex)
+float Light_Outgoing_3 (in SRayHitInfo rayHitInfo, in float3 rayHitPos, in float3 outDir, inout float rngSeed)
 {
     // start with emissive lighting
     float light = rayHitInfo.m_emissive;
 
     // add in a random recursive sample for global illumination
-    float3 newRayDir = CosineSampleHemisphere(rayHitInfo.m_surfaceNormal, pixelIndex, 3.0f);
+    float3 newRayDir = CosineSampleHemisphere(rayHitInfo.m_surfaceNormal, rngSeed);
     SRayHitInfo newRayHitInfo = ClosestIntersection(rayHitPos, newRayDir);
     if (newRayHitInfo.m_intersectTime >= 0.0f)
-        light += rayHitInfo.m_albedo * Light_Outgoing_2(newRayHitInfo, rayHitPos + newRayDir * newRayHitInfo.m_intersectTime + -newRayDir * c_rayEpsilon, -newRayDir, pixelIndex);
+        light += rayHitInfo.m_albedo * Light_Outgoing_2(newRayHitInfo, rayHitPos + newRayDir * newRayHitInfo.m_intersectTime + -newRayDir * c_rayEpsilon, -newRayDir, rngSeed);
     else
         light += rayHitInfo.m_albedo * numSpheres_numTris_nearPlaneDist_missColor.w;
 
@@ -449,16 +448,16 @@ float Light_Outgoing_3 (in SRayHitInfo rayHitInfo, in float3 rayHitPos, in float
 }
 
 //----------------------------------------------------------------------------
-float Light_Outgoing_4 (in SRayHitInfo rayHitInfo, in float3 rayHitPos, in float3 outDir, in float pixelIndex)
+float Light_Outgoing_4 (in SRayHitInfo rayHitInfo, in float3 rayHitPos, in float3 outDir, inout float rngSeed)
 {
     // start with emissive lighting
     float light = rayHitInfo.m_emissive;
 
     // add in a random recursive sample for global illumination
-    float3 newRayDir = CosineSampleHemisphere(rayHitInfo.m_surfaceNormal, pixelIndex, 4.0f);
+    float3 newRayDir = CosineSampleHemisphere(rayHitInfo.m_surfaceNormal, rngSeed);
     SRayHitInfo newRayHitInfo = ClosestIntersection(rayHitPos, newRayDir);
     if (newRayHitInfo.m_intersectTime >= 0.0f)
-        light += rayHitInfo.m_albedo * Light_Outgoing_3(newRayHitInfo, rayHitPos + newRayDir * newRayHitInfo.m_intersectTime + -newRayDir * c_rayEpsilon, -newRayDir, pixelIndex);
+        light += rayHitInfo.m_albedo * Light_Outgoing_3(newRayHitInfo, rayHitPos + newRayDir * newRayHitInfo.m_intersectTime + -newRayDir * c_rayEpsilon, -newRayDir, rngSeed);
     else
         light += rayHitInfo.m_albedo * numSpheres_numTris_nearPlaneDist_missColor.w;
 
@@ -467,16 +466,16 @@ float Light_Outgoing_4 (in SRayHitInfo rayHitInfo, in float3 rayHitPos, in float
 }
 
 //----------------------------------------------------------------------------
-float Light_Outgoing_5 (in SRayHitInfo rayHitInfo, in float3 rayHitPos, in float3 outDir, in float pixelIndex)
+float Light_Outgoing_5 (in SRayHitInfo rayHitInfo, in float3 rayHitPos, in float3 outDir, inout float rngSeed)
 {
     // start with emissive lighting
     float light = rayHitInfo.m_emissive;
 
     // add in a random recursive sample for global illumination
-    float3 newRayDir = CosineSampleHemisphere(rayHitInfo.m_surfaceNormal, pixelIndex, 5.0f);
+    float3 newRayDir = CosineSampleHemisphere(rayHitInfo.m_surfaceNormal, rngSeed);
     SRayHitInfo newRayHitInfo = ClosestIntersection(rayHitPos, newRayDir);
     if (newRayHitInfo.m_intersectTime >= 0.0f)
-        light += rayHitInfo.m_albedo * Light_Outgoing_4(newRayHitInfo, rayHitPos + newRayDir * newRayHitInfo.m_intersectTime + -newRayDir * c_rayEpsilon, -newRayDir, pixelIndex);
+        light += rayHitInfo.m_albedo * Light_Outgoing_4(newRayHitInfo, rayHitPos + newRayDir * newRayHitInfo.m_intersectTime + -newRayDir * c_rayEpsilon, -newRayDir, rngSeed);
     else
         light += rayHitInfo.m_albedo * numSpheres_numTris_nearPlaneDist_missColor.w;
 
@@ -485,7 +484,7 @@ float Light_Outgoing_5 (in SRayHitInfo rayHitInfo, in float3 rayHitPos, in float
 }
 
 //----------------------------------------------------------------------------
-float Light_Incoming (in float3 rayPos, in float3 rayDir, in uint pixelIndex)
+float Light_Incoming (in float3 rayPos, in float3 rayDir, inout float rngSeed)
 {
     // find out what our ray hit first
     SRayHitInfo rayHitInfo = ClosestIntersection(rayPos, rayDir);
@@ -495,7 +494,7 @@ float Light_Incoming (in float3 rayPos, in float3 rayDir, in uint pixelIndex)
         return numSpheres_numTris_nearPlaneDist_missColor.w;
 
     // else, return the amount of light coming towards us from that point on the object we hit
-    return Light_Outgoing_5(rayHitInfo, rayPos + rayDir * rayHitInfo.m_intersectTime + -rayDir * c_rayEpsilon, -rayDir, pixelIndex);
+    return Light_Outgoing_5(rayHitInfo, rayPos + rayDir * rayHitInfo.m_intersectTime + -rayDir * c_rayEpsilon, -rayDir, rngSeed);
 }
 
 //----------------------------------------------------------------------------
@@ -511,7 +510,8 @@ void cs_main (
     pathTraceOutput_rw.GetDimensions(dimsX, dimsY);
     if (dispatchThreadID.x > dimsX || dispatchThreadID.y > dimsY)
         return;
-    float pixelIndex = dispatchThreadID.y * dimsY + dispatchThreadID.x;
+
+    float rngSeed = float(dispatchThreadID.x) + float(dispatchThreadID.y) * 3.43121412313f + frac(1.12345314312*frameRnd_appTime_sampleCount_numQuads.y) + frameRnd_appTime_sampleCount_numQuads.x;
 
     // calculate coordinate of pixel on the screen in [-1,1]
     float2 pixelClipSpace = 2.0f * float2(dispatchThreadID.xy) / float2(dimsX, dimsY) - 1.0f;
@@ -536,9 +536,6 @@ void cs_main (
     float3 rayDir = normalize(pixelPos - cameraPos_FOVX.xyz);
 
     // path trace!
-    float light = Light_Incoming(pixelPos, rayDir, pixelIndex);
+    float light = Light_Incoming(pixelPos, rayDir, rngSeed);
     pathTraceOutput_rw[dispatchThreadID.xy] = lerp(pathTraceOutput_rw[dispatchThreadID.xy], float4(light, light, light, light), 1.0f / frameRnd_appTime_sampleCount_numQuads.z);
 }
-
-
-// TODO: make a "miss color". this is a solid color emissive sky box. Have it sent in as a constant in the scene data.
