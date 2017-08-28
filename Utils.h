@@ -1,5 +1,7 @@
 #pragma once
 
+static const float c_pi = 3.14159265359f;
+
 template <typename T>
 struct CAutoReleasePointer
 {
@@ -24,3 +26,8 @@ struct CAutoReleasePointer
 
     T* m_ptr;
 };
+
+inline float DegreesToRadians (float degrees)
+{
+    return degrees * c_pi / 180.0f;
+}

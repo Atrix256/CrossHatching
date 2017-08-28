@@ -164,11 +164,11 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                 {
                     obbs[0].position_Albedo = { 185.5f, 82.5f, 169.0f, 1.0f };
                     obbs[0].radius_Emissive = { 82.5f, 82.5f, 82.5f, 0.0f };
-                    obbs[0].rotationAxis_rotationAngle = { 0.0f, 1.0f, 0.0f, -17.0f * 3.14f / 180.0f }; // TODO: a better DEGREES TO RADIANS method (utils.h?
+                    obbs[0].rotationAxis_rotationAngle = { 0.0f, 1.0f, 0.0f, DegreesToRadians(-17.0f) };
                     
                     obbs[1].position_Albedo = { 368.5f, 165.0f, 351.25f, 1.0f };
                     obbs[1].radius_Emissive = { 82.5f, 165.0f, 82.5f, 0.0f };
-                    obbs[1].rotationAxis_rotationAngle = { 0.0f, 1.0f, 0.0f, 107.0f * 3.14f / 180.0f };
+                    obbs[1].rotationAxis_rotationAngle = { 0.0f, 1.0f, 0.0f, DegreesToRadians(107.0f) };
 
                     CalculateOBBNormals(obbs[0]);
                     CalculateOBBNormals(obbs[1]);
@@ -257,11 +257,11 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                 {
                     obbs[0].position_Albedo = { 185.5f, 82.5f, 169.0f, 1.0f };
                     obbs[0].radius_Emissive = { 82.5f, 82.5f, 82.5f, 0.0f };
-                    obbs[0].rotationAxis_rotationAngle = { 0.0f, 1.0f, 0.0f, -17.0f * 3.14f / 180.0f }; // TODO: a better DEGREES TO RADIANS method (utils.h?
+                    obbs[0].rotationAxis_rotationAngle = { 0.0f, 1.0f, 0.0f, DegreesToRadians(-17.0f) };
                     
                     obbs[1].position_Albedo = { 368.5f, 165.0f, 351.25f, 1.0f };
                     obbs[1].radius_Emissive = { 82.5f, 165.0f, 82.5f, 0.0f };
-                    obbs[1].rotationAxis_rotationAngle = { 0.0f, 1.0f, 0.0f, 107.0f * 3.14f / 180.0f };
+                    obbs[1].rotationAxis_rotationAngle = { 0.0f, 1.0f, 0.0f, DegreesToRadians(107) };
 
                     CalculateOBBNormals(obbs[0]);
                     CalculateOBBNormals(obbs[1]);

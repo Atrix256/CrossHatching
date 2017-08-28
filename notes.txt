@@ -59,6 +59,10 @@ clean up code (spaces after function names etc)
 
 * could also directly sample the light to make it converge faster
 
+* will eventually want to make videos. A thing to render a frame at a time and then use ffmpeg to combine?
+
+* Try adding golden ratio to seed instead of 0.1?  Or maybe not since that is a future frame value?
+
 ================================= LATER IDEAS =================================
 
 * could do a lens and get depth of field effect.
