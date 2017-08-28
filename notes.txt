@@ -1,3 +1,7 @@
+? try using a low discrepancy sequence instead of random number generator? you do over time but maybe also try over space? or maybe sample a blue noise texture for initial seed?
+ * yes, this!
+ * tile a blue noise texture as initial seed. add framenumber * golden ratio to seed each frame. do you frac result?
+
 * something is wrong with one of the tests. maybe ray vs triangle. it has the black line in the center.
  * could also be a problem w/ hemisphere sampling maybe.
 

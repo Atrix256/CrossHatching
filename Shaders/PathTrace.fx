@@ -3,6 +3,7 @@
 static const float c_pi = 3.14159265359f;
 static const float c_rayEpsilon = 0.001f;
 static const float FLT_MAX = 3.402823466e+38F;
+static const float GOLDEN_RATIO = 1.61803398875f;
 
 //----------------------------------------------------------------------------
 struct SRayHitInfo
@@ -12,35 +13,28 @@ struct SRayHitInfo
     float  m_albedo;
     float  m_emissive;
 };
+
 //----------------------------------------------------------------------------
 // These are from: https://www.shadertoy.com/view/4tl3z4
 // Links to other shader friendly prngs:
 // https://www.shadertoy.com/view/4djSRW "Hash Without Sine" by Dave_Hoskins
 // https://www.shadertoy.com/view/MsV3z3 2d Weyl Hash by MBR
 // https://github.com/gheshu/gputracer/blob/master/src/depth.glsl#L43 From Lauren @lh0xfb
-float hash1 (inout float seed)
-{
-    return frac(sin(seed += 0.1)*43758.5453123);
-}
 float2 hash2 (inout float seed)
 {
     return frac(sin(float2(seed += 0.1, seed += 0.1))*float2(43758.5453123, 22578.1459123));
 }
 
-//----------------------------------------------------------------------------
-// for testing, from https://www.shadertoy.com/view/4tl3z4
-float3 UnformSampleSphere (inout float seed)
-{
-    float2 r = hash2(seed)*6.2831;
-	float3 dr= float3(sin(r.x)*float2(sin(r.y),cos(r.y)),cos(r.x));
-	return dr;
-}
+// TODO: replace the above with a variant of hash without sine that modifies the seed?
 
 //----------------------------------------------------------------------------
-// for testing, from https://www.shadertoy.com/view/4tl3z4
-float3 UnformSampleHemiphere (const float3 n, inout float seed) {
-	float3 dr = UnformSampleSphere(seed);
-	return dot(dr,n) * dr;
+//  1 out, 2 in...
+// from "hash without sine" https://www.shadertoy.com/view/4djSRW
+float hash12(float2 p)
+{
+    float3 p3 = frac(float3(p.xyx) * 0.1031f);
+    p3 += dot(p3, p3.yzx + 19.19);
+    return frac((p3.x + p3.y) * p3.z);
 }
 
 //----------------------------------------------------------------------------
@@ -539,7 +533,7 @@ void cs_main (
     if (dispatchThreadID.x > dimsX || dispatchThreadID.y > dimsY)
         return;
 
-    float rngSeed = float(dispatchThreadID.x) + float(dispatchThreadID.y) * 3.43121412313f + frac(1.12345314312*frameRnd_appTime_sampleCount_numQuads.y) + frameRnd_appTime_sampleCount_numQuads.x;
+    float rngSeed = hash12(float2(dispatchThreadID.xy)) + GOLDEN_RATIO * frameRnd_appTime_sampleCount_numQuads.z;
 
     // calculate coordinate of pixel on the screen in [-1,1]
     float2 pixelClipSpace = 2.0f * float2(dispatchThreadID.xy) / float2(dimsX, dimsY) - 1.0f;
@@ -569,4 +563,6 @@ void cs_main (
     // use lerping for incremental averageing:  https://blog.demofox.org/2016/08/23/incremental-averaging/
     // lerp from the old value to the current and write it back out
     pathTraceOutput_rw[dispatchThreadID.xy] = lerp(pathTraceOutput_rw[dispatchThreadID.xy], light, 1.0f / frameRnd_appTime_sampleCount_numQuads.z);
+
+    //pathTraceOutput_rw[dispatchThreadID.xy] = frac(rngSeed);
 }
