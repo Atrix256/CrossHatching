@@ -71,3 +71,6 @@ clean up code (spaces after function names etc)
 
 DX11 guid: http://www.rastertek.com/dx11tut02.html
 
+* when writing a CPU path tracer, each time i needed a random number, i just called rand() basically. very easy.
+ * on gpu, not so easy to generate random numbers! (could show problems of doign it incorrectly)
+ * ended up using a blue noise texture as initial seed, and adding frame number * golden ratio to make it a low discrepancy sequence over time.

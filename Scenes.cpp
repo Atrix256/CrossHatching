@@ -84,7 +84,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                     scene.numSpheres_numTris_nearPlaneDist_missColor[0] = 2.0f;
                     scene.numSpheres_numTris_nearPlaneDist_missColor[1] = 0.0f;
                     scene.numSpheres_numTris_nearPlaneDist_missColor[2] = 0.1f;
-                    scene.numSpheres_numTris_nearPlaneDist_missColor[3] = 0.1f;
+                    scene.numSpheres_numTris_nearPlaneDist_missColor[3] = 0.025f;
 
                     scene.frameRnd_appTime_sampleCount_numQuads[3] = 2.0f;
                     scene.numOBBs_yzw[0] = 0.0f;

@@ -533,7 +533,18 @@ void cs_main (
     if (dispatchThreadID.x > dimsX || dispatchThreadID.y > dimsY)
         return;
 
-    float rngSeed = hash12(float2(dispatchThreadID.xy)) + GOLDEN_RATIO * frameRnd_appTime_sampleCount_numQuads.z;
+    // TODO: get rid of todo's to use a blue noise texture since you are?
+    // TODO: get rid of hash12 not needed anymore
+    //float rngSeed = hash12(float2(dispatchThreadID.xy)) + GOLDEN_RATIO * frameRnd_appTime_sampleCount_numQuads.z;
+
+    // TODO: should we keep rngSeed in 0-1?
+
+    // calculate a rngSeed by sampling a blue noise texture for this pixel and adding frame number * golden ratio.
+    // The blue noise starting seed makes the noise less harsh on the eyes.
+    // The golden ratio addition makes the seed into a low discprepancy sequence over time.
+    // TODO: is the above comment correct?
+    float2 uv = float2(dispatchThreadID.xy) / float2(dimsX, dimsY);
+    float rngSeed = blueNoise256.SampleLevel(SamplerLinearWrap, uv, 0).r + GOLDEN_RATIO * frameRnd_appTime_sampleCount_numQuads.z;
 
     // calculate coordinate of pixel on the screen in [-1,1]
     float2 pixelClipSpace = 2.0f * float2(dispatchThreadID.xy) / float2(dimsX, dimsY) - 1.0f;

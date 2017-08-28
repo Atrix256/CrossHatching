@@ -161,6 +161,7 @@ VERTEX_FORMAT_END
 //=================================================================
 
 TEXTURE(stone, "Art/stone01.tga")
+TEXTURE(blueNoise256, "Art/BlueNoise256.tga")
 TEXTURE(pathTraceOutput, nullptr)
 
 //=================================================================
