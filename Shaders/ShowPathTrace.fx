@@ -1,4 +1,4 @@
-#include "ShaderTypes.h"
+#include "PathTrace.h"
 
 //----------------------------------------------------------------------------
 struct SPixelInput
@@ -16,7 +16,7 @@ SPixelInput vs_main(Pos2D input)
     output.position = input.position;
 
     // convert position from [-1,1] space to being in [0,1] space for uv
-    output.uv = input.position * 0.5f + 0.5f;
+    output.uv = input.position.xy * 0.5f + 0.5f;
 
     return output;
 }
@@ -24,14 +24,20 @@ SPixelInput vs_main(Pos2D input)
 //----------------------------------------------------------------------------
 float4 ps_main(SPixelInput input) : SV_TARGET
 {
-    // get the lit value
-    float light = pathTraceOutput.Sample(SamplerLinearWrap, input.uv);
+    // calculate the ray for this pixel and get the time of the first ray hit
+    float3 rayPos, rayDir;
+    CalculateRay(input.uv, rayPos, rayDir);
+    SRayHitInfo rayHitInfo = ClosestIntersection(rayPos, rayDir);
 
-    // apply sRGB correction
+    // return the distance
+    //float dist = rayHitInfo.m_intersectTime;
+    //dist = dist / (dist + 1000.0f);
+    //return float4(dist, dist, dist, 1.0f);
+
+    // get the lit value and apply sRGB correction
+    float light = pathTraceOutput.Sample(SamplerLinearWrap, input.uv);
     light = pow(light, 1.0f / 2.0f);
 
     // return the value as greyscale
     return float4(light, light, light, 1.0f);
 }
-
-// TODO: if we need more info like 3d position of hit, to do planar UV's etc, can easily recalculate location of first hit. Just put path tracer code in a shared header.

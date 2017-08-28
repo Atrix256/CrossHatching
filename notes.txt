@@ -55,6 +55,10 @@ clean up code (spaces after function names etc)
 
 * when the image converges, it still looks splotchy! maybe RNG is not so great, even now that the PRNG is improved?
 
+* make it spit out shader-error.txt even if there's just warnings?
+
+* could also directly sample the light to make it converge faster
+
 ================================= LATER IDEAS =================================
 
 * could do a lens and get depth of field effect.
