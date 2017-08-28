@@ -53,6 +53,8 @@ clean up code (spaces after function names etc)
 
 * store the xyz position of first hit, as well as averaged luminance in pathtracer: x,y,z is position. w is shaded color.
 
+* when the image converges, it still looks splotchy! maybe RNG is not so great, even now that the PRNG is improved?
+
 ================================= LATER IDEAS =================================
 
 * could do a lens and get depth of field effect.

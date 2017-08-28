@@ -233,8 +233,8 @@ void OnKeyPress (unsigned char key, bool pressed)
     {
         case '1': FillSceneData(EScene::SphereOnPlane_LowLight, g_d3d.Context()); break;
         case '2': FillSceneData(EScene::SphereOnPlane_RegularLight, g_d3d.Context()); break;
-        case '3': FillSceneData(EScene::SpheresInBox_LowLight, g_d3d.Context()); break;
-        case '4': FillSceneData(EScene::SpheresInBox_RegularLight, g_d3d.Context()); break;
+        case '3': FillSceneData(EScene::CornellBox_SmallLight, g_d3d.Context()); break;
+        case '4': FillSceneData(EScene::CornellBox_BigLight, g_d3d.Context()); break;
         case '5': FillSceneData(EScene::FurnaceTest, g_d3d.Context()); break;
     }
 }

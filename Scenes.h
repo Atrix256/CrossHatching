@@ -6,8 +6,8 @@ enum class EScene
 {
     SphereOnPlane_LowLight,
     SphereOnPlane_RegularLight,
-    SpheresInBox_LowLight,
-    SpheresInBox_RegularLight,
+    CornellBox_SmallLight,
+    CornellBox_BigLight,
     FurnaceTest
 };
 

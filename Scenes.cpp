@@ -15,8 +15,6 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
         }
     );
 
-    // TODO: add the other scenes!  https://github.com/Atrix256/RandomCode/blob/master/PTBlogPost1/Source.cpp
-
     switch (scene)
     {
         case EScene::SphereOnPlane_LowLight:
@@ -131,15 +129,11 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
             );
             break;
         }
-        case EScene::SpheresInBox_LowLight:
+        case EScene::CornellBox_SmallLight:
         {
             // TODO: do some HDR to SDR tone mapping
             // TODO: can we somehow unify this stuff into something easier to read and harder to get wrong?
             // TODO: put FOV in the scene data instead of being global. have aspect ratio be global though
-            // TODO: the scene is not spheres in box! it is cornel box (well the actual scenes from the other thing is...
-            // TODO: OBB support
-
-            // TODO: add OBBs!
 
             // slightly modified cornell box, from source: http://www.graphics.cornell.edu/online/box/data.html
             ret &= ShaderData::ConstantBuffers::Scene.Write(
@@ -232,10 +226,8 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
 
             break;
         }
-        case EScene::SpheresInBox_RegularLight:
+        case EScene::CornellBox_BigLight:
         {
-            // TODO: add OBBs!
-
             // slightly modified cornell box, from source: http://www.graphics.cornell.edu/online/box/data.html
             ret &= ShaderData::ConstantBuffers::Scene.Write(
                 context,

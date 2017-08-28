@@ -31,6 +31,9 @@
     <ClInclude Include="ConstantBuffer.h" />
     <ClInclude Include="StructuredBuffer.h" />
     <ClInclude Include="Scenes.h" />
+    <ClInclude Include="Shaders\PathTrace.h">
+      <Filter>Shaders</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\ShowPathTrace.fx">
