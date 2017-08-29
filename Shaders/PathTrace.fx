@@ -26,7 +26,10 @@ void cs_main (
     // The blue noise starting seed makes the noise less harsh on the eyes.
     // The golden ratio addition makes the seed into a low discprepancy sequence over time.
     // TODO: is the above comment correct if we don't keep the seed in 0,1?
-    float rngSeed = blueNoise256.SampleLevel(SamplerLinearWrap, uv, 0).r + GOLDEN_RATIO * frameRnd_appTime_sampleCount_numQuads.z;
+    float2 blueNoiseUV = uv;
+    blueNoiseUV.x *= float(dimsX) / 256.0f;
+    blueNoiseUV.y *= float(dimsY) / 256.0f;
+    float rngSeed = blueNoise256.SampleLevel(SamplerLinearWrap, blueNoiseUV, 0).r + GOLDEN_RATIO * frameRnd_appTime_sampleCount_numQuads.z;
 
     // calculate the ray for this pixel
     float3 rayPos, rayDir;
