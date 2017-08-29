@@ -23,6 +23,7 @@ public:
     ID3D11DeviceContext* Context () { return m_deviceContext.m_ptr; }
 
     ID3D11SamplerState* SamplerLinearWrap () { return m_samplerLinearWrap.m_ptr; }
+    ID3D11SamplerState* SamplerNearestWrap () { return m_samplerNearestWrap.m_ptr; }
 
     ~CD3D11 ();
 
@@ -38,4 +39,5 @@ private:
     CAutoReleasePointer<ID3D11RasterizerState> m_rasterState;
 
     CAutoReleasePointer<ID3D11SamplerState> m_samplerLinearWrap;
+    CAutoReleasePointer<ID3D11SamplerState> m_samplerNearestWrap;
 };

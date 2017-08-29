@@ -87,7 +87,7 @@ bool WriteShaderTypesHLSL (void)
 
     // hard coded sampler states
     fprintf(file, "//----------------------------------------------------------------------------\n//Samplers\n//----------------------------------------------------------------------------\n");
-    fprintf(file, "SamplerState SamplerLinearWrap;\n\n");
+    fprintf(file, "SamplerState SamplerLinearWrap;\nSamplerState SamplerNearestWrap;\n\n");
 
     // write the texture declarations
     fprintf(file, "//----------------------------------------------------------------------------\n//Textures\n//----------------------------------------------------------------------------\n");
@@ -214,6 +214,17 @@ void FillShaderParams (ID3D11DeviceContext* deviceContext, ID3D11ShaderReflectio
     if (!FAILED(result))
     {
         ID3D11SamplerState* sampler = g_d3d.SamplerLinearWrap();
+        if (SHADER_TYPE == EShaderType::vertex)
+            deviceContext->VSSetSamplers(desc.BindPoint, 1, &sampler);
+        else if (SHADER_TYPE == EShaderType::pixel)
+            deviceContext->PSSetSamplers(desc.BindPoint, 1, &sampler);
+        else
+            deviceContext->CSSetSamplers(desc.BindPoint, 1, &sampler);
+    }
+    result = reflector->GetResourceBindingDescByName("SamplerNearestWrap", &desc);
+    if (!FAILED(result))
+    {
+        ID3D11SamplerState* sampler = g_d3d.SamplerNearestWrap();
         if (SHADER_TYPE == EShaderType::vertex)
             deviceContext->VSSetSamplers(desc.BindPoint, 1, &sampler);
         else if (SHADER_TYPE == EShaderType::pixel)

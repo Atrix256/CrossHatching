@@ -29,7 +29,7 @@ void cs_main (
     float2 blueNoiseUV = uv;
     blueNoiseUV.x *= float(dimsX) / 256.0f;
     blueNoiseUV.y *= float(dimsY) / 256.0f;
-    float rngSeed = blueNoise256.SampleLevel(SamplerLinearWrap, blueNoiseUV, 0).r + GOLDEN_RATIO * frameRnd_appTime_sampleCount_numQuads.z;
+    float rngSeed = blueNoise256.SampleLevel(SamplerNearestWrap, blueNoiseUV, 0).r + GOLDEN_RATIO * frameRnd_appTime_sampleCount_numQuads.z;
 
     // calculate the ray for this pixel
     float3 rayPos, rayDir;
