@@ -381,33 +381,28 @@ SRayHitInfo ClosestIntersection (in float3 rayPos, in float3 rayDir)
 }
 
 //----------------------------------------------------------------------------
-// These are from: https://www.shadertoy.com/view/4tl3z4
-// Links to other shader friendly prngs:
+// Links to some shader friendly prngs:
 // https://www.shadertoy.com/view/4djSRW "Hash Without Sine" by Dave_Hoskins
 // https://www.shadertoy.com/view/MsV3z3 2d Weyl Hash by MBR
 // https://github.com/gheshu/gputracer/blob/master/src/depth.glsl#L43 From Lauren @lh0xfb
-float2 hash2 (inout float seed)
-{
-    return frac(sin(float2(seed += 0.1, seed += 0.1))*float2(43758.5453123, 22578.1459123));
-}
-
-// TODO: replace the above with a variant of hash without sine that modifies the seed?
-
+// https://www.shadertoy.com/view/4tl3z4
 //----------------------------------------------------------------------------
-//  1 out, 2 in...
 // from "hash without sine" https://www.shadertoy.com/view/4djSRW
-float hash12(float2 p)
+//  2 out, 1 in...
+float2 hash21(inout float p)
 {
-    float3 p3 = frac(float3(p.xyx) * 0.1031f);
+    float3 p3 = frac(float3(p,p,p) * float3(0.1031f, 0.1030f, 0.0973f));
     p3 += dot(p3, p3.yzx + 19.19);
-    return frac((p3.x + p3.y) * p3.z);
+    float2 ret = frac((p3.xx + p3.yz)*p3.zy);
+    p += 0.3514;
+    return ret;
 }
 
 //----------------------------------------------------------------------------
 // from smallpt path tracer: http://www.kevinbeason.com/smallpt/
 float3 CosineSampleHemisphere (in float3 normal, inout float rngSeed)
 {
-    float2 rnd = hash2(rngSeed);
+    float2 rnd = hash21(rngSeed);
 
     float r1 = 2.0f * c_pi * rnd.x;
     float r2 = rnd.y;

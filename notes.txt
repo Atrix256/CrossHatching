@@ -63,6 +63,8 @@ clean up code (spaces after function names etc)
 
 * Try adding golden ratio to seed instead of 0.1?  Or maybe not since that is a future frame value?
 
+* get rid of frameRnd_appTime_sampleCount_numQuads.x if we don't use it anymore.
+
 ================================= LATER IDEAS =================================
 
 * could do a lens and get depth of field effect.

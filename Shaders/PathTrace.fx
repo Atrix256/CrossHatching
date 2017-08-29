@@ -17,15 +17,9 @@ void cs_main (
     // calculate screen uv
     float2 uv = float2(dispatchThreadID.xy) / float2(dimsX, dimsY);
 
-    // TODO: get rid of todo's to use a blue noise texture since you are?
-    // TODO: get rid of hash12 not needed anymore
-
-    // TODO: should we keep rngSeed in 0-1?
-
     // calculate a rngSeed by sampling a blue noise texture for this pixel and adding frame number * golden ratio.
     // The blue noise starting seed makes the noise less harsh on the eyes.
-    // The golden ratio addition makes the seed into a low discprepancy sequence over time.
-    // TODO: is the above comment correct if we don't keep the seed in 0,1?
+    // The golden ratio addition makes a sort of low discrepancy sequence, even though we aren't keeping it in 0-1 range
     float2 blueNoiseUV = uv;
     blueNoiseUV.x *= float(dimsX) / 256.0f;
     blueNoiseUV.y *= float(dimsY) / 256.0f;
