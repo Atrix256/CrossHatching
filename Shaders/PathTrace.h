@@ -4,6 +4,7 @@ static const float c_pi = 3.14159265359f;
 static const float c_rayEpsilon = 0.001f;
 static const float FLT_MAX = 3.402823466e+38F;
 static const float GOLDEN_RATIO = 1.61803398875f;
+static const int c_numBounces = 5;
 
 //----------------------------------------------------------------------------
 struct SRayHitInfo
@@ -422,108 +423,37 @@ float3 CosineSampleHemisphere (in float3 normal, inout float rngSeed)
 
     return d;
 }
-
 //----------------------------------------------------------------------------
-float Light_Outgoing_0 (in SRayHitInfo rayHitInfo, in float3 rayHitPos, in float3 outDir, inout float rngSeed)
+float Light_Outgoing (in SRayHitInfo rayHitInfo, in float3 rayHitPos, inout float rngSeed)
 {
-    // start with emissive lighting
-    float light = rayHitInfo.m_emissive;
+    float lightSum = 0.0f;
+    float lightMultiplier = 1.0f;
+    
+    for (int i = 0; i < c_numBounces; ++i)
+    {
+        // update our light sum and future light multiplier
+        lightSum += rayHitInfo.m_emissive * lightMultiplier;
+        lightMultiplier *= rayHitInfo.m_albedo;
 
-    // add in albedo * miss color
-    light += rayHitInfo.m_albedo * numSpheres_numTris_nearPlaneDist_missColor.w;
+        // add a random recursive sample for global illumination
+        float3 newRayDir = CosineSampleHemisphere(rayHitInfo.m_surfaceNormal, rngSeed);
+        SRayHitInfo newRayHitInfo = ClosestIntersection(rayHitPos + newRayDir * c_rayEpsilon, newRayDir);
 
-    // return our recursively calculated light amount
-    return light;
-}
+        // if we hit something new, we continue
+        if (newRayHitInfo.m_intersectTime >= 0.0f)
+        {
+            rayHitInfo = newRayHitInfo;
+            rayHitPos += newRayDir * newRayHitInfo.m_intersectTime;
+        }
+        // else we missed so light using the miss color (skybox lighting) and return the light we've summed up
+        else
+        {
+            lightSum += numSpheres_numTris_nearPlaneDist_missColor.w * lightMultiplier;
+            return lightSum;
+        }
+    }
 
-//----------------------------------------------------------------------------
-float Light_Outgoing_1 (in SRayHitInfo rayHitInfo, in float3 rayHitPos, in float3 outDir, inout float rngSeed)
-{
-    // start with emissive lighting
-    float light = rayHitInfo.m_emissive;
-
-    // add in a random recursive sample for global illumination
-    float3 newRayDir = CosineSampleHemisphere(rayHitInfo.m_surfaceNormal, rngSeed);
-    SRayHitInfo newRayHitInfo = ClosestIntersection(rayHitPos, newRayDir);
-    if (newRayHitInfo.m_intersectTime >= 0.0f)
-        light += rayHitInfo.m_albedo * Light_Outgoing_0(newRayHitInfo, rayHitPos + newRayDir * newRayHitInfo.m_intersectTime + -newRayDir * c_rayEpsilon, -newRayDir, rngSeed);
-    else
-        light += rayHitInfo.m_albedo * numSpheres_numTris_nearPlaneDist_missColor.w;
-
-    // return our recursively calculated light amount
-    return light;
-}
-
-//----------------------------------------------------------------------------
-float Light_Outgoing_2 (in SRayHitInfo rayHitInfo, in float3 rayHitPos, in float3 outDir, inout float rngSeed)
-{
-    // start with emissive lighting
-    float light = rayHitInfo.m_emissive;
-
-    // add in a random recursive sample for global illumination
-    float3 newRayDir = CosineSampleHemisphere(rayHitInfo.m_surfaceNormal, rngSeed);
-    SRayHitInfo newRayHitInfo = ClosestIntersection(rayHitPos, newRayDir);
-    if (newRayHitInfo.m_intersectTime >= 0.0f)
-        light += rayHitInfo.m_albedo * Light_Outgoing_1(newRayHitInfo, rayHitPos + newRayDir * newRayHitInfo.m_intersectTime + -newRayDir * c_rayEpsilon, -newRayDir, rngSeed);
-    else
-        light += rayHitInfo.m_albedo * numSpheres_numTris_nearPlaneDist_missColor.w;
-
-    // return our recursively calculated light amount
-    return light;
-}
-
-//----------------------------------------------------------------------------
-float Light_Outgoing_3 (in SRayHitInfo rayHitInfo, in float3 rayHitPos, in float3 outDir, inout float rngSeed)
-{
-    // start with emissive lighting
-    float light = rayHitInfo.m_emissive;
-
-    // add in a random recursive sample for global illumination
-    float3 newRayDir = CosineSampleHemisphere(rayHitInfo.m_surfaceNormal, rngSeed);
-    SRayHitInfo newRayHitInfo = ClosestIntersection(rayHitPos, newRayDir);
-    if (newRayHitInfo.m_intersectTime >= 0.0f)
-        light += rayHitInfo.m_albedo * Light_Outgoing_2(newRayHitInfo, rayHitPos + newRayDir * newRayHitInfo.m_intersectTime + -newRayDir * c_rayEpsilon, -newRayDir, rngSeed);
-    else
-        light += rayHitInfo.m_albedo * numSpheres_numTris_nearPlaneDist_missColor.w;
-
-    // return our recursively calculated light amount
-    return light;
-}
-
-//----------------------------------------------------------------------------
-float Light_Outgoing_4 (in SRayHitInfo rayHitInfo, in float3 rayHitPos, in float3 outDir, inout float rngSeed)
-{
-    // start with emissive lighting
-    float light = rayHitInfo.m_emissive;
-
-    // add in a random recursive sample for global illumination
-    float3 newRayDir = CosineSampleHemisphere(rayHitInfo.m_surfaceNormal, rngSeed);
-    SRayHitInfo newRayHitInfo = ClosestIntersection(rayHitPos, newRayDir);
-    if (newRayHitInfo.m_intersectTime >= 0.0f)
-        light += rayHitInfo.m_albedo * Light_Outgoing_3(newRayHitInfo, rayHitPos + newRayDir * newRayHitInfo.m_intersectTime + -newRayDir * c_rayEpsilon, -newRayDir, rngSeed);
-    else
-        light += rayHitInfo.m_albedo * numSpheres_numTris_nearPlaneDist_missColor.w;
-
-    // return our recursively calculated light amount
-    return light;
-}
-
-//----------------------------------------------------------------------------
-float Light_Outgoing_5 (in SRayHitInfo rayHitInfo, in float3 rayHitPos, in float3 outDir, inout float rngSeed)
-{
-    // start with emissive lighting
-    float light = rayHitInfo.m_emissive;
-
-    // add in a random recursive sample for global illumination
-    float3 newRayDir = CosineSampleHemisphere(rayHitInfo.m_surfaceNormal, rngSeed);
-    SRayHitInfo newRayHitInfo = ClosestIntersection(rayHitPos, newRayDir);
-    if (newRayHitInfo.m_intersectTime >= 0.0f)
-        light += rayHitInfo.m_albedo * Light_Outgoing_4(newRayHitInfo, rayHitPos + newRayDir * newRayHitInfo.m_intersectTime + -newRayDir * c_rayEpsilon, -newRayDir, rngSeed);
-    else
-        light += rayHitInfo.m_albedo * numSpheres_numTris_nearPlaneDist_missColor.w;
-
-    // return our recursively calculated light amount
-    return light;
+    return lightSum;
 }
 
 //----------------------------------------------------------------------------
@@ -537,5 +467,5 @@ float Light_Incoming (in float3 rayPos, in float3 rayDir, inout float rngSeed)
         return numSpheres_numTris_nearPlaneDist_missColor.w;
 
     // else, return the amount of light coming towards us from that point on the object we hit
-    return Light_Outgoing_5(rayHitInfo, rayPos + rayDir * rayHitInfo.m_intersectTime + -rayDir * c_rayEpsilon, -rayDir, rngSeed);
+    return Light_Outgoing(rayHitInfo, rayPos + rayDir * rayHitInfo.m_intersectTime + -rayDir * c_rayEpsilon, rngSeed);
 }

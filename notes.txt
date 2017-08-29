@@ -1,3 +1,12 @@
+? have c++ side send an iterative sum of golden ratio to shader?
+ * or try just adding the random number per frame to it!
+  * i tried that and it looked aweful, maybe my prng sucks with seeds that are in 0-1?
+ * try and see if you can keep the seed in 0-1?
+ * if this works out get rid of app rand and frame number and app time i think.
+ ! i tried this 8/29 at lunch and it didn't work out, not sure what the problem is.
+
+! need to keep the rng seed from becoming so huge that small floats don't matter and it stops updating.
+
 ? try using a low discrepancy sequence instead of random number generator? you do over time but maybe also try over space? or maybe sample a blue noise texture for initial seed?
  * yes, this!
  * tile a blue noise texture as initial seed. add framenumber * golden ratio to seed each frame. do you frac result?
@@ -65,6 +74,8 @@ clean up code (spaces after function names etc)
 
 * get rid of frameRnd_appTime_sampleCount_numQuads.x if we don't use it anymore.
 
+? can we convert the blue noise tga to single texture file and load it that way? probably doesn't really matter that much but it would be cleaner.
+
 ================================= LATER IDEAS =================================
 
 * could do a lens and get depth of field effect.
@@ -86,3 +97,5 @@ DX11 guid: http://www.rastertek.com/dx11tut02.html
 * when writing a CPU path tracer, each time i needed a random number, i just called rand() basically. very easy.
  * on gpu, not so easy to generate random numbers! (could show problems of doign it incorrectly)
  * ended up using a blue noise texture as initial seed, and adding frame number * golden ratio to make it a low discrepancy sequence over time.
+
+* free blue nois textures: http://momentsingraphics.de/?p=127
