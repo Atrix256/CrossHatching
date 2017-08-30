@@ -1,3 +1,13 @@
+! fix the black line on quad tests.
+ * the dark line down the middle of the scene in SphereOnPlane_LowLight stays there if all there is, is the ground, and the light sphere.
+* something is wrong with one of the tests. maybe ray vs triangle. it has the black line in the center.
+ * could also be a problem w/ hemisphere sampling maybe.
+
+* get rid of depth, depth test, and back face culling
+ * i don't think we need a depth buffer since it'll all be path traced, so remove that (eventually)
+
+* check out todo's here. if nothing pressing, get model loading / rendering working? bounding spheres (?) around triangles? or just triangle soup.
+
 ? have c++ side send an iterative sum of golden ratio to shader?
  * or try just adding the random number per frame to it!
   * i tried that and it looked aweful, maybe my prng sucks with seeds that are in 0-1?
@@ -5,29 +15,11 @@
  * if this works out get rid of app rand and frame number and app time i think.
  ! i tried this 8/29 at lunch and it didn't work out, not sure what the problem is.
 
-* the dark line down the middle of the scene in SphereOnPlane_LowLight stays there if all there is, is the ground, and the light sphere.
-
 ! need to keep the rng seed from becoming so huge that small floats don't matter and it stops updating.
 
 ? try using a low discrepancy sequence instead of random number generator? you do over time but maybe also try over space? or maybe sample a blue noise texture for initial seed?
  * yes, this!
  * tile a blue noise texture as initial seed. add framenumber * golden ratio to seed each frame. do you frac result?
-
-* something is wrong with one of the tests. maybe ray vs triangle. it has the black line in the center.
- * could also be a problem w/ hemisphere sampling maybe.
-
-* Problem with convergance: texture is RGBA 8 bits per channel. lerp is doing nothing! need a full sized float to store the values!
- * it's solved now but need to formalize texture declarations i think
-
-* set up a cornel box scene to start out.
-* objects need emissive and diffuse (single float) to do basic shading.
-
-* get rid of depth, depth test, and back face culling
-i don't think we need a depth buffer since it'll all be path traced, so remove that (eventually)
-
-i think i'll need a deferred renderer type setup? I'll have an intermediary buffer that has uv and intensity that i will then process with the shader.
-
-a way to specify a scene? list spheres and meshes. they get loaded and passed through to the scene. Or have them hard coded
 
 allow a way to specify screen w/h and fullscreen. Command line? or just leave it like it is.
 
@@ -37,46 +29,15 @@ test x64 and release
 
 TODO's in code
 
-Figure out how to get labels that show up in renderdoc
-
 Sean said he'd be willing to give me textures.
 
-clean up code (spaces after function names etc)
-
-? should i add an assert / asserts everywhere?
-
 ? I'm thinking we probably want window borders / close button on this window.
-
-? do we need render target stuff? maybe make the d3d class use it for the main render target?
-
-* get rid of un-needed shaders etc when things are working well!
-
-* sRGB correction
-
-? in the path tracing shader, can we convert the faked recursive functions into a for loop? A problem to figure out is the multiplication layer thing.
-
-* it doesn't seem like my image is converging. the random number quality may be low? maybe look at what other gpu path tracers do for rng?
- * could also see if the sample count is getting too large or something? doesn't make sense but....
-
-* we might want to add quad support since it's as fast as a single triangle.
-
-* get rid of original test scene. not useful now that we are getting real scenes
-
-* store the xyz position of first hit, as well as averaged luminance in pathtracer: x,y,z is position. w is shaded color.
-
-* when the image converges, it still looks splotchy! maybe RNG is not so great, even now that the PRNG is improved?
 
 * make it spit out shader-error.txt even if there's just warnings?
 
 * could also directly sample the light to make it converge faster
 
-* will eventually want to make videos. A thing to render a frame at a time and then use ffmpeg to combine?
-
-* Try adding golden ratio to seed instead of 0.1?  Or maybe not since that is a future frame value?
-
-* get rid of frameRnd_appTime_sampleCount_numQuads.x if we don't use it anymore.
-
-? can we convert the blue noise tga to single texture file and load it that way? probably doesn't really matter that much but it would be cleaner.
+* will eventually want to make videos probably. A thing to render a frame at a time and then use ffmpeg to combine? Would need logic for updating camera and objects over time. Fixed frame rate update obviously!
 
 ? HDR to SDR tone mapping?
 
