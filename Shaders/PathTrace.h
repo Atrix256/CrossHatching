@@ -429,7 +429,7 @@ float Light_Outgoing (in SRayHitInfo rayHitInfo, in float3 rayHitPos, inout floa
     float lightSum = 0.0f;
     float lightMultiplier = 1.0f;
     
-    for (int i = 0; i < c_numBounces; ++i)
+    for (int i = 0; i <= c_numBounces; ++i)
     {
         // update our light sum and future light multiplier
         lightSum += rayHitInfo.m_emissive * lightMultiplier;
