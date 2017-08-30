@@ -7,11 +7,11 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
     bool ret = true;
 
     // reset the sample count back to 0
-    ret &= ShaderData::ConstantBuffers::Scene.Write(
+    ret &= ShaderData::ConstantBuffers::ConstantsPerFrame.Write(
         context,
-        [](ShaderTypes::ConstantBuffers::Scene& scene)
+        [](ShaderTypes::ConstantBuffers::ConstantsPerFrame& data)
         {
-            scene.frameRnd_appTime_sampleCount_numQuads[2] = 0.0f;
+            data.sampleCount_yzw[0] = 0;
         }
     );
 
@@ -19,18 +19,10 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
     {
         case EScene::SphereOnPlane_LowLight:
         {
-            ret &= ShaderData::ConstantBuffers::Scene.Write(
+            ret &= ShaderData::ConstantBuffers::ConstantsOnce.Write(
                 context,
-                [](ShaderTypes::ConstantBuffers::Scene& scene)
+                [](ShaderTypes::ConstantBuffers::ConstantsOnce& scene)
                 {
-                    scene.numSpheres_numTris_nearPlaneDist_missColor[0] = 2.0f;
-                    scene.numSpheres_numTris_nearPlaneDist_missColor[1] = 0.0f;
-                    scene.numSpheres_numTris_nearPlaneDist_missColor[2] = 0.1f;
-                    scene.numSpheres_numTris_nearPlaneDist_missColor[3] = 0.0f;
-
-                    scene.frameRnd_appTime_sampleCount_numQuads[3] = 2.0f;
-                    scene.numOBBs_yzw[0] = 0.0f;
-
                     scene.cameraPos_FOVX[0] = 0.0f;
                     scene.cameraPos_FOVX[1] = 0.0f;
                     scene.cameraPos_FOVX[2] = -10.0f;
@@ -38,6 +30,11 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                     scene.cameraAt_FOVY[0] = 0.0f;
                     scene.cameraAt_FOVY[1] = 0.0f;
                     scene.cameraAt_FOVY[2] = 0.0f;
+
+                    scene.nearPlaneDist_missColor_zw[0] = 0.1f;
+                    scene.nearPlaneDist_missColor_zw[1] = 0.0f;
+
+                    scene.numSpheres_numTris_numOBBs_numQuads = { 2.0f, 0.0f, 0.0f, 2.0f };
                 }
             );
 
@@ -62,18 +59,10 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
         }
         case EScene::SphereOnPlane_RegularLight:
         {
-            ret &= ShaderData::ConstantBuffers::Scene.Write(
+            ret &= ShaderData::ConstantBuffers::ConstantsOnce.Write(
                 context,
-                [](ShaderTypes::ConstantBuffers::Scene& scene)
+                [](ShaderTypes::ConstantBuffers::ConstantsOnce& scene)
                 {
-                    scene.numSpheres_numTris_nearPlaneDist_missColor[0] = 2.0f;
-                    scene.numSpheres_numTris_nearPlaneDist_missColor[1] = 0.0f;
-                    scene.numSpheres_numTris_nearPlaneDist_missColor[2] = 0.1f;
-                    scene.numSpheres_numTris_nearPlaneDist_missColor[3] = 0.025f;
-
-                    scene.frameRnd_appTime_sampleCount_numQuads[3] = 2.0f;
-                    scene.numOBBs_yzw[0] = 0.0f;
-
                     scene.cameraPos_FOVX[0] = 0.0f;
                     scene.cameraPos_FOVX[1] = 0.0f;
                     scene.cameraPos_FOVX[2] = -10.0f;
@@ -81,6 +70,11 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                     scene.cameraAt_FOVY[0] = 0.0f;
                     scene.cameraAt_FOVY[1] = 0.0f;
                     scene.cameraAt_FOVY[2] = 0.0f;
+
+                    scene.nearPlaneDist_missColor_zw[0] = 0.1f;
+                    scene.nearPlaneDist_missColor_zw[1] = 0.025f;
+
+                    scene.numSpheres_numTris_numOBBs_numQuads = { 2.0f, 0.0f, 0.0f, 2.0f };
                 }
             );
 
@@ -105,22 +99,11 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
         }
         case EScene::CornellBox_SmallLight:
         {
-            // TODO: can we somehow unify this stuff into something easier to read and harder to get wrong?
-            // TODO: put FOV in the scene data instead of being global. have aspect ratio be global though
-
             // slightly modified cornell box, from source: http://www.graphics.cornell.edu/online/box/data.html
-            ret &= ShaderData::ConstantBuffers::Scene.Write(
+            ret &= ShaderData::ConstantBuffers::ConstantsOnce.Write(
                 context,
-                [](ShaderTypes::ConstantBuffers::Scene& scene)
+                [](ShaderTypes::ConstantBuffers::ConstantsOnce& scene)
                 {
-                    scene.numSpheres_numTris_nearPlaneDist_missColor[0] = 0.0f;
-                    scene.numSpheres_numTris_nearPlaneDist_missColor[1] = 0.0f;
-                    scene.numSpheres_numTris_nearPlaneDist_missColor[2] = 0.1f;
-                    scene.numSpheres_numTris_nearPlaneDist_missColor[3] = 0.0f;
-
-                    scene.frameRnd_appTime_sampleCount_numQuads[3] = 6.0f;
-                    scene.numOBBs_yzw[0] = 2.0f;
-
                     scene.cameraPos_FOVX[0] = 278.0f;
                     scene.cameraPos_FOVX[1] = 273.0f;
                     scene.cameraPos_FOVX[2] = -800.0f;
@@ -128,6 +111,11 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                     scene.cameraAt_FOVY[0] = 278.0f;
                     scene.cameraAt_FOVY[1] = 273.0f;
                     scene.cameraAt_FOVY[2] = 0.0f;
+
+                    scene.nearPlaneDist_missColor_zw[0] = 0.1f;
+                    scene.nearPlaneDist_missColor_zw[1] = 0.0f;
+
+                    scene.numSpheres_numTris_numOBBs_numQuads = { 0.0f, 0.0f, 2.0f, 6.0f };
                 }
             );
 
@@ -169,18 +157,10 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
         case EScene::CornellBox_BigLight:
         {
             // slightly modified cornell box, from source: http://www.graphics.cornell.edu/online/box/data.html
-            ret &= ShaderData::ConstantBuffers::Scene.Write(
+            ret &= ShaderData::ConstantBuffers::ConstantsOnce.Write(
                 context,
-                [](ShaderTypes::ConstantBuffers::Scene& scene)
+                [](ShaderTypes::ConstantBuffers::ConstantsOnce& scene)
                 {
-                    scene.numSpheres_numTris_nearPlaneDist_missColor[0] = 0.0f;
-                    scene.numSpheres_numTris_nearPlaneDist_missColor[1] = 0.0f;
-                    scene.numSpheres_numTris_nearPlaneDist_missColor[2] = 0.1f;
-                    scene.numSpheres_numTris_nearPlaneDist_missColor[3] = 0.0f;
-
-                    scene.frameRnd_appTime_sampleCount_numQuads[3] = 5.0f;
-                    scene.numOBBs_yzw[0] = 2.0f;
-
                     scene.cameraPos_FOVX[0] = 278.0f;
                     scene.cameraPos_FOVX[1] = 273.0f;
                     scene.cameraPos_FOVX[2] = -800.0f;
@@ -188,6 +168,11 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                     scene.cameraAt_FOVY[0] = 278.0f;
                     scene.cameraAt_FOVY[1] = 273.0f;
                     scene.cameraAt_FOVY[2] = 0.0f;
+
+                    scene.nearPlaneDist_missColor_zw[0] = 0.1f;
+                    scene.nearPlaneDist_missColor_zw[1] = 0.0f;
+
+                    scene.numSpheres_numTris_numOBBs_numQuads = { 0.0f, 0.0f, 2.0f, 5.0f };
                 }
             );
 
@@ -225,18 +210,10 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
         }
         case EScene::FurnaceTest:
         {
-            ret &= ShaderData::ConstantBuffers::Scene.Write(
+            ret &= ShaderData::ConstantBuffers::ConstantsOnce.Write(
                 context,
-                [](ShaderTypes::ConstantBuffers::Scene& scene)
+                [](ShaderTypes::ConstantBuffers::ConstantsOnce& scene)
                 {
-                    scene.numSpheres_numTris_nearPlaneDist_missColor[0] = 2.0f;
-                    scene.numSpheres_numTris_nearPlaneDist_missColor[1] = 0.0f;
-                    scene.numSpheres_numTris_nearPlaneDist_missColor[2] = 0.1f;
-                    scene.numSpheres_numTris_nearPlaneDist_missColor[3] = 0.0f;
-
-                    scene.frameRnd_appTime_sampleCount_numQuads[3] = 0.0f;
-                    scene.numOBBs_yzw[0] = 0.0f;
-
                     scene.cameraPos_FOVX[0] = 0.0f;
                     scene.cameraPos_FOVX[1] = 0.0f;
                     scene.cameraPos_FOVX[2] = -10.0f;
@@ -244,6 +221,11 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                     scene.cameraAt_FOVY[0] = 0.0f;
                     scene.cameraAt_FOVY[1] = 0.0f;
                     scene.cameraAt_FOVY[2] = 0.0f;
+
+                    scene.nearPlaneDist_missColor_zw[0] = 0.1f;
+                    scene.nearPlaneDist_missColor_zw[1] = 0.0f;
+
+                    scene.numSpheres_numTris_numOBBs_numQuads = { 2.0f, 0.0f, 0.0f, 0.0f };
                 }
             );
 

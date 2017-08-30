@@ -368,20 +368,25 @@ bool init ()
         }
     );
 
-    // TODO: maybe separate scene data from other stuff (frameRnd_appTime_sampleCount_w) since it doesn't need to be updated every frame. maybe just seperate "set infrequently" from "set frequently"
-    // TODO: make this an initialization of scene data to sane values / defaults (like for near place).
-    writeOK = ShaderData::ConstantBuffers::Scene.Write(
+    writeOK = ShaderData::ConstantBuffers::ConstantsOnce.Write(
         g_d3d.Context(),
-        [] (ShaderTypes::ConstantBuffers::Scene& scene)
+        [] (ShaderTypes::ConstantBuffers::ConstantsOnce& data)
         {
-            scene.numSpheres_numTris_nearPlaneDist_missColor = { 0.0f, 0.0f, 0.0f, 0.0f };
+            data.cameraPos_FOVX = { 0.0f, 0.0f, 0.0f, c_fovX };
+            data.cameraAt_FOVY = { 0.0f, 0.0f, 0.0f, c_fovY };
+            data.nearPlaneDist_missColor_zw = { 0.0f, 0.0f, 0.0f, 0.0f };
+            data.numSpheres_numTris_numOBBs_numQuads = { 0.0f, 0.0f, 0.0f, 0.0f };
+        }
+    );
+    if (!writeOK)
+        return false;
 
-            scene.frameRnd_appTime_sampleCount_numQuads = { 0.0f, 0.0f, 0.0f, 0.0f };
-
-            scene.numOBBs_yzw = { 0.0f, 0.0f, 0.0f, 0.0f };
-
-            scene.cameraPos_FOVX = { 0.0f, 0.0f, 0.0f, c_fovX };
-            scene.cameraAt_FOVY = { 0.0f, 0.0f, 0.0f, c_fovY };
+    writeOK = ShaderData::ConstantBuffers::ConstantsPerFrame.Write(
+        g_d3d.Context(),
+        [] (ShaderTypes::ConstantBuffers::ConstantsPerFrame& data)
+        {
+            data.frameRnd_appTime_zw = { 0.0f, 0.0f, 0.0f, 0.0f };
+            data.sampleCount_yzw = {0, 0, 0, 0};
         }
     );
     if (!writeOK)
@@ -422,14 +427,15 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
         {
             // update frame specific values
             std::chrono::duration<float> appTimeSeconds = std::chrono::high_resolution_clock::now() - appStart;
-            bool writeOK = ShaderData::ConstantBuffers::Scene.Write(
+            bool writeOK = ShaderData::ConstantBuffers::ConstantsPerFrame.Write(
                 g_d3d.Context(),
-                [&appTimeSeconds] (ShaderTypes::ConstantBuffers::Scene& scene)
-            {
-                scene.frameRnd_appTime_sampleCount_numQuads[0] = RandomFloat(0.0f, 1.0f);
-                scene.frameRnd_appTime_sampleCount_numQuads[1] = appTimeSeconds.count();
-                scene.frameRnd_appTime_sampleCount_numQuads[2] += 1.0f;
-            }
+                [&appTimeSeconds] (ShaderTypes::ConstantBuffers::ConstantsPerFrame& data)
+                {
+                    data.frameRnd_appTime_zw[0] = RandomFloat(0.0f, 1.0f);
+                    data.frameRnd_appTime_zw[1] = appTimeSeconds.count();
+
+                    data.sampleCount_yzw[0]++;
+                }
             );
             if (!writeOK)
                 done = true;

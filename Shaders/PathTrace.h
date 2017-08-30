@@ -56,12 +56,12 @@ void CalculateRay (in float2 uv, out float3 rayPos, out float3 rayDir)
     float3 cameraUp = normalize(cross(cameraFwd, cameraRight));
 
     // calculate view window dimensions in world space
-    float windowRight = tan(cameraPos_FOVX.w) * numSpheres_numTris_nearPlaneDist_missColor.z;
-    float windowTop = tan(cameraAt_FOVY.w) * numSpheres_numTris_nearPlaneDist_missColor.z;
+    float windowRight = tan(cameraPos_FOVX.w) * nearPlaneDist_missColor_zw.x;
+    float windowTop = tan(cameraAt_FOVY.w) * nearPlaneDist_missColor_zw.x;
 
     // calculate pixel position in world space, this is the ray's origin
     // start at the camera, go down the forward vector to the near plane, then move right and up based on pixelClipSpace
-    rayPos = cameraPos_FOVX.xyz + cameraFwd * numSpheres_numTris_nearPlaneDist_missColor.z;
+    rayPos = cameraPos_FOVX.xyz + cameraFwd * nearPlaneDist_missColor_zw.x;
     rayPos += pixelClipSpace.x * cameraRight * windowRight;
     rayPos += pixelClipSpace.y * cameraUp * windowTop;
 
@@ -168,8 +168,8 @@ void RayIntersectsAABB (in float3 rayPos, in float3 rayDir, in OBBPrim obb, inou
 void RayIntersectsOBB (in float3 rayPos, in float3 rayDir, in OBBPrim obb, inout SRayHitInfo rayHitInfo)
 {
     // put the ray into local space of the obb
-    float3 newRayPos = ChangeBasis(rayPos - obb.position_Albedo.xyz, obb.XAxis_w, obb.YAxis_w, obb.ZAxis_w) + obb.position_Albedo.xyz;
-    float3 newRayDir = ChangeBasis(rayDir, obb.XAxis_w, obb.YAxis_w, obb.ZAxis_w);
+    float3 newRayPos = ChangeBasis(rayPos - obb.position_Albedo.xyz, obb.XAxis_w.xyz, obb.YAxis_w.xyz, obb.ZAxis_w.xyz) + obb.position_Albedo.xyz;
+    float3 newRayDir = ChangeBasis(rayDir, obb.XAxis_w.xyz, obb.YAxis_w.xyz, obb.ZAxis_w.xyz);
 
     // do ray vs abb intersection
     RayIntersectsAABB(newRayPos, newRayDir, obb, rayHitInfo);
@@ -177,7 +177,7 @@ void RayIntersectsOBB (in float3 rayPos, in float3 rayDir, in OBBPrim obb, inout
         return;
 
     // convert surface normal back to global space
-    rayHitInfo.m_surfaceNormal = UndoChangeBasis(rayHitInfo.m_surfaceNormal, obb.XAxis_w, obb.YAxis_w, obb.ZAxis_w);
+    rayHitInfo.m_surfaceNormal = UndoChangeBasis(rayHitInfo.m_surfaceNormal, obb.XAxis_w.xyz, obb.YAxis_w.xyz, obb.ZAxis_w.xyz);
 }
 
 //----------------------------------------------------------------------------
@@ -352,28 +352,28 @@ SRayHitInfo ClosestIntersection (in float3 rayPos, in float3 rayDir)
 
     // spheres
     {
-        int numSpheres = numSpheres_numTris_nearPlaneDist_missColor.x;
+        int numSpheres = numSpheres_numTris_numOBBs_numQuads.x;
         for (int i = 0; i < numSpheres; ++i)
             RayIntersectsSphere(rayPos, rayDir, Spheres[i], rayHitInfo);
     }
 
     // triangles
     {
-        int numTris = numSpheres_numTris_nearPlaneDist_missColor.y;
+        int numTris = numSpheres_numTris_numOBBs_numQuads.y;
         for (int i = 0; i < numTris; ++i)
             RayIntersectsTriangle(rayPos, rayDir, Triangles[i], rayHitInfo);
     }
 
     // quads
     {
-        int numQuads = frameRnd_appTime_sampleCount_numQuads.w;
+        int numQuads = numSpheres_numTris_numOBBs_numQuads.w;
         for (int i = 0; i < numQuads; ++i)
             RayIntersectsQuad(rayPos, rayDir, Quads[i], rayHitInfo);
     }
 
     // obbs
     {
-        int numOBBs = numOBBs_yzw.x;
+        int numOBBs = numSpheres_numTris_numOBBs_numQuads.z;
         for (int i = 0; i < numOBBs; ++i)
             RayIntersectsOBB(rayPos, rayDir, OBBs[i], rayHitInfo);
     }
@@ -448,7 +448,7 @@ float Light_Outgoing (in SRayHitInfo rayHitInfo, in float3 rayHitPos, inout floa
         // else we missed so light using the miss color (skybox lighting) and return the light we've summed up
         else
         {
-            lightSum += numSpheres_numTris_nearPlaneDist_missColor.w * lightMultiplier;
+            lightSum += nearPlaneDist_missColor_zw.y * lightMultiplier;
             return lightSum;
         }
     }
@@ -464,7 +464,7 @@ float Light_Incoming (in float3 rayPos, in float3 rayDir, inout float rngSeed)
 
     // if it missed, return the miss color
     if (rayHitInfo.m_intersectTime < 0.0f)
-        return numSpheres_numTris_nearPlaneDist_missColor.w;
+        return nearPlaneDist_missColor_zw.y;
 
     // else, return the amount of light coming towards us from that point on the object we hit
     return Light_Outgoing(rayHitInfo, rayPos + rayDir * rayHitInfo.m_intersectTime + -rayDir * c_rayEpsilon, rngSeed);

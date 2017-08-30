@@ -18,13 +18,18 @@ RWTexture2D<float> pathTraceOutput_rw;
 //----------------------------------------------------------------------------
 //Constant Buffers
 //----------------------------------------------------------------------------
-cbuffer Scene
+cbuffer ConstantsOnce
 {
   float4 cameraPos_FOVX;
   float4 cameraAt_FOVY;
-  float4 numSpheres_numTris_nearPlaneDist_missColor;
-  float4 frameRnd_appTime_sampleCount_numQuads;
-  float4 numOBBs_yzw;
+  float4 nearPlaneDist_missColor_zw;
+  float4 numSpheres_numTris_numOBBs_numQuads;
+};
+
+cbuffer ConstantsPerFrame
+{
+  float4 frameRnd_appTime_zw;
+  uint4 sampleCount_yzw;
 };
 
 //----------------------------------------------------------------------------

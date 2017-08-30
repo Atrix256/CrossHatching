@@ -9,6 +9,8 @@ typedef std::array<float, 2> float2;
 typedef std::array<float, 3> float3;
 typedef std::array<float, 4> float4;
 
+typedef std::array<unsigned int, 4> uint4;
+
 namespace ShaderTypes
 {
     // define the constant buffer structs

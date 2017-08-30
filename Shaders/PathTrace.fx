@@ -23,7 +23,7 @@ void cs_main (
     float2 blueNoiseUV = uv;
     blueNoiseUV.x *= float(dimsX) / 256.0f;
     blueNoiseUV.y *= float(dimsY) / 256.0f;
-    float rngSeed = blueNoise256.SampleLevel(SamplerNearestWrap, blueNoiseUV, 0).r + GOLDEN_RATIO * frameRnd_appTime_sampleCount_numQuads.z;
+    float rngSeed = blueNoise256.SampleLevel(SamplerNearestWrap, blueNoiseUV, 0).r + GOLDEN_RATIO * float(sampleCount_yzw.x);
 
     // calculate the ray for this pixel
     float3 rayPos, rayDir;
@@ -34,5 +34,5 @@ void cs_main (
 
     // use lerping for incremental averageing:  https://blog.demofox.org/2016/08/23/incremental-averaging/
     // lerp from the old value to the current and write it back out
-    pathTraceOutput_rw[dispatchThreadID.xy] = lerp(pathTraceOutput_rw[dispatchThreadID.xy], light, 1.0f / frameRnd_appTime_sampleCount_numQuads.z);
+    pathTraceOutput_rw[dispatchThreadID.xy] = lerp(pathTraceOutput_rw[dispatchThreadID.xy], light, 1.0f / float(sampleCount_yzw.x));
 }

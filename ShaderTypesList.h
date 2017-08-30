@@ -113,12 +113,16 @@ TEXTURE_BUFFER(Name, ShaderType, Format)
 //                     Constant Buffers
 //=================================================================
 
-CONSTANT_BUFFER_BEGIN(Scene)
+CONSTANT_BUFFER_BEGIN(ConstantsOnce)
     CONSTANT_BUFFER_FIELD(cameraPos_FOVX, float4)
     CONSTANT_BUFFER_FIELD(cameraAt_FOVY, float4)
-    CONSTANT_BUFFER_FIELD(numSpheres_numTris_nearPlaneDist_missColor, float4)
-    CONSTANT_BUFFER_FIELD(frameRnd_appTime_sampleCount_numQuads, float4)
-    CONSTANT_BUFFER_FIELD(numOBBs_yzw, float4)
+    CONSTANT_BUFFER_FIELD(nearPlaneDist_missColor_zw, float4)
+    CONSTANT_BUFFER_FIELD(numSpheres_numTris_numOBBs_numQuads, float4)
+CONSTANT_BUFFER_END
+
+CONSTANT_BUFFER_BEGIN(ConstantsPerFrame)
+    CONSTANT_BUFFER_FIELD(frameRnd_appTime_zw, float4)
+    CONSTANT_BUFFER_FIELD(sampleCount_yzw, uint4)
 CONSTANT_BUFFER_END
 
 //=================================================================
