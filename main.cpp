@@ -59,7 +59,8 @@ namespace ShaderData
 
     namespace Textures
     {
-        #define TEXTURE(NAME, FILENAME) CTexture NAME;
+        #define TEXTURE_IMAGE(NAME, FILENAME) CTexture NAME;
+        #define TEXTURE_BUFFER(NAME, SHADERTYPE, FORMAT) CTexture NAME;
         #include "ShaderTypesList.h"
     }
 
@@ -91,10 +92,9 @@ bool WriteShaderTypesHLSL (void)
 
     // write the texture declarations
     fprintf(file, "//----------------------------------------------------------------------------\n//Textures\n//----------------------------------------------------------------------------\n");
-    #define TEXTURE(NAME, FILENAME) fprintf(file, "Texture2D " #NAME ";\nRWTexture2D<float> " #NAME "_rw;\n\n");
+    #define TEXTURE_IMAGE(NAME, FILENAME) fprintf(file, "Texture2D " #NAME ";\nRWTexture2D<float4> " #NAME "_rw;\n\n");
+    #define TEXTURE_BUFFER(NAME, SHADERTYPE, FORMAT) fprintf(file, "Texture2D " #NAME ";\nRWTexture2D<" #SHADERTYPE "> " #NAME "_rw;\n\n");
     #include "ShaderTypesList.h"
-    // TODO: the above declares the texture as <float> but that should be based on texture type, so put it in macro!
-    // TODO: note the above happens for textures declared as null pointers and not. loaded files should be float4. others should vary.
 
     // write the cbuffer declarations
     fprintf(file, "//----------------------------------------------------------------------------\n//Constant Buffers\n//----------------------------------------------------------------------------\n");
@@ -133,7 +133,26 @@ void UnbindShaderTextures (ID3D11DeviceContext* deviceContext, ID3D11ShaderRefle
     HRESULT result;
 
     // reflect textures
-    #define TEXTURE(NAME, FILENAME) \
+    #define TEXTURE_IMAGE(NAME, FILENAME) \
+        result = reflector->GetResourceBindingDescByName(#NAME, &desc); \
+        if (!FAILED(result)) { \
+            ID3D11ShaderResourceView* srv = nullptr; \
+            if (SHADER_TYPE == EShaderType::vertex) \
+                deviceContext->VSSetShaderResources(desc.BindPoint, 1, &srv); \
+            else if (SHADER_TYPE == EShaderType::pixel) \
+                deviceContext->PSSetShaderResources(desc.BindPoint, 1, &srv); \
+            else \
+                deviceContext->CSSetShaderResources(desc.BindPoint, 1, &srv); \
+        } \
+        result = reflector->GetResourceBindingDescByName(#NAME "_rw", &desc); \
+        if (!FAILED(result)) { \
+            UINT count = -1; \
+            ID3D11UnorderedAccessView* uav = nullptr; \
+            if (SHADER_TYPE == EShaderType::compute) \
+                deviceContext->CSSetUnorderedAccessViews(desc.BindPoint, 1, &uav, &count); \
+        }
+
+    #define TEXTURE_BUFFER(NAME, SHADERTYPE, FORMAT) \
         result = reflector->GetResourceBindingDescByName(#NAME, &desc); \
         if (!FAILED(result)) { \
             ID3D11ShaderResourceView* srv = nullptr; \
@@ -188,7 +207,25 @@ void FillShaderParams (ID3D11DeviceContext* deviceContext, ID3D11ShaderReflectio
         }
 
     // reflect textures
-    #define TEXTURE(NAME, FILENAME) \
+    #define TEXTURE_IMAGE(NAME, FILENAME) \
+        result = reflector->GetResourceBindingDescByName(#NAME, &desc); \
+        if (!FAILED(result)) { \
+            ID3D11ShaderResourceView* srv = ShaderData::Textures::##NAME.GetSRV(); \
+            if (SHADER_TYPE == EShaderType::vertex) \
+                deviceContext->VSSetShaderResources(desc.BindPoint, 1, &srv); \
+            else if (SHADER_TYPE == EShaderType::pixel) \
+                deviceContext->PSSetShaderResources(desc.BindPoint, 1, &srv); \
+            else \
+                deviceContext->CSSetShaderResources(desc.BindPoint, 1, &srv); \
+        } \
+        result = reflector->GetResourceBindingDescByName(#NAME "_rw", &desc); \
+        if (!FAILED(result)) { \
+            UINT count = -1; \
+            ID3D11UnorderedAccessView* uav = ShaderData::Textures::##NAME.GetUAV(); \
+            if (SHADER_TYPE == EShaderType::compute) \
+                deviceContext->CSSetUnorderedAccessViews(desc.BindPoint, 1, &uav, &count); \
+        }
+    #define TEXTURE_BUFFER(NAME, SHADERTYPE, FORMAT) \
         result = reflector->GetResourceBindingDescByName(#NAME, &desc); \
         if (!FAILED(result)) { \
             ID3D11ShaderResourceView* srv = ShaderData::Textures::##NAME.GetSRV(); \
@@ -269,12 +306,10 @@ bool init ()
     #include "ShaderTypesList.h"
 
     // create textures
-    #define TEXTURE(NAME, FILENAME) \
-        if (FILENAME == nullptr) { \
-            if(!ShaderData::Textures::NAME.Create(g_d3d.Device(), g_d3d.Context(), c_width, c_height)) return false; \
-        } else { \
-            if(!ShaderData::Textures::NAME.LoadTGA(g_d3d.Device(), g_d3d.Context(), FILENAME)) return false; \
-        }
+    #define TEXTURE_IMAGE(NAME, FILENAME) \
+        if(!ShaderData::Textures::NAME.LoadTGA(g_d3d.Device(), g_d3d.Context(), FILENAME)) return false;
+    #define TEXTURE_BUFFER(NAME, SHADERTYPE, FORMAT) \
+        if(!ShaderData::Textures::NAME.Create(g_d3d.Device(), g_d3d.Context(), c_width, c_height, FORMAT)) return false;
     #include "ShaderTypesList.h"
 
     // write some triangles

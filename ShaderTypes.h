@@ -55,7 +55,8 @@ namespace ShaderData
 
     namespace Textures
     {
-        #define TEXTURE(NAME, FILENAME) extern CTexture NAME;
+        #define TEXTURE_IMAGE(NAME, FILENAME) extern CTexture NAME;
+        #define TEXTURE_BUFFER(NAME, SHADERTYPE, FORMAT) extern CTexture NAME;
         #include "ShaderTypesList.h"
     }
 };

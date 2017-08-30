@@ -172,7 +172,7 @@ bool CTexture::LoadTGA (ID3D11Device* device, ID3D11DeviceContext* deviceContext
     return true;
 }
 
-bool CTexture::Create (ID3D11Device* device, ID3D11DeviceContext* deviceContext, size_t width, size_t height)
+bool CTexture::Create (ID3D11Device* device, ID3D11DeviceContext* deviceContext, size_t width, size_t height, DXGI_FORMAT format)
 {
     D3D11_TEXTURE2D_DESC textureDesc;
     HRESULT hResult;
@@ -184,9 +184,7 @@ bool CTexture::Create (ID3D11Device* device, ID3D11DeviceContext* deviceContext,
     textureDesc.Width = (UINT)width;
     textureDesc.MipLevels = 1;
     textureDesc.ArraySize = 1;
-    // TODO: temp! make this a macro parameter or something!
-    //textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    textureDesc.Format = DXGI_FORMAT_R32_FLOAT;
+    textureDesc.Format = format;
     textureDesc.SampleDesc.Count = 1;
     textureDesc.SampleDesc.Quality = 0;
     textureDesc.Usage = D3D11_USAGE_DEFAULT;

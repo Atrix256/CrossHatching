@@ -8,7 +8,7 @@ class CTexture
 public:
     bool LoadTGA (ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* filename);
 
-    bool Create (ID3D11Device* device, ID3D11DeviceContext* deviceContext, size_t width, size_t height);
+    bool Create (ID3D11Device* device, ID3D11DeviceContext* deviceContext, size_t width, size_t height, DXGI_FORMAT format);
     
     ID3D11ShaderResourceView* GetSRV () { return m_textureSRV.m_ptr; }
 

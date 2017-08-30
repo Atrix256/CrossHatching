@@ -78,6 +78,8 @@ clean up code (spaces after function names etc)
 
 ? can we convert the blue noise tga to single texture file and load it that way? probably doesn't really matter that much but it would be cleaner.
 
+? HDR to SDR tone mapping?
+
 ================================= LATER IDEAS =================================
 
 * could do a lens and get depth of field effect.

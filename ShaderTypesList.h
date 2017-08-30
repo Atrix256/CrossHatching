@@ -51,9 +51,14 @@ VERTEX_FORMAT_END
                           Textures
 ===================================================================
 
-TEXTURE(Name, FileName)
+TEXTURE_IMAGE(Name, FileName)
   Name     - The name of the texture as it appears in C++ and shader code
   FileName - The file name of the texture to load. If nullptr, will create a read write texture.
+
+TEXTURE_BUFFER(Name, ShaderType, Format)
+  Name       - The name of the texture as it appears in C++ and shader code
+  ShaderType - as declared in shader, such as float or float4
+  Format     - d3d image format, like DXGI_FORMAT_R32_FLOAT or DXGI_FORMAT_R8G8B8A8_UNORM
 
 */
 
@@ -96,8 +101,12 @@ TEXTURE(Name, FileName)
 #define VERTEX_FORMAT_END
 #endif
 
-#ifndef TEXTURE
-#define TEXTURE(NAME, FILENAME)
+#ifndef TEXTURE_IMAGE
+#define TEXTURE_IMAGE(NAME, FILENAME)
+#endif
+
+#ifndef TEXTURE_BUFFER
+#define TEXTURE_BUFFER(NAME, SHADERTYPE, FORMAT)
 #endif
 
 //=================================================================
@@ -156,9 +165,8 @@ VERTEX_FORMAT_END
 //                       Textures
 //=================================================================
 
-TEXTURE(stone, "Art/stone01.tga")
-TEXTURE(blueNoise256, "Art/BlueNoise256.tga")
-TEXTURE(pathTraceOutput, nullptr)
+TEXTURE_IMAGE(blueNoise256, "Art/BlueNoise256.tga")
+TEXTURE_BUFFER(pathTraceOutput, float, DXGI_FORMAT_R32_FLOAT)
 
 //=================================================================
 // undefine everything for the caller's convenience
@@ -171,4 +179,5 @@ TEXTURE(pathTraceOutput, nullptr)
 #undef VERTEX_FORMAT_BEGIN
 #undef VERTEX_FORMAT_FIELD
 #undef VERTEX_FORMAT_END
-#undef TEXTURE
+#undef TEXTURE_IMAGE
+#undef TEXTURE_BUFFER

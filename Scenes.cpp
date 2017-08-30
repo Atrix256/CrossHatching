@@ -105,7 +105,6 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
         }
         case EScene::CornellBox_SmallLight:
         {
-            // TODO: do some HDR to SDR tone mapping
             // TODO: can we somehow unify this stuff into something easier to read and harder to get wrong?
             // TODO: put FOV in the scene data instead of being global. have aspect ratio be global though
 
