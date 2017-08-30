@@ -1,3 +1,9 @@
+! the black line problem only seems to happen when camera is at (0,0,z) looking at (0,0,0)?
+ * true for first scene, but not for cornel box
+ * in cornel box, it is looking at (x,y,0) though.
+ * also, the camera pos and at (x,y) are the same. maybe related somehow?
+ * could see if it happens if you replace quad with obb or triangles?
+
 ! fix the black line on quad tests.
  * the dark line down the middle of the scene in SphereOnPlane_LowLight stays there if all there is, is the ground, and the light sphere.
 * something is wrong with one of the tests. maybe ray vs triangle. it has the black line in the center.
@@ -43,8 +49,9 @@ Sean said he'd be willing to give me textures.
 
 ================================= LATER IDEAS =================================
 
-* could do a lens and get depth of field effect.
-* reflections.
+* could do a lens and get depth of field effect. (actually, won't work with this technique)
+* reflections. Probably needs to be done as a post step, but could do N samples and jitter them even.
+* anti aliasing? could render at 4x resolution and downsample final image (longer to render though)
 * caustics and refraction could be interesting
 * Work with sean for the franklin booth technioque?
 
