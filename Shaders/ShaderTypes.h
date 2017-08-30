@@ -68,7 +68,6 @@ struct OBBPrim
 {
   float4 position_Albedo;
   float4 radius_Emissive;
-  float4 rotationAxis_rotationAngle;
   float4 XAxis_w;
   float4 YAxis_w;
   float4 ZAxis_w;

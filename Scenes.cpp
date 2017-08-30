@@ -136,16 +136,8 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                 context,
                 [] (std::array<ShaderTypes::StructuredBuffers::OBBPrim, 10>& obbs)
                 {
-                    obbs[0].position_Albedo = { 185.5f, 82.5f, 169.0f, 1.0f };
-                    obbs[0].radius_Emissive = { 82.5f, 82.5f, 82.5f, 0.0f };
-                    obbs[0].rotationAxis_rotationAngle = { 0.0f, 1.0f, 0.0f, DegreesToRadians(-17.0f) };
-                    
-                    obbs[1].position_Albedo = { 368.5f, 165.0f, 351.25f, 1.0f };
-                    obbs[1].radius_Emissive = { 82.5f, 165.0f, 82.5f, 0.0f };
-                    obbs[1].rotationAxis_rotationAngle = { 0.0f, 1.0f, 0.0f, DegreesToRadians(107.0f) };
-
-                    CalculateOBBNormals(obbs[0]);
-                    CalculateOBBNormals(obbs[1]);
+                    MakeOBB(obbs[0], { 185.5f, 82.5f, 169.0f }, { 82.5f, 82.5f, 82.5f }, { 0.0f, 1.0f, 0.0f }, DegreesToRadians(-17.0f), 1.0f, 0.0f);
+                    MakeOBB(obbs[1], { 368.5f, 165.0f, 351.25f }, { 82.5f, 165.0f, 82.5f }, { 0.0f, 1.0f, 0.0f }, DegreesToRadians(107.0f), 1.0f, 0.0f);
                 }
             );
 
@@ -204,16 +196,8 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                 context,
                 [] (std::array<ShaderTypes::StructuredBuffers::OBBPrim, 10>& obbs)
                 {
-                    obbs[0].position_Albedo = { 185.5f, 82.5f, 169.0f, 1.0f };
-                    obbs[0].radius_Emissive = { 82.5f, 82.5f, 82.5f, 0.0f };
-                    obbs[0].rotationAxis_rotationAngle = { 0.0f, 1.0f, 0.0f, DegreesToRadians(-17.0f) };
-                    
-                    obbs[1].position_Albedo = { 368.5f, 165.0f, 351.25f, 1.0f };
-                    obbs[1].radius_Emissive = { 82.5f, 165.0f, 82.5f, 0.0f };
-                    obbs[1].rotationAxis_rotationAngle = { 0.0f, 1.0f, 0.0f, DegreesToRadians(107) };
-
-                    CalculateOBBNormals(obbs[0]);
-                    CalculateOBBNormals(obbs[1]);
+                    MakeOBB(obbs[0], { 185.5f, 82.5f, 169.0f }, { 82.5f, 82.5f, 82.5f }, { 0.0f, 1.0f, 0.0f }, DegreesToRadians(-17.0f), 1.0f, 0.0f);
+                    MakeOBB(obbs[1], { 368.5f, 165.0f, 351.25f }, { 82.5f, 165.0f, 82.5f }, { 0.0f, 1.0f, 0.0f }, DegreesToRadians(107.0f), 1.0f, 0.0f);
                 }
             );
 

@@ -206,39 +206,54 @@ inline void MakeSphere(
     sphere.albedo_Emissive_zw[3] = 0.0f;
 }
 
-// TODO: turn this into a "MakeOBB" function like the ones above
-inline void CalculateOBBNormals (ShaderTypes::StructuredBuffers::OBBPrim& obb)
+inline void MakeOBB (
+    ShaderTypes::StructuredBuffers::OBBPrim& obb,
+    float3 position,
+    float3 radius,
+    float3 rotAxis,
+    float rotAngle,
+    float albedo,
+    float emissive
+)
 {
+    obb.position_Albedo[0] = position[0];
+    obb.position_Albedo[1] = position[1];
+    obb.position_Albedo[2] = position[2];
+    obb.position_Albedo[3] = albedo;
+
+    obb.radius_Emissive[0] = radius[0];
+    obb.radius_Emissive[1] = radius[1];
+    obb.radius_Emissive[2] = radius[2];
+    obb.radius_Emissive[3] = emissive;
+
     // make sure the axis we get is normalized
-    float3 axis = XYZ(obb.rotationAxis_rotationAngle);
-    Normalize(axis);
-    float rotation = obb.rotationAxis_rotationAngle[3];
+    Normalize(rotAxis);
 
     // calculate the x,y,z axis of the OBB
-    float cosTheta = cos(rotation);
-    float sinTheta = sin(rotation);
+    float cosTheta = cos(rotAngle);
+    float sinTheta = sin(rotAngle);
 
     obb.XAxis_w =
     {
-        cosTheta + axis[0] * axis[0] * (1.0f - cosTheta),
-        axis[0] * axis[1] * (1.0f - cosTheta) - axis[2] * sinTheta,
-        axis[0] * axis[2] * (1.0f - cosTheta) + axis[1] * sinTheta,
+        cosTheta + rotAxis[0] * rotAxis[0] * (1.0f - cosTheta),
+        rotAxis[0] * rotAxis[1] * (1.0f - cosTheta) - rotAxis[2] * sinTheta,
+        rotAxis[0] * rotAxis[2] * (1.0f - cosTheta) + rotAxis[1] * sinTheta,
         0.0f
     };
 
     obb.YAxis_w =
     {
-        axis[1] * axis[0] * (1.0f - cosTheta) + axis[2] * sinTheta,
-        cosTheta + axis[1] * axis[1] * (1.0f - cosTheta),
-        axis[1] * axis[2] * (1.0f - cosTheta) - axis[0] * sinTheta,
+        rotAxis[1] * rotAxis[0] * (1.0f - cosTheta) + rotAxis[2] * sinTheta,
+        cosTheta + rotAxis[1] * rotAxis[1] * (1.0f - cosTheta),
+        rotAxis[1] * rotAxis[2] * (1.0f - cosTheta) - rotAxis[0] * sinTheta,
         0.0f
     };
 
     obb.ZAxis_w =
     {
-        axis[2] * axis[0] * (1.0f - cosTheta) - axis[1] * sinTheta,
-        axis[2] * axis[1] * (1.0f - cosTheta) + axis[0] * sinTheta,
-        cosTheta + axis[2] * axis[2] * (1.0f - cosTheta),
+        rotAxis[2] * rotAxis[0] * (1.0f - cosTheta) - rotAxis[1] * sinTheta,
+        rotAxis[2] * rotAxis[1] * (1.0f - cosTheta) + rotAxis[0] * sinTheta,
+        cosTheta + rotAxis[2] * rotAxis[2] * (1.0f - cosTheta),
         0.0f
     };
 }

@@ -136,13 +136,9 @@ STRUCTURED_BUFFER_BEGIN(Quads, QuadPrim, 10)
     STRUCTURED_BUFFER_FIELD(normal_w, float4)
 STRUCTURED_BUFFER_END
 
-// TODO: to make this leaner, we should have a function that fills out an OBB struct given some parameters. We don't need to keep around all these params
-// TODO: actually, i think a "MakePrim" function for each primitive type would be useful. Easier to give data to without worrying about storage details, and also no more having to call calculate normals on them!
-// TODO: can we zero memory these guys to initialize them?
 STRUCTURED_BUFFER_BEGIN(OBBs, OBBPrim, 10)
     STRUCTURED_BUFFER_FIELD(position_Albedo, float4)
     STRUCTURED_BUFFER_FIELD(radius_Emissive, float4)
-    STRUCTURED_BUFFER_FIELD(rotationAxis_rotationAngle, float4)
     STRUCTURED_BUFFER_FIELD(XAxis_w, float4)
     STRUCTURED_BUFFER_FIELD(YAxis_w, float4)
     STRUCTURED_BUFFER_FIELD(ZAxis_w, float4)
