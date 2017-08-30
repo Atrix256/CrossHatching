@@ -110,30 +110,103 @@ inline void Normalize (std::array<float, N>& v)
     v[2] /= len;
 }
 
-inline void CalculateTriangleNormal (ShaderTypes::StructuredBuffers::TrianglePrim& triangle)
+inline void MakeTriangle (
+    ShaderTypes::StructuredBuffers::TrianglePrim& triangle,
+    float3 a,
+    float3 b,
+    float3 c,
+    float albedo,
+    float emissive
+)
 {
-    float3 AB = XYZ(triangle.positionB_Emissive) - XYZ(triangle.positionA_Albedo);
-    float3 AC = XYZ(triangle.positionC_w) - XYZ(triangle.positionA_Albedo);
+    triangle.positionA_Albedo[0] = a[0];
+    triangle.positionA_Albedo[1] = a[1];
+    triangle.positionA_Albedo[2] = a[2];
+    triangle.positionA_Albedo[3] = albedo;
+
+    triangle.positionB_Emissive[0] = b[0];
+    triangle.positionB_Emissive[1] = b[1];
+    triangle.positionB_Emissive[2] = b[2];
+    triangle.positionB_Emissive[3] = emissive;
+
+    triangle.positionC_w[0] = c[0];
+    triangle.positionC_w[1] = c[1];
+    triangle.positionC_w[2] = c[2];
+    triangle.positionC_w[3] = 0.0f;
+
+    // calculate normal
+    float3 AB = b - a;
+    float3 AC = c - a;
 
     float3 norm = Cross(AB, AC);
     Normalize(norm);
     triangle.normal_w[0] = norm[0];
     triangle.normal_w[1] = norm[1];
     triangle.normal_w[2] = norm[2];
+    triangle.normal_w[3] = 0.0f;
 }
 
-inline void CalculateQuadNormal (ShaderTypes::StructuredBuffers::QuadPrim& quad)
+inline void MakeQuad(
+    ShaderTypes::StructuredBuffers::QuadPrim& quad,
+    float3 a,
+    float3 b,
+    float3 c,
+    float3 d,
+    float albedo,
+    float emissive
+)
 {
-    float3 AB = XYZ(quad.positionB_Emissive) - XYZ(quad.positionA_Albedo);
-    float3 AC = XYZ(quad.positionC_w) - XYZ(quad.positionA_Albedo);
+    quad.positionA_Albedo[0] = a[0];
+    quad.positionA_Albedo[1] = a[1];
+    quad.positionA_Albedo[2] = a[2];
+    quad.positionA_Albedo[3] = albedo;
+
+    quad.positionB_Emissive[0] = b[0];
+    quad.positionB_Emissive[1] = b[1];
+    quad.positionB_Emissive[2] = b[2];
+    quad.positionB_Emissive[3] = emissive;
+
+    quad.positionC_w[0] = c[0];
+    quad.positionC_w[1] = c[1];
+    quad.positionC_w[2] = c[2];
+    quad.positionC_w[3] = 0.0f;
+
+    quad.positionD_w[0] = d[0];
+    quad.positionD_w[1] = d[1];
+    quad.positionD_w[2] = d[2];
+    quad.positionD_w[3] = 0.0f;
+
+    // calculate normal
+    float3 AB = b - a;
+    float3 AC = c - a;
 
     float3 norm = Cross(AB, AC);
     Normalize(norm);
     quad.normal_w[0] = norm[0];
     quad.normal_w[1] = norm[1];
     quad.normal_w[2] = norm[2];
+    quad.normal_w[3] = 0.0f;
 }
 
+inline void MakeSphere(
+    ShaderTypes::StructuredBuffers::SpherePrim& sphere,
+    float3 position,
+    float radius,
+    float albedo,
+    float emissive)
+{
+    sphere.position_Radius[0] = position[0];
+    sphere.position_Radius[1] = position[1];
+    sphere.position_Radius[2] = position[2];
+    sphere.position_Radius[3] = radius;
+
+    sphere.albedo_Emissive_zw[0] = albedo;
+    sphere.albedo_Emissive_zw[1] = emissive;
+    sphere.albedo_Emissive_zw[2] = 0.0f;
+    sphere.albedo_Emissive_zw[3] = 0.0f;
+}
+
+// TODO: turn this into a "MakeOBB" function like the ones above
 inline void CalculateOBBNormals (ShaderTypes::StructuredBuffers::OBBPrim& obb)
 {
     // make sure the axis we get is normalized

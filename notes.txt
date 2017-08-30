@@ -5,6 +5,8 @@
  * if this works out get rid of app rand and frame number and app time i think.
  ! i tried this 8/29 at lunch and it didn't work out, not sure what the problem is.
 
+* the dark line down the middle of the scene in SphereOnPlane_LowLight stays there if all there is, is the ground, and the light sphere.
+
 ! need to keep the rng seed from becoming so huge that small floats don't matter and it stops updating.
 
 ? try using a low discrepancy sequence instead of random number generator? you do over time but maybe also try over space? or maybe sample a blue noise texture for initial seed?

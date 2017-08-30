@@ -45,11 +45,8 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                 context,
                 [] (std::array<ShaderTypes::StructuredBuffers::SpherePrim, 10>& spheres)
                 {
-                    spheres[0].position_Radius = { 4.0f, 4.0f, 6.0f, 0.5f };
-                    spheres[0].albedo_Emissive_zw = { 0.0f, 10.0f, 0.0f, 0.0f };
-
-                    spheres[1].position_Radius = { 0.0f, 0.0f, 4.0f, 2.0f };
-                    spheres[1].albedo_Emissive_zw = { 0.5f, 0.0f, 0.0f, 0.0f };
+                    MakeSphere(spheres[0], { 4.0f, 4.0f, 6.0f }, 0.5f, 0.0f, 10.0f);
+                    MakeSphere(spheres[1], { 0.0f, 0.0f, 4.0f }, 2.0f, 0.5f, 0.0f);
                 }
             );
 
@@ -57,18 +54,8 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                 context,
                 [] (std::array<ShaderTypes::StructuredBuffers::QuadPrim, 10>& Quads)
                 {
-                    Quads[0].positionA_Albedo = { -4.0f, -3.0f, -4.0f, 0.9f };
-                    Quads[0].positionB_Emissive = { -4.0f, 2.0f, -4.0f, 0.0f };
-                    Quads[0].positionC_w = { -4.0f, 2.0f, 12.0f, 0.0f };
-                    Quads[0].positionD_w = { -4.0f, -3.0f, 12.0f, 0.0f };
-
-                    Quads[1].positionA_Albedo = { -15.0f, -2.0f, 15.0f, 0.9f };
-                    Quads[1].positionB_Emissive = { 15.0f, -2.0f, 15.0f, 0.0f };
-                    Quads[1].positionC_w = { 15.0f, -2.0f, -15.0f, 0.0f };
-                    Quads[1].positionD_w = { -15.0f, -2.0f, -15.0f, 0.0f };
-
-                    CalculateQuadNormal(Quads[0]);
-                    CalculateQuadNormal(Quads[1]);
+                    MakeQuad(Quads[0], { -4.0f, -3.0f, -4.0f }, { -4.0f, 2.0f, -4.0f }, { -4.0f, 2.0f, 12.0f }, { -4.0f, -3.0f, 12.0f }, 0.9f, 0.0f);
+                    MakeQuad(Quads[1], { -15.0f, -2.0f, 15.0f }, { 15.0f, -2.0f, 15.0f }, { 15.0f, -2.0f, -15.0f }, { -15.0f, -2.0f, -15.0f }, 0.9f, 0.0f);
                 }
             );
             break;
@@ -101,11 +88,8 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                 context,
                 [] (std::array<ShaderTypes::StructuredBuffers::SpherePrim, 10>& spheres)
                 {
-                    spheres[0].position_Radius = { 4.0f, 4.0f, 6.0f, 0.5f };
-                    spheres[0].albedo_Emissive_zw = { 0.0f, 10.0f, 0.0f, 0.0f };
-
-                    spheres[1].position_Radius = { 0.0f, 0.0f, 4.0f, 2.0f };
-                    spheres[1].albedo_Emissive_zw = { 0.5f, 0.0f, 0.0f, 0.0f };
+                    MakeSphere(spheres[0], { 4.0f, 4.0f, 6.0f }, 0.5f, 0.0f, 10.0f);
+                    MakeSphere(spheres[1], { 0.0f, 0.0f, 4.0f }, 2.0f, 0.5f, 0.0f);
                 }
             );
 
@@ -113,18 +97,8 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                 context,
                 [] (std::array<ShaderTypes::StructuredBuffers::QuadPrim, 10>& Quads)
                 {
-                    Quads[0].positionA_Albedo = { -4.0f, -3.0f, -4.0f, 0.9f };
-                    Quads[0].positionB_Emissive = { -4.0f, 2.0f, -4.0f, 0.0f };
-                    Quads[0].positionC_w = { -4.0f, 2.0f, 12.0f, 0.0f };
-                    Quads[0].positionD_w = { -4.0f, -3.0f, 12.0f, 0.0f };
-
-                    Quads[1].positionA_Albedo = { -15.0f, -2.0f, 15.0f, 0.9f };
-                    Quads[1].positionB_Emissive = { 15.0f, -2.0f, 15.0f, 0.0f };
-                    Quads[1].positionC_w = { 15.0f, -2.0f, -15.0f, 0.0f };
-                    Quads[1].positionD_w = { -15.0f, -2.0f, -15.0f, 0.0f };
-
-                    CalculateQuadNormal(Quads[0]);
-                    CalculateQuadNormal(Quads[1]);
+                    MakeQuad(Quads[0], { -4.0f, -3.0f, -4.0f }, { -4.0f, 2.0f, -4.0f }, { -4.0f, 2.0f, 12.0f }, { -4.0f, -3.0f, 12.0f }, 0.9f, 0.0f);
+                    MakeQuad(Quads[1], { -15.0f, -2.0f, 15.0f }, { 15.0f, -2.0f, 15.0f }, { 15.0f, -2.0f, -15.0f }, { -15.0f, -2.0f, -15.0f }, 0.9f, 0.0f);
                 }
             );
             break;
@@ -180,47 +154,22 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                 [] (std::array<ShaderTypes::StructuredBuffers::QuadPrim, 10>& Quads)
                 {
                     // Light
-                    Quads[0].positionA_Albedo = { 343.0f, 548.6f, 227.0f, 0.78f };
-                    Quads[0].positionB_Emissive = { 343.0f, 548.6f, 332.0f, 25.0f };
-                    Quads[0].positionC_w = { 213.0f, 548.6f, 332.0f, 0.0f };
-                    Quads[0].positionD_w = { 213.0f, 548.6f, 227.0f, 0.0f };
+                    MakeQuad(Quads[0], { 343.0f, 548.6f, 227.0f }, { 343.0f, 548.6f, 332.0f }, { 213.0f, 548.6f, 332.0f }, { 213.0f, 548.6f, 227.0f }, 0.78f, 25.0f);
 
                     // Floor
-                    Quads[1].positionA_Albedo = { 552.8f, 0.0f, 0.0f, 1.0f };
-                    Quads[1].positionB_Emissive = { 0.0f, 0.0f, 0.0f, 0.0f };
-                    Quads[1].positionC_w = { 0.0f, 0.0f, 559.2f, 0.0f };
-                    Quads[1].positionD_w = { 549.6f, 0.0f, 559.2f, 0.0f };
+                    MakeQuad(Quads[1], { 552.8f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 559.2f }, { 549.6f, 0.0f, 559.2f }, 1.0f, 0.0f);
 
                     // Ceiling
-                    Quads[2].positionA_Albedo = { 556.0f, 548.8f,   0.0f, 1.0f };
-                    Quads[2].positionB_Emissive = { 556.0f, 548.8f, 559.2f, 0.0f };
-                    Quads[2].positionC_w = { 0.0f, 548.8f, 559.2f, 0.0f };
-                    Quads[2].positionD_w = { 0.0f, 548.8f,   0.0f, 0.0f };
+                    MakeQuad(Quads[2], { 556.0f, 548.8f,   0.0f }, { 556.0f, 548.8f, 559.2f }, { 0.0f, 548.8f, 559.2f }, { 0.0f, 548.8f,   0.0f }, 1.0f, 0.0f);
 
                     // Back Wall
-                    Quads[3].positionA_Albedo = { 549.6f,   0.0f, 559.2f, 1.0f };
-                    Quads[3].positionB_Emissive = { 0.0f,   0.0f, 559.2f, 0.0f };
-                    Quads[3].positionC_w = { 0.0f, 548.8f, 559.2f, 0.0f };
-                    Quads[3].positionD_w = { 556.0f, 548.8f, 559.2f, 0.0f };
+                    MakeQuad(Quads[3], { 549.6f,   0.0f, 559.2f }, { 0.0f,   0.0f, 559.2f }, { 0.0f, 548.8f, 559.2f }, { 556.0f, 548.8f, 559.2f }, 1.0f, 0.0f);
 
                     // Left Wall
-                    Quads[4].positionA_Albedo = { 0.0f,   0.0f, 559.2f, 1.0f };
-                    Quads[4].positionB_Emissive = { 0.0f,   0.0f, 0.0f, 0.0f };
-                    Quads[4].positionC_w = { 0.0f, 548.8f, 0.0f, 0.0f };
-                    Quads[4].positionD_w = { 0.0f, 548.8f, 559.2f, 0.0f };
+                    MakeQuad(Quads[4], { 0.0f,   0.0f, 559.2f }, { 0.0f,   0.0f, 0.0f }, { 0.0f, 548.8f, 0.0f }, { 0.0f, 548.8f, 559.2f }, 1.0f, 0.0f);
 
                     // Right Wall
-                    Quads[5].positionA_Albedo = { 552.8f, 0.0f,   0.0f, 1.0f };
-                    Quads[5].positionB_Emissive = { 549.6f,   0.0f, 559.2f, 0.0f };
-                    Quads[5].positionC_w = { 556.0f, 548.8f, 559.2f, 0.0f };
-                    Quads[5].positionD_w = { 556.0f, 548.8f,   0.0f, 0.0f };
-
-                    CalculateQuadNormal(Quads[0]);
-                    CalculateQuadNormal(Quads[1]);
-                    CalculateQuadNormal(Quads[2]);
-                    CalculateQuadNormal(Quads[3]);
-                    CalculateQuadNormal(Quads[4]);
-                    CalculateQuadNormal(Quads[5]);
+                    MakeQuad(Quads[5], { 552.8f, 0.0f,   0.0f }, { 549.6f,   0.0f, 559.2f }, { 556.0f, 548.8f, 559.2f }, { 556.0f, 548.8f,   0.0f }, 1.0f, 0.0f);
                 }
             );
 
@@ -273,40 +222,19 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                 [] (std::array<ShaderTypes::StructuredBuffers::QuadPrim, 10>& Quads)
                 {
                     // Floor
-                    Quads[1].positionA_Albedo = { 552.8f, 0.0f, 0.0f, 1.0f };
-                    Quads[1].positionB_Emissive = { 0.0f, 0.0f, 0.0f, 0.0f };
-                    Quads[1].positionC_w = { 0.0f, 0.0f, 559.2f, 0.0f };
-                    Quads[1].positionD_w = { 549.6f, 0.0f, 559.2f, 0.0f };
+                    MakeQuad(Quads[1], { 552.8f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 559.2f }, { 549.6f, 0.0f, 559.2f }, 1.0f, 0.0f);
 
                     // Ceiling
-                    Quads[2].positionA_Albedo = { 556.0f, 548.8f,   0.0f, 0.78f };
-                    Quads[2].positionB_Emissive = { 556.0f, 548.8f, 559.2f, 1.0f };
-                    Quads[2].positionC_w = { 0.0f, 548.8f, 559.2f, 0.0f };
-                    Quads[2].positionD_w = { 0.0f, 548.8f,   0.0f, 0.0f };
+                    MakeQuad(Quads[2], { 556.0f, 548.8f,   0.0f }, { 556.0f, 548.8f, 559.2f }, { 0.0f, 548.8f, 559.2f }, { 0.0f, 548.8f,   0.0f }, 0.78f, 1.0f);
 
                     // Back Wall
-                    Quads[3].positionA_Albedo = { 549.6f,   0.0f, 559.2f, 1.0f };
-                    Quads[3].positionB_Emissive = { 0.0f,   0.0f, 559.2f, 0.0f };
-                    Quads[3].positionC_w = { 0.0f, 548.8f, 559.2f, 0.0f };
-                    Quads[3].positionD_w = { 556.0f, 548.8f, 559.2f, 0.0f };
+                    MakeQuad(Quads[3], { 549.6f,   0.0f, 559.2f }, { 0.0f,   0.0f, 559.2f }, { 0.0f, 548.8f, 559.2f }, { 556.0f, 548.8f, 559.2f }, 1.0f, 0.0f);
 
                     // Left Wall
-                    Quads[4].positionA_Albedo = { 0.0f,   0.0f, 559.2f, 1.0f };
-                    Quads[4].positionB_Emissive = { 0.0f,   0.0f, 0.0f, 0.0f };
-                    Quads[4].positionC_w = { 0.0f, 548.8f, 0.0f, 0.0f };
-                    Quads[4].positionD_w = { 0.0f, 548.8f, 559.2f, 0.0f };
+                    MakeQuad(Quads[4], { 0.0f,   0.0f, 559.2f }, { 0.0f,   0.0f, 0.0f }, { 0.0f, 548.8f, 0.0f }, { 0.0f, 548.8f, 559.2f }, 1.0f, 0.0f);
 
                     // Right Wall
-                    Quads[0].positionA_Albedo = { 552.8f, 0.0f,   0.0f, 1.0f };
-                    Quads[0].positionB_Emissive = { 549.6f,   0.0f, 559.2f, 0.0f };
-                    Quads[0].positionC_w = { 556.0f, 548.8f, 559.2f, 0.0f };
-                    Quads[0].positionD_w = { 556.0f, 548.8f,   0.0f, 0.0f };
-
-                    CalculateQuadNormal(Quads[0]);
-                    CalculateQuadNormal(Quads[1]);
-                    CalculateQuadNormal(Quads[2]);
-                    CalculateQuadNormal(Quads[3]);
-                    CalculateQuadNormal(Quads[4]);
+                    MakeQuad(Quads[0], { 552.8f, 0.0f,   0.0f }, { 549.6f,   0.0f, 559.2f }, { 556.0f, 548.8f, 559.2f }, { 556.0f, 548.8f,   0.0f }, 1.0f, 0.0f);
                 }
             );
 
@@ -340,11 +268,8 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                 context,
                 [] (std::array<ShaderTypes::StructuredBuffers::SpherePrim, 10>& spheres)
                 {
-                    spheres[0].position_Radius = { 0.0f, 0.0f, 4.0f, 2.0f };
-                    spheres[0].albedo_Emissive_zw = { 1.0f, 0.0f, 0.0f, 0.0f };
-
-                    spheres[1].position_Radius = { 0.0f, 0.0f, 0.0f, 20.0f };
-                    spheres[1].albedo_Emissive_zw = { 0.0f, 0.5f, 0.0f, 0.0f };
+                    MakeSphere(spheres[0], { 0.0f, 0.0f, 4.0f }, 2.0f, 1.0f, 0.0f);
+                    MakeSphere(spheres[1], { 0.0f, 0.0f, 0.0f }, 20.0f, 0.0f, 0.5f);
                 }
             );
             break;
