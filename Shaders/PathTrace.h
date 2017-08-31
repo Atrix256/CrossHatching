@@ -350,6 +350,8 @@ SRayHitInfo ClosestIntersection (in float3 rayPos, in float3 rayDir)
     SRayHitInfo rayHitInfo;
     rayHitInfo.m_intersectTime = -1.0f;
 
+    rayPos += rayDir * c_rayEpsilon;
+
     // spheres
     {
         int numSpheres = numSpheres_numTris_numOBBs_numQuads.x;
@@ -437,7 +439,7 @@ float Light_Outgoing (in SRayHitInfo rayHitInfo, in float3 rayHitPos, inout floa
 
         // add a random recursive sample for global illumination
         float3 newRayDir = CosineSampleHemisphere(rayHitInfo.m_surfaceNormal, rngSeed);
-        SRayHitInfo newRayHitInfo = ClosestIntersection(rayHitPos + newRayDir * c_rayEpsilon, newRayDir);
+        SRayHitInfo newRayHitInfo = ClosestIntersection(rayHitPos, newRayDir);
 
         // if we hit something new, we continue
         if (newRayHitInfo.m_intersectTime >= 0.0f)
@@ -467,5 +469,5 @@ float Light_Incoming (in float3 rayPos, in float3 rayDir, inout float rngSeed)
         return nearPlaneDist_missColor_zw.y;
 
     // else, return the amount of light coming towards us from that point on the object we hit
-    return Light_Outgoing(rayHitInfo, rayPos + rayDir * rayHitInfo.m_intersectTime + -rayDir * c_rayEpsilon, rngSeed);
+    return Light_Outgoing(rayHitInfo, rayPos + rayDir * rayHitInfo.m_intersectTime, rngSeed);
 }

@@ -1,9 +1,4 @@
-* black lines went away, but the cornel box thing on the back wall is still there, what's that about?
-
-! fix the black line on quad tests.
- * the dark line down the middle of the scene in SphereOnPlane_LowLight stays there if all there is, is the ground, and the light sphere.
-* something is wrong with one of the tests. maybe ray vs triangle. it has the black line in the center.
- * could also be a problem w/ hemisphere sampling maybe.
+* the cornell box has some strange dark areas. like the left wall in the front half is dark for some strange reason even though the right side isn't.
 
 * get rid of depth, depth test, and back face culling
  * i don't think we need a depth buffer since it'll all be path traced, so remove that (eventually)
@@ -19,13 +14,9 @@
 
 ! need to keep the rng seed from becoming so huge that small floats don't matter and it stops updating.
 
-? try using a low discrepancy sequence instead of random number generator? you do over time but maybe also try over space? or maybe sample a blue noise texture for initial seed?
- * yes, this!
- * tile a blue noise texture as initial seed. add framenumber * golden ratio to seed each frame. do you frac result?
-
-allow a way to specify screen w/h and fullscreen. Command line? or just leave it like it is.
-
 show fps / mspf
+
+be able to move camera? reset sample count on camera move
 
 test x64 and release
 
