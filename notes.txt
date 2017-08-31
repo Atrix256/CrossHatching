@@ -43,8 +43,9 @@ Sean said he'd be willing to give me textures.
 
 ================================= LATER IDEAS =================================
 
-* could do a lens and get depth of field effect.
-* reflections.
+* could do a lens and get depth of field effect. (actually, won't work with this technique)
+* reflections. Probably needs to be done as a post step, but could do N samples and jitter them even.
+* anti aliasing? could render at 4x resolution and downsample final image (longer to render though)
 * caustics and refraction could be interesting
 * Work with sean for the franklin booth technioque?
 
