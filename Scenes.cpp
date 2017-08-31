@@ -32,14 +32,9 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                     scene.cameraAt_FOVY[2] = 0.0f;
 
                     scene.nearPlaneDist_missColor_zw[0] = 0.1f;
-
-                    // TODO: temp! trying to figure out quad test problem
-                    //scene.nearPlaneDist_missColor_zw[1] = 0.0f;
                     scene.nearPlaneDist_missColor_zw[1] = 0.0f;
 
-                    // TODO: temp! trying to figure out quad test problem
-                    //scene.numSpheres_numTris_numOBBs_numQuads = { 2.0f, 0.0f, 0.0f, 2.0f };
-                    scene.numSpheres_numTris_numOBBs_numQuads = { 1.0f, 0.0f, 0.0f, 1.0f };
+                    scene.numSpheres_numTris_numOBBs_numQuads = { 2.0f, 0.0f, 0.0f, 2.0f };
                 }
             );
 
@@ -47,9 +42,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                 context,
                 [] (std::array<ShaderTypes::StructuredBuffers::SpherePrim, 10>& spheres)
                 {
-                    // TODO: temp! trying to figure out quad test problem
-                    //MakeSphere(spheres[0], { 4.0f, 4.0f, 6.0f }, 0.5f, 0.0f, 10.0f);
-                    MakeSphere(spheres[0], { 4.0f, 4.0f, 6.0f }, 5.0f, 0.0f, 10.0f);
+                    MakeSphere(spheres[0], { 4.0f, 4.0f, 6.0f }, 0.5f, 0.0f, 10.0f);
                     MakeSphere(spheres[1], { 0.0f, 0.0f, 4.0f }, 2.0f, 0.5f, 0.0f);
                 }
             );
@@ -58,8 +51,8 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                 context,
                 [] (std::array<ShaderTypes::StructuredBuffers::QuadPrim, 10>& Quads)
                 {
-                    MakeQuad(Quads[0], { -15.0f, -2.0f, 15.0f }, { 15.0f, -2.0f, 15.0f }, { 15.0f, -2.0f, -15.0f }, { -15.0f, -2.0f, -15.0f }, 0.9f, 0.0f);
-                    MakeQuad(Quads[1], { -4.0f, -3.0f, -4.0f }, { -4.0f, 2.0f, -4.0f }, { -4.0f, 2.0f, 12.0f }, { -4.0f, -3.0f, 12.0f }, 0.9f, 0.0f);
+                    MakeQuad(Quads[0], { -4.0f, -3.0f, -4.0f }, { -4.0f, 2.0f, -4.0f }, { -4.0f, 2.0f, 12.0f }, { -4.0f, -3.0f, 12.0f }, 0.9f, 0.0f);
+                    MakeQuad(Quads[1], { -15.0f, -2.0f, 15.0f }, { 15.0f, -2.0f, 15.0f }, { 15.0f, -2.0f, -15.0f }, { -15.0f, -2.0f, -15.0f }, 0.9f, 0.0f);
                 }
             );
             break;
@@ -177,9 +170,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                     scene.cameraAt_FOVY[2] = 0.0f;
 
                     scene.nearPlaneDist_missColor_zw[0] = 0.1f;
-                    // TODO: temp! investigating ray vs quad problem
-                    //scene.nearPlaneDist_missColor_zw[1] = 0.0f;
-                    scene.nearPlaneDist_missColor_zw[1] = 0.5f;
+                    scene.nearPlaneDist_missColor_zw[1] = 0.0f;
 
                     scene.numSpheres_numTris_numOBBs_numQuads = { 0.0f, 0.0f, 2.0f, 5.0f };
                 }
