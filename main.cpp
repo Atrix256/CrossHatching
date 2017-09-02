@@ -28,10 +28,13 @@ const float3 c_cameraAt = { 0.0f, 0.0f, 0.0f };
 // globals
 CD3D11 g_d3d;
 
+bool g_showGray = false;
+
 CModel<ShaderTypes::VertexFormats::Pos2D> g_fullScreenMesh;
 
 CComputeShader g_pathTrace;
 CShader g_shaderShowPathTrace;
+CShader g_shaderShowPathTraceGrey;
 
 float RandomFloat (float min, float max)
 {
@@ -283,6 +286,7 @@ void OnKeyPress (unsigned char key, bool pressed)
         case '3': FillSceneData(EScene::CornellBox_SmallLight, g_d3d.Context()); break;
         case '4': FillSceneData(EScene::CornellBox_BigLight, g_d3d.Context()); break;
         case '5': FillSceneData(EScene::FurnaceTest, g_d3d.Context()); break;
+        case 'G': g_showGray = !g_showGray; break;
     }
 }
 
@@ -315,6 +319,9 @@ bool init ()
         return false;
 
     if (!g_shaderShowPathTrace.Load(g_d3d.Device(), WindowGetHWND(), L"Shaders/ShowPathTrace.fx", ShaderData::VertexFormats::Pos2D, ShaderData::VertexFormats::Pos2DElements, c_shaderDebug))
+        return false;
+
+    if (!g_shaderShowPathTraceGrey.Load(g_d3d.Device(), WindowGetHWND(), L"Shaders/ShowPathTraceGrey.fx", ShaderData::VertexFormats::Pos2D, ShaderData::VertexFormats::Pos2DElements, c_shaderDebug))
         return false;
 
     // make a full screen triangle
@@ -412,13 +419,15 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
             g_pathTrace.Dispatch(g_d3d.Context(), dispatchX, dispatchY, 1);
             UnbindShaderTextures<EShaderType::compute>(g_d3d.Context(), g_pathTrace.GetReflector());
 
+            CShader& shader = g_showGray ? g_shaderShowPathTraceGrey : g_shaderShowPathTrace;
+
             // vs & ps
-            FillShaderParams<EShaderType::vertex>(g_d3d.Context(), g_shaderShowPathTrace.GetVSReflector());
-            FillShaderParams<EShaderType::pixel>(g_d3d.Context(), g_shaderShowPathTrace.GetPSReflector());
+            FillShaderParams<EShaderType::vertex>(g_d3d.Context(), shader.GetVSReflector());
+            FillShaderParams<EShaderType::pixel>(g_d3d.Context(), shader.GetPSReflector());
             g_fullScreenMesh.Render(g_d3d.Context());
-            g_shaderShowPathTrace.Draw(g_d3d.Context(), g_fullScreenMesh.GetIndexCount());
-            UnbindShaderTextures<EShaderType::vertex>(g_d3d.Context(), g_shaderShowPathTrace.GetVSReflector());
-            UnbindShaderTextures<EShaderType::pixel>(g_d3d.Context(), g_shaderShowPathTrace.GetPSReflector());
+            shader.Draw(g_d3d.Context(), g_fullScreenMesh.GetIndexCount());
+            UnbindShaderTextures<EShaderType::vertex>(g_d3d.Context(), shader.GetVSReflector());
+            UnbindShaderTextures<EShaderType::pixel>(g_d3d.Context(), shader.GetPSReflector());
             g_d3d.Present();
         }
     }
