@@ -13,12 +13,12 @@
 #include "Scenes.h"
 
 // settings
-const size_t c_width = 800;
-const size_t c_height = 600;
+const size_t c_width = 1024;
+const size_t c_height = 768;
 const bool c_fullScreen = false;
 const bool c_vsync = true;
-const bool c_shaderDebug = true;
-const bool c_d3ddebug = true;
+const bool c_shaderDebug = false;
+const bool c_d3ddebug = false;
 const float c_fovX = DegreesToRadians(40.0f);
 const float c_fovY = c_fovX * float(c_height) / float(c_width);
 const float c_nearPlane = 0.1f;
@@ -311,38 +311,6 @@ bool init ()
         if(!ShaderData::Textures::NAME.Create(g_d3d.Device(), g_d3d.Context(), c_width, c_height, FORMAT)) return false;
     #include "ShaderTypesList.h"
 
-    // write some triangles
-    bool writeOK = ShaderData::StructuredBuffers::Triangles.Write(
-        g_d3d.Context(),
-        [] (std::array<ShaderTypes::StructuredBuffers::TrianglePrim, 10>& data)
-        {
-            for (size_t i = 0; i < 10; ++i)
-            {
-                data[i].positionA_Albedo[0] = 0.0f;
-                data[i].positionA_Albedo[1] = 0.0f;
-                data[i].positionA_Albedo[2] = 0.0f;
-                data[i].positionA_Albedo[3] = 0.0f;
-
-                data[i].positionB_Emissive[0] = 0.0f;
-                data[i].positionB_Emissive[1] = 0.0f;
-                data[i].positionB_Emissive[2] = 0.0f;
-                data[i].positionB_Emissive[3] = 0.0f;
-
-                data[i].positionC_w[0] = 0.0f;
-                data[i].positionC_w[1] = 0.0f;
-                data[i].positionC_w[2] = 0.0f;
-                data[i].positionC_w[3] = 0.0f;
-
-                data[i].normal_w[0] = 0.0f;
-                data[i].normal_w[1] = 0.0f;
-                data[i].normal_w[2] = 0.0f;
-                data[i].normal_w[3] = 0.0f;
-            }
-        }
-    );
-    if (!writeOK)
-        return false;
-
     if (!g_pathTrace.Load(g_d3d.Device(), WindowGetHWND(), L"Shaders/PathTrace.fx", c_shaderDebug))
         return false;
 
@@ -350,7 +318,7 @@ bool init ()
         return false;
 
     // make a full screen triangle
-    writeOK = g_fullScreenMesh.Create(
+   bool writeOK = g_fullScreenMesh.Create(
         g_d3d.Device(),
         [] (std::vector<ShaderTypes::VertexFormats::Pos2D>& vertexData, std::vector<unsigned long>& indexData)
         {
@@ -373,7 +341,7 @@ bool init ()
         {
             data.cameraPos_FOVX = { 0.0f, 0.0f, 0.0f, c_fovX };
             data.cameraAt_FOVY = { 0.0f, 0.0f, 0.0f, c_fovY };
-            data.nearPlaneDist_missColor_zw = { 0.0f, 0.0f, 0.0f, 0.0f };
+            data.nearPlaneDist_missColor = { 0.0f, 0.0f, 0.0f, 0.0f };
             data.numSpheres_numTris_numOBBs_numQuads = { 0.0f, 0.0f, 0.0f, 0.0f };
         }
     );
@@ -445,14 +413,13 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
             UnbindShaderTextures<EShaderType::compute>(g_d3d.Context(), g_pathTrace.GetReflector());
 
             // vs & ps
-            g_d3d.BeginScene(0.4f, 0.0f, 0.4f, 1.0f);
             FillShaderParams<EShaderType::vertex>(g_d3d.Context(), g_shaderShowPathTrace.GetVSReflector());
             FillShaderParams<EShaderType::pixel>(g_d3d.Context(), g_shaderShowPathTrace.GetPSReflector());
             g_fullScreenMesh.Render(g_d3d.Context());
             g_shaderShowPathTrace.Draw(g_d3d.Context(), g_fullScreenMesh.GetIndexCount());
             UnbindShaderTextures<EShaderType::vertex>(g_d3d.Context(), g_shaderShowPathTrace.GetVSReflector());
             UnbindShaderTextures<EShaderType::pixel>(g_d3d.Context(), g_shaderShowPathTrace.GetPSReflector());
-            g_d3d.EndScene();
+            g_d3d.Present();
         }
     }
 

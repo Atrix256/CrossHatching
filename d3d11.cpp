@@ -264,21 +264,7 @@ CD3D11::~CD3D11()
     }
 }
 
-void CD3D11::BeginScene (float red, float green, float blue, float alpha)
-{
-    float color[4];
-
-    // Setup the color to clear the buffer to.
-    color[0] = red;
-    color[1] = green;
-    color[2] = blue;
-    color[3] = alpha;
-
-    // Clear the back buffer.
-    m_deviceContext.m_ptr->ClearRenderTargetView(m_renderTargetView.m_ptr, color);
-}
-
-void CD3D11::EndScene ()
+void CD3D11::Present ()
 {
     // Present the back buffer to the screen since rendering is complete.
     if (m_vsync_enabled)

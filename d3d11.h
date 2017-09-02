@@ -14,8 +14,7 @@ public:
         bool fullscreen,
         bool debug);
 
-    void BeginScene (float red, float green, float blue, float alpha);
-    void EndScene ();
+    void Present ();
 
     ID3D11Device* Device() { return m_device.m_ptr; }
     ID3D11DeviceContext* Context () { return m_deviceContext.m_ptr; }

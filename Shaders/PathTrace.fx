@@ -30,9 +30,10 @@ void cs_main (
     CalculateRay(uv, rayPos, rayDir);
 
     // path trace
-    float light = Light_Incoming(rayPos, rayDir, rngSeed);
+    float3 light = Light_Incoming(rayPos, rayDir, rngSeed);
 
     // use lerping for incremental averageing:  https://blog.demofox.org/2016/08/23/incremental-averaging/
     // lerp from the old value to the current and write it back out
-    pathTraceOutput_rw[dispatchThreadID.xy] = lerp(pathTraceOutput_rw[dispatchThreadID.xy], light, 1.0f / float(sampleCount_yzw.x));
+    float3 integration = lerp(pathTraceOutput_rw[dispatchThreadID.xy].xyz, light, 1.0f / float(sampleCount_yzw.x));
+    pathTraceOutput_rw[dispatchThreadID.xy] = float4(integration, 1.0f);
 }

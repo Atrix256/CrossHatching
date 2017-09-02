@@ -1,4 +1,6 @@
+* make an option to show as greyscale
 * get model loading / rendering working? bounding spheres (?) around triangles? or just triangle soup.
+* make it use textures for shading - using the color to tint the non black parts of the textures. 
 
 ? have c++ side send an iterative sum of golden ratio to shader?
  * or try just adding the random number per frame to it!
@@ -6,6 +8,8 @@
  * try and see if you can keep the seed in 0-1?
  * if this works out get rid of app rand and frame number and app time i think.
  ! i tried this 8/29 at lunch and it didn't work out, not sure what the problem is.
+
+! the path on cornell box has red wall on left, but the "showpathtrace" flips it correctly to red wall on right. should fix that minor wrinkle
 
 ! need to keep the rng seed from becoming so huge that small floats don't matter and it stops updating.
 

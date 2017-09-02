@@ -116,7 +116,7 @@ TEXTURE_BUFFER(Name, ShaderType, Format)
 CONSTANT_BUFFER_BEGIN(ConstantsOnce)
     CONSTANT_BUFFER_FIELD(cameraPos_FOVX, float4)
     CONSTANT_BUFFER_FIELD(cameraAt_FOVY, float4)
-    CONSTANT_BUFFER_FIELD(nearPlaneDist_missColor_zw, float4)
+    CONSTANT_BUFFER_FIELD(nearPlaneDist_missColor, float4)
     CONSTANT_BUFFER_FIELD(numSpheres_numTris_numOBBs_numQuads, float4)
 CONSTANT_BUFFER_END
 
@@ -131,30 +131,37 @@ CONSTANT_BUFFER_END
 
 STRUCTURED_BUFFER_BEGIN(Spheres, SpherePrim, 10)
     STRUCTURED_BUFFER_FIELD(position_Radius, float4)
-    STRUCTURED_BUFFER_FIELD(albedo_Emissive_zw, float4)
+    STRUCTURED_BUFFER_FIELD(albedo_w, float4)
+    STRUCTURED_BUFFER_FIELD(emissive_w, float4)
 STRUCTURED_BUFFER_END
 
 STRUCTURED_BUFFER_BEGIN(Triangles, TrianglePrim, 10)
-    STRUCTURED_BUFFER_FIELD(positionA_Albedo, float4)
-    STRUCTURED_BUFFER_FIELD(positionB_Emissive, float4)
+    STRUCTURED_BUFFER_FIELD(positionA_w, float4)
+    STRUCTURED_BUFFER_FIELD(positionB_w, float4)
     STRUCTURED_BUFFER_FIELD(positionC_w, float4)
     STRUCTURED_BUFFER_FIELD(normal_w, float4)
+    STRUCTURED_BUFFER_FIELD(albedo_w, float4)
+    STRUCTURED_BUFFER_FIELD(emissive_w, float4)
 STRUCTURED_BUFFER_END
 
 STRUCTURED_BUFFER_BEGIN(Quads, QuadPrim, 10)
-    STRUCTURED_BUFFER_FIELD(positionA_Albedo, float4)
-    STRUCTURED_BUFFER_FIELD(positionB_Emissive, float4)
+    STRUCTURED_BUFFER_FIELD(positionA_w, float4)
+    STRUCTURED_BUFFER_FIELD(positionB_w, float4)
     STRUCTURED_BUFFER_FIELD(positionC_w, float4)
     STRUCTURED_BUFFER_FIELD(positionD_w, float4)
     STRUCTURED_BUFFER_FIELD(normal_w, float4)
+    STRUCTURED_BUFFER_FIELD(albedo_w, float4)
+    STRUCTURED_BUFFER_FIELD(emissive_w, float4)
 STRUCTURED_BUFFER_END
 
 STRUCTURED_BUFFER_BEGIN(OBBs, OBBPrim, 10)
-    STRUCTURED_BUFFER_FIELD(position_Albedo, float4)
-    STRUCTURED_BUFFER_FIELD(radius_Emissive, float4)
+    STRUCTURED_BUFFER_FIELD(position_w, float4)
+    STRUCTURED_BUFFER_FIELD(radius_w, float4)
     STRUCTURED_BUFFER_FIELD(XAxis_w, float4)
     STRUCTURED_BUFFER_FIELD(YAxis_w, float4)
     STRUCTURED_BUFFER_FIELD(ZAxis_w, float4)
+    STRUCTURED_BUFFER_FIELD(albedo_w, float4)
+    STRUCTURED_BUFFER_FIELD(emissive_w, float4)
 STRUCTURED_BUFFER_END
 
 //=================================================================
@@ -170,7 +177,7 @@ VERTEX_FORMAT_END
 //=================================================================
 
 TEXTURE_IMAGE(blueNoise256, "Art/BlueNoise256.tga")
-TEXTURE_BUFFER(pathTraceOutput, float, DXGI_FORMAT_R32_FLOAT)
+TEXTURE_BUFFER(pathTraceOutput, float4, DXGI_FORMAT_R32G32B32A32_FLOAT)
 
 //=================================================================
 // undefine everything for the caller's convenience

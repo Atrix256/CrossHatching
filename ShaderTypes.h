@@ -118,24 +118,34 @@ inline void MakeTriangle (
     float3 a,
     float3 b,
     float3 c,
-    float albedo,
-    float emissive
+    float3 albedo,
+    float3 emissive
 )
 {
-    triangle.positionA_Albedo[0] = a[0];
-    triangle.positionA_Albedo[1] = a[1];
-    triangle.positionA_Albedo[2] = a[2];
-    triangle.positionA_Albedo[3] = albedo;
+    triangle.positionA_w[0] = a[0];
+    triangle.positionA_w[1] = a[1];
+    triangle.positionA_w[2] = a[2];
+    triangle.positionA_w[3] = 0.0f;
 
-    triangle.positionB_Emissive[0] = b[0];
-    triangle.positionB_Emissive[1] = b[1];
-    triangle.positionB_Emissive[2] = b[2];
-    triangle.positionB_Emissive[3] = emissive;
+    triangle.positionB_w[0] = b[0];
+    triangle.positionB_w[1] = b[1];
+    triangle.positionB_w[2] = b[2];
+    triangle.positionB_w[3] = 0.0f;
 
     triangle.positionC_w[0] = c[0];
     triangle.positionC_w[1] = c[1];
     triangle.positionC_w[2] = c[2];
     triangle.positionC_w[3] = 0.0f;
+
+    triangle.albedo_w[0] = albedo[0];
+    triangle.albedo_w[1] = albedo[1];
+    triangle.albedo_w[2] = albedo[2];
+    triangle.albedo_w[3] = 0.0f;
+
+    triangle.emissive_w[0] = emissive[0];
+    triangle.emissive_w[1] = emissive[1];
+    triangle.emissive_w[2] = emissive[2];
+    triangle.emissive_w[3] = 0.0f;
 
     // calculate normal
     float3 AB = b - a;
@@ -155,19 +165,19 @@ inline void MakeQuad(
     float3 b,
     float3 c,
     float3 d,
-    float albedo,
-    float emissive
+    float3 albedo,
+    float3 emissive
 )
 {
-    quad.positionA_Albedo[0] = a[0];
-    quad.positionA_Albedo[1] = a[1];
-    quad.positionA_Albedo[2] = a[2];
-    quad.positionA_Albedo[3] = albedo;
+    quad.positionA_w[0] = a[0];
+    quad.positionA_w[1] = a[1];
+    quad.positionA_w[2] = a[2];
+    quad.positionA_w[3] = 0.0f;
 
-    quad.positionB_Emissive[0] = b[0];
-    quad.positionB_Emissive[1] = b[1];
-    quad.positionB_Emissive[2] = b[2];
-    quad.positionB_Emissive[3] = emissive;
+    quad.positionB_w[0] = b[0];
+    quad.positionB_w[1] = b[1];
+    quad.positionB_w[2] = b[2];
+    quad.positionB_w[3] = 0.0f;
 
     quad.positionC_w[0] = c[0];
     quad.positionC_w[1] = c[1];
@@ -178,6 +188,16 @@ inline void MakeQuad(
     quad.positionD_w[1] = d[1];
     quad.positionD_w[2] = d[2];
     quad.positionD_w[3] = 0.0f;
+
+    quad.albedo_w[0] = albedo[0];
+    quad.albedo_w[1] = albedo[1];
+    quad.albedo_w[2] = albedo[2];
+    quad.albedo_w[3] = 0.0f;
+
+    quad.emissive_w[0] = emissive[0];
+    quad.emissive_w[1] = emissive[1];
+    quad.emissive_w[2] = emissive[2];
+    quad.emissive_w[3] = 0.0f;
 
     // calculate normal
     float3 AB = b - a;
@@ -195,18 +215,23 @@ inline void MakeSphere(
     ShaderTypes::StructuredBuffers::SpherePrim& sphere,
     float3 position,
     float radius,
-    float albedo,
-    float emissive)
+    float3 albedo,
+    float3 emissive)
 {
     sphere.position_Radius[0] = position[0];
     sphere.position_Radius[1] = position[1];
     sphere.position_Radius[2] = position[2];
     sphere.position_Radius[3] = radius;
 
-    sphere.albedo_Emissive_zw[0] = albedo;
-    sphere.albedo_Emissive_zw[1] = emissive;
-    sphere.albedo_Emissive_zw[2] = 0.0f;
-    sphere.albedo_Emissive_zw[3] = 0.0f;
+    sphere.albedo_w[0] = albedo[0];
+    sphere.albedo_w[1] = albedo[1];
+    sphere.albedo_w[2] = albedo[2];
+    sphere.albedo_w[3] = 0.0f;
+
+    sphere.emissive_w[0] = emissive[0];
+    sphere.emissive_w[1] = emissive[1];
+    sphere.emissive_w[2] = emissive[2];
+    sphere.emissive_w[3] = 0.0f;
 }
 
 inline void MakeOBB (
@@ -215,19 +240,29 @@ inline void MakeOBB (
     float3 radius,
     float3 rotAxis,
     float rotAngle,
-    float albedo,
-    float emissive
+    float3 albedo,
+    float3 emissive
 )
 {
-    obb.position_Albedo[0] = position[0];
-    obb.position_Albedo[1] = position[1];
-    obb.position_Albedo[2] = position[2];
-    obb.position_Albedo[3] = albedo;
+    obb.position_w[0] = position[0];
+    obb.position_w[1] = position[1];
+    obb.position_w[2] = position[2];
+    obb.position_w[3] = 0.0f;
 
-    obb.radius_Emissive[0] = radius[0];
-    obb.radius_Emissive[1] = radius[1];
-    obb.radius_Emissive[2] = radius[2];
-    obb.radius_Emissive[3] = emissive;
+    obb.radius_w[0] = radius[0];
+    obb.radius_w[1] = radius[1];
+    obb.radius_w[2] = radius[2];
+    obb.radius_w[3] = 0.0f;
+
+    obb.albedo_w[0] = albedo[0];
+    obb.albedo_w[1] = albedo[1];
+    obb.albedo_w[2] = albedo[2];
+    obb.albedo_w[3] = 0.0f;
+
+    obb.emissive_w[0] = emissive[0];
+    obb.emissive_w[1] = emissive[1];
+    obb.emissive_w[2] = emissive[2];
+    obb.emissive_w[3] = 0.0f;
 
     // make sure the axis we get is normalized
     Normalize(rotAxis);

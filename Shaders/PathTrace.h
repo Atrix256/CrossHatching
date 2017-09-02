@@ -11,8 +11,8 @@ struct SRayHitInfo
 {
     float  m_intersectTime;
     float3 m_surfaceNormal;
-    float  m_albedo;
-    float  m_emissive;
+    float3 m_albedo;
+    float3 m_emissive;
 };
 
 //----------------------------------------------------------------------------
@@ -55,12 +55,12 @@ void CalculateRay (in float2 uv, out float3 rayPos, out float3 rayDir)
     float3 cameraUp = normalize(cross(cameraFwd, cameraRight));
 
     // calculate view window dimensions in world space
-    float windowRight = tan(cameraPos_FOVX.w) * nearPlaneDist_missColor_zw.x;
-    float windowTop = tan(cameraAt_FOVY.w) * nearPlaneDist_missColor_zw.x;
+    float windowRight = tan(cameraPos_FOVX.w) * nearPlaneDist_missColor.x;
+    float windowTop = tan(cameraAt_FOVY.w) * nearPlaneDist_missColor.x;
 
     // calculate pixel position in world space, this is the ray's origin
     // start at the camera, go down the forward vector to the near plane, then move right and up based on pixelClipSpace
-    rayPos = cameraPos_FOVX.xyz + cameraFwd * nearPlaneDist_missColor_zw.x;
+    rayPos = cameraPos_FOVX.xyz + cameraFwd * nearPlaneDist_missColor.x;
     rayPos += pixelClipSpace.x * cameraRight * windowRight;
     rayPos += pixelClipSpace.y * cameraUp * windowTop;
 
@@ -80,8 +80,8 @@ bool RayIntersectsAABB (in float3 rayPos, in float3 rayDir, in OBBPrim obb, inou
     for (axis = 0; axis < 3; ++axis)
     {
         //calculate the min and max of the box on this axis
-        float axisMin = obb.position_Albedo[axis] - obb.radius_Emissive[axis];
-        float axisMax = obb.position_Albedo[axis] + obb.radius_Emissive[axis];
+        float axisMin = obb.position_w[axis] - obb.radius_w[axis];
+        float axisMax = obb.position_w[axis] + obb.radius_w[axis];
 
         //if the ray is paralel with this axis
         if (abs(rayDir[axis]) < 0.0001f)
@@ -141,14 +141,14 @@ bool RayIntersectsAABB (in float3 rayPos, in float3 rayDir, in OBBPrim obb, inou
     float v = 0.0f;
     for (axis = 0; axis < 3; ++axis)
     {
-        float distFromPos = abs(obb.position_Albedo[axis] - intersectionPoint[axis]);
-        float distFromEdge = abs(distFromPos - obb.radius_Emissive[axis]);
+        float distFromPos = abs(obb.position_w[axis] - intersectionPoint[axis]);
+        float distFromEdge = abs(distFromPos - obb.radius_w[axis]);
 
         if (distFromEdge < closestDist)
         {
             closestDist = distFromEdge;
             normal = float3( 0.0f, 0.0f, 0.0f );
-            if (intersectionPoint[axis] < obb.position_Albedo[axis])
+            if (intersectionPoint[axis] < obb.position_w[axis])
                 normal[axis] = -1.0;
             else
                 normal[axis] = 1.0;
@@ -162,8 +162,8 @@ bool RayIntersectsAABB (in float3 rayPos, in float3 rayDir, in OBBPrim obb, inou
 
     rayHitInfo.m_intersectTime = collisionTime;
     rayHitInfo.m_surfaceNormal = normal;
-    rayHitInfo.m_albedo = obb.position_Albedo.w;
-    rayHitInfo.m_emissive = obb.radius_Emissive.w;
+    rayHitInfo.m_albedo = obb.albedo_w.xyz;
+    rayHitInfo.m_emissive = obb.emissive_w.xyz;
 
     return true;
 }
@@ -172,7 +172,7 @@ bool RayIntersectsAABB (in float3 rayPos, in float3 rayDir, in OBBPrim obb, inou
 void RayIntersectsOBB (in float3 rayPos, in float3 rayDir, in OBBPrim obb, inout SRayHitInfo rayHitInfo)
 {
     // put the ray into local space of the obb
-    float3 newRayPos = ChangeBasis(rayPos - obb.position_Albedo.xyz, obb.XAxis_w.xyz, obb.YAxis_w.xyz, obb.ZAxis_w.xyz) + obb.position_Albedo.xyz;
+    float3 newRayPos = ChangeBasis(rayPos - obb.position_w.xyz, obb.XAxis_w.xyz, obb.YAxis_w.xyz, obb.ZAxis_w.xyz) + obb.position_w.xyz;
     float3 newRayDir = ChangeBasis(rayDir, obb.XAxis_w.xyz, obb.YAxis_w.xyz, obb.ZAxis_w.xyz);
 
     // do ray vs abb intersection
@@ -188,8 +188,8 @@ void RayIntersectsQuad (in float3 rayPos, in float3 rayDir, in QuadPrim quad, in
 {
     // This function adapted from "Real Time Collision Detection" 5.3.5 Intersecting Line Against Quadrilateral
     // IntersectLineQuad()
-    float3 pa = quad.positionA_Albedo.xyz - rayPos;
-    float3 pb = quad.positionB_Emissive.xyz - rayPos;
+    float3 pa = quad.positionA_w.xyz - rayPos;
+    float3 pb = quad.positionB_w.xyz - rayPos;
     float3 pc = quad.positionC_w.xyz - rayPos;
     // Determine which triangle to test against by testing against diagonal first
     float3 m = cross(pc, rayDir);
@@ -206,7 +206,7 @@ void RayIntersectsQuad (in float3 rayPos, in float3 rayDir, in QuadPrim quad, in
         u *= denom;
         v *= denom;
         w *= denom; // w = 1.0f - u - v;
-        r = u*quad.positionA_Albedo.xyz + v*quad.positionB_Emissive.xyz + w*quad.positionC_w.xyz;
+        r = u*quad.positionA_w.xyz + v*quad.positionB_w.xyz + w*quad.positionC_w.xyz;
     }
     else {
         // Test intersection against triangle dac
@@ -221,7 +221,7 @@ void RayIntersectsQuad (in float3 rayPos, in float3 rayDir, in QuadPrim quad, in
         u *= denom;
         v *= denom;
         w *= denom; // w = 1.0f - u - v;
-        r = u*quad.positionA_Albedo.xyz + v*quad.positionD_w.xyz + w*quad.positionC_w.xyz;
+        r = u*quad.positionA_w.xyz + v*quad.positionD_w.xyz + w*quad.positionC_w.xyz;
     }
 
     // make sure normal is facing opposite of ray direction.
@@ -249,8 +249,8 @@ void RayIntersectsQuad (in float3 rayPos, in float3 rayDir, in QuadPrim quad, in
 
     rayHitInfo.m_intersectTime = t;
     rayHitInfo.m_surfaceNormal = normal;
-    rayHitInfo.m_albedo = quad.positionA_Albedo.w;
-    rayHitInfo.m_emissive = quad.positionB_Emissive.w;
+    rayHitInfo.m_albedo = quad.albedo_w.xyz;
+    rayHitInfo.m_emissive = quad.emissive_w.xyz;
 }
 
 //----------------------------------------------------------------------------
@@ -295,8 +295,8 @@ void RayIntersectsSphere (in float3 rayPos, in float3 rayDir, in SpherePrim sphe
 
     rayHitInfo.m_intersectTime = collisionTime;
     rayHitInfo.m_surfaceNormal = normal;
-    rayHitInfo.m_albedo = sphere.albedo_Emissive_zw.x;
-    rayHitInfo.m_emissive = sphere.albedo_Emissive_zw.y;
+    rayHitInfo.m_albedo = sphere.albedo_w.xyz;
+    rayHitInfo.m_emissive = sphere.emissive_w.xyz;
 }
 
 //----------------------------------------------------------------------------
@@ -309,8 +309,8 @@ void RayIntersectsTriangle (in float3 rayPos, in float3 rayDir, in TrianglePrim 
     in t. Otherwise returns false and the other output parameters are undefined.*/
 
     // Edge vectors
-    float3 e_1 = trianglePrim.positionB_Emissive.xyz - trianglePrim.positionA_Albedo.xyz;
-    float3 e_2 = trianglePrim.positionC_w.xyz - trianglePrim.positionA_Albedo.xyz;
+    float3 e_1 = trianglePrim.positionB_w.xyz - trianglePrim.positionA_w.xyz;
+    float3 e_2 = trianglePrim.positionC_w.xyz - trianglePrim.positionA_w.xyz;
 
     float3 q = cross(rayDir, e_2);
     float a = dot(e_1, q);
@@ -318,7 +318,7 @@ void RayIntersectsTriangle (in float3 rayPos, in float3 rayDir, in TrianglePrim 
     if (abs(a) == 0.0f)
         return;
 
-    float3 s = (rayPos - trianglePrim.positionA_Albedo.xyz) / a;
+    float3 s = (rayPos - trianglePrim.positionA_w.xyz) / a;
     float3 r = cross(s, e_1);
     float3 b; // b is barycentric coordinates
     b[0] = dot(s, q);
@@ -343,8 +343,8 @@ void RayIntersectsTriangle (in float3 rayPos, in float3 rayDir, in TrianglePrim 
 
     rayHitInfo.m_intersectTime = t;
     rayHitInfo.m_surfaceNormal = normal;
-    rayHitInfo.m_albedo = trianglePrim.positionA_Albedo.w;
-    rayHitInfo.m_emissive = trianglePrim.positionB_Emissive.w;
+    rayHitInfo.m_albedo = trianglePrim.albedo_w.xyz;
+    rayHitInfo.m_emissive = trianglePrim.emissive_w.xyz;
 }
 
 //----------------------------------------------------------------------------
@@ -429,10 +429,10 @@ float3 CosineSampleHemisphere (in float3 normal, inout float rngSeed)
     return d;
 }
 //----------------------------------------------------------------------------
-float Light_Outgoing (in SRayHitInfo rayHitInfo, in float3 rayHitPos, inout float rngSeed)
+float3 Light_Outgoing (in SRayHitInfo rayHitInfo, in float3 rayHitPos, inout float rngSeed)
 {
-    float lightSum = 0.0f;
-    float lightMultiplier = 1.0f;
+    float3 lightSum = float3(0.0f, 0.0f, 0.0f);
+    float3 lightMultiplier = float3(1.0f, 1.0f, 1.0f);
     
     for (int i = 0; i <= c_numBounces; ++i)
     {
@@ -453,7 +453,7 @@ float Light_Outgoing (in SRayHitInfo rayHitInfo, in float3 rayHitPos, inout floa
         // else we missed so light using the miss color (skybox lighting) and return the light we've summed up
         else
         {
-            lightSum += nearPlaneDist_missColor_zw.y * lightMultiplier;
+            lightSum += nearPlaneDist_missColor.yzw * lightMultiplier;
             return lightSum;
         }
     }
@@ -462,14 +462,14 @@ float Light_Outgoing (in SRayHitInfo rayHitInfo, in float3 rayHitPos, inout floa
 }
 
 //----------------------------------------------------------------------------
-float Light_Incoming (in float3 rayPos, in float3 rayDir, inout float rngSeed)
+float3 Light_Incoming (in float3 rayPos, in float3 rayDir, inout float rngSeed)
 {
     // find out what our ray hit first
     SRayHitInfo rayHitInfo = ClosestIntersection(rayPos, rayDir);
 
     // if it missed, return the miss color
     if (rayHitInfo.m_intersectTime < 0.0f)
-        return nearPlaneDist_missColor_zw.y;
+        return nearPlaneDist_missColor.yzw;
 
     // else, return the amount of light coming towards us from that point on the object we hit
     return Light_Outgoing(rayHitInfo, rayPos + rayDir * rayHitInfo.m_intersectTime, rngSeed);

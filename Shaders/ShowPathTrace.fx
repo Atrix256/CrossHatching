@@ -39,9 +39,9 @@ float4 ps_main(SPixelInput input) : SV_TARGET
     //return normals;
 
     // get the lit value and apply sRGB correction
-    float light = pathTraceOutput.Sample(SamplerLinearWrap, float2(1.0f, 1.0f) - input.uv);
+    float3 light = pathTraceOutput.Sample(SamplerLinearWrap, float2(1.0f, 1.0f) - input.uv).xyz;
     light = pow(light, 1.0f / 2.0f);
 
     // return the value as greyscale
-    return float4(light, light, light, 1.0f);
+    return float4(light, 1.0f);
 }

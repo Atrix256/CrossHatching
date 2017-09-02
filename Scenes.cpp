@@ -31,8 +31,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                     scene.cameraAt_FOVY[1] = 0.0f;
                     scene.cameraAt_FOVY[2] = 0.0f;
 
-                    scene.nearPlaneDist_missColor_zw[0] = 0.1f;
-                    scene.nearPlaneDist_missColor_zw[1] = 0.0f;
+                    scene.nearPlaneDist_missColor = { 0.1f, 0.0f, 0.0f, 0.0f };
 
                     scene.numSpheres_numTris_numOBBs_numQuads = { 2.0f, 0.0f, 0.0f, 2.0f };
                 }
@@ -42,8 +41,8 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                 context,
                 [] (std::array<ShaderTypes::StructuredBuffers::SpherePrim, 10>& spheres)
                 {
-                    MakeSphere(spheres[0], { 4.0f, 4.0f, 6.0f }, 0.5f, 0.0f, 10.0f);
-                    MakeSphere(spheres[1], { 0.0f, 0.0f, 4.0f }, 2.0f, 0.5f, 0.0f);
+                    MakeSphere(spheres[0], { 4.0f, 4.0f, 6.0f }, 0.5f, { 0.0f, 0.0f, 0.0f }, { 10.0f, 10.0f, 10.0f });
+                    MakeSphere(spheres[1], { 0.0f, 0.0f, 4.0f }, 2.0f, { 0.5f, 0.5f, 0.5f }, { 0.0f, 0.0f, 0.0f });
                 }
             );
 
@@ -51,8 +50,8 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                 context,
                 [] (std::array<ShaderTypes::StructuredBuffers::QuadPrim, 10>& Quads)
                 {
-                    MakeQuad(Quads[0], { -4.0f, -3.0f, -4.0f }, { -4.0f, 2.0f, -4.0f }, { -4.0f, 2.0f, 12.0f }, { -4.0f, -3.0f, 12.0f }, 0.9f, 0.0f);
-                    MakeQuad(Quads[1], { -15.0f, -2.0f, 15.0f }, { 15.0f, -2.0f, 15.0f }, { 15.0f, -2.0f, -15.0f }, { -15.0f, -2.0f, -15.0f }, 0.9f, 0.0f);
+                    MakeQuad(Quads[0], { -4.0f, -3.0f, -4.0f }, { -4.0f, 2.0f, -4.0f }, { -4.0f, 2.0f, 12.0f }, { -4.0f, -3.0f, 12.0f }, { 0.1f, 0.9f, 0.1f }, { 0.0f, 0.0f, 0.0f });
+                    MakeQuad(Quads[1], { -15.0f, -2.0f, 15.0f }, { 15.0f, -2.0f, 15.0f }, { 15.0f, -2.0f, -15.0f }, { -15.0f, -2.0f, -15.0f }, { 0.9f, 0.1f, 0.1f }, { 0.0f, 0.0f, 0.0f });
                 }
             );
             break;
@@ -71,8 +70,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                     scene.cameraAt_FOVY[1] = 0.0f;
                     scene.cameraAt_FOVY[2] = 0.0f;
 
-                    scene.nearPlaneDist_missColor_zw[0] = 0.1f;
-                    scene.nearPlaneDist_missColor_zw[1] = 0.025f;
+                    scene.nearPlaneDist_missColor = { 0.1f, 0.1f, 0.4f, 1.0f };
 
                     scene.numSpheres_numTris_numOBBs_numQuads = { 2.0f, 0.0f, 0.0f, 2.0f };
                 }
@@ -82,8 +80,8 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                 context,
                 [] (std::array<ShaderTypes::StructuredBuffers::SpherePrim, 10>& spheres)
                 {
-                    MakeSphere(spheres[0], { 4.0f, 4.0f, 6.0f }, 0.5f, 0.0f, 10.0f);
-                    MakeSphere(spheres[1], { 0.0f, 0.0f, 4.0f }, 2.0f, 0.5f, 0.0f);
+                    MakeSphere(spheres[0], { 4.0f, 4.0f, 6.0f }, 0.5f, { 0.0f, 0.0f, 0.0f }, { 10.0f, 10.0f, 10.0f });
+                    MakeSphere(spheres[1], { 0.0f, 0.0f, 4.0f }, 2.0f, { 0.5f, 0.5f, 0.5f }, { 0.0f, 0.0f, 0.0f });
                 }
             );
 
@@ -91,8 +89,8 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                 context,
                 [] (std::array<ShaderTypes::StructuredBuffers::QuadPrim, 10>& Quads)
                 {
-                    MakeQuad(Quads[0], { -4.0f, -3.0f, -4.0f }, { -4.0f, 2.0f, -4.0f }, { -4.0f, 2.0f, 12.0f }, { -4.0f, -3.0f, 12.0f }, 0.9f, 0.0f);
-                    MakeQuad(Quads[1], { -15.0f, -2.0f, 15.0f }, { 15.0f, -2.0f, 15.0f }, { 15.0f, -2.0f, -15.0f }, { -15.0f, -2.0f, -15.0f }, 0.9f, 0.0f);
+                    MakeQuad(Quads[0], { -4.0f, -3.0f, -4.0f }, { -4.0f, 2.0f, -4.0f }, { -4.0f, 2.0f, 12.0f }, { -4.0f, -3.0f, 12.0f }, { 0.1f, 0.9f, 0.1f }, { 0.0f, 0.0f, 0.0f });
+                    MakeQuad(Quads[1], { -15.0f, -2.0f, 15.0f }, { 15.0f, -2.0f, 15.0f }, { 15.0f, -2.0f, -15.0f }, { -15.0f, -2.0f, -15.0f }, { 0.9f, 0.1f, 0.1f }, { 0.0f, 0.0f, 0.0f });
                 }
             );
             break;
@@ -106,14 +104,13 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                 {
                     scene.cameraPos_FOVX[0] = 2.78f;
                     scene.cameraPos_FOVX[1] = 2.73f;
-                    scene.cameraPos_FOVX[2] = -8.0f;
+                    scene.cameraPos_FOVX[2] = -5.0f;
 
                     scene.cameraAt_FOVY[0] = 2.78f;
                     scene.cameraAt_FOVY[1] = 2.73f;
                     scene.cameraAt_FOVY[2] = 0.0f;
 
-                    scene.nearPlaneDist_missColor_zw[0] = 0.1f;
-                    scene.nearPlaneDist_missColor_zw[1] = 0.0f;
+                    scene.nearPlaneDist_missColor = { 0.1f, 0.0f, 0.0f, 0.0f };
 
                     scene.numSpheres_numTris_numOBBs_numQuads = { 0.0f, 0.0f, 2.0f, 6.0f };
                 }
@@ -123,8 +120,8 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                 context,
                 [] (std::array<ShaderTypes::StructuredBuffers::OBBPrim, 10>& obbs)
                 {
-                    MakeOBB(obbs[0], { 1.855f, 0.825f, 1.69f }, { 0.825f, 0.825f, 0.825f }, { 0.0f, 1.0f, 0.0f }, DegreesToRadians(-17.0f), 1.0f, 0.0f);
-                    MakeOBB(obbs[1], { 3.685f, 1.65f, 3.5125f }, { 0.825f, 1.65f, 0.825f }, { 0.0f, 1.0f, 0.0f }, DegreesToRadians(107.0f), 1.0f, 0.0f);
+                    MakeOBB(obbs[0], { 1.855f, 0.825f, 1.69f }, { 0.825f, 0.825f, 0.825f }, { 0.0f, 1.0f, 0.0f }, DegreesToRadians(-17.0f), { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f });
+                    MakeOBB(obbs[1], { 3.685f, 1.65f, 3.5125f }, { 0.825f, 1.65f, 0.825f }, { 0.0f, 1.0f, 0.0f }, DegreesToRadians(107.0f), { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f });
                 }
             );
 
@@ -133,22 +130,22 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                 [] (std::array<ShaderTypes::StructuredBuffers::QuadPrim, 10>& Quads)
                 {
                     // Light
-                    MakeQuad(Quads[0], { 3.43f, 5.486f, 2.27f }, { 3.43f, 5.486f, 3.32f }, { 2.13f, 5.486f, 3.32f }, { 2.13f, 5.486f, 2.27f }, 0.78f, 25.0f);
+                    MakeQuad(Quads[0], { 3.43f, 5.486f, 2.27f }, { 3.43f, 5.486f, 3.32f }, { 2.13f, 5.486f, 3.32f }, { 2.13f, 5.486f, 2.27f }, { 0.78f, 0.78f, 0.78f }, { 25.0f, 25.0f, 25.0f });
 
                     // Floor
-                    MakeQuad(Quads[1], { 5.528f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 5.592f }, { 5.496f, 0.0f, 5.592f }, 1.0f, 0.0f);
+                    MakeQuad(Quads[1], { 5.528f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 5.592f }, { 5.496f, 0.0f, 5.592f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f });
 
                     // Ceiling
-                    MakeQuad(Quads[2], { 5.560f, 5.488f,   0.0f }, { 5.56f, 5.488f, 5.592f }, { 0.0f, 5.488f, 5.592f }, { 0.0f, 5.488f,   0.0f }, 1.0f, 0.0f);
+                    MakeQuad(Quads[2], { 5.560f, 5.488f,   0.0f }, { 5.56f, 5.488f, 5.592f }, { 0.0f, 5.488f, 5.592f }, { 0.0f, 5.488f,   0.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f });
 
                     // Back Wall
-                    MakeQuad(Quads[3], { 5.496f,   0.0f, 5.592f }, { 0.0f,   0.0f, 5.592f }, { 0.0f, 5.488f, 5.592f }, { 5.56f, 5.488f, 5.592f }, 1.0f, 0.0f);
+                    MakeQuad(Quads[3], { 5.496f,   0.0f, 5.592f }, { 0.0f,   0.0f, 5.592f }, { 0.0f, 5.488f, 5.592f }, { 5.56f, 5.488f, 5.592f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f });
 
                     // Left Wall
-                    MakeQuad(Quads[4], { 0.0f,   0.0f, 5.592f }, { 0.0f,   0.0f, 0.0f }, { 0.0f, 5.488f, 0.0f }, { 0.0f, 5.488f, 5.592f }, 1.0f, 0.0f);
+                    MakeQuad(Quads[4], { 0.0f,   0.0f, 5.592f }, { 0.0f,   0.0f, 0.0f }, { 0.0f, 5.488f, 0.0f }, { 0.0f, 5.488f, 5.592f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, 0.0f });
 
                     // Right Wall
-                    MakeQuad(Quads[5], { 5.528f, 0.0f,   0.0f }, { 5.496f,   0.0f, 5.592f }, { 5.560f, 5.488f, 5.592f }, { 5.56f, 5.488f,   0.0f }, 1.0f, 0.0f);
+                    MakeQuad(Quads[5], { 5.528f, 0.0f,   0.0f }, { 5.496f,   0.0f, 5.592f }, { 5.560f, 5.488f, 5.592f }, { 5.56f, 5.488f,   0.0f }, { 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f });
                 }
             );
 
@@ -163,14 +160,13 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                 {
                     scene.cameraPos_FOVX[0] = 2.78f;
                     scene.cameraPos_FOVX[1] = 2.73f;
-                    scene.cameraPos_FOVX[2] = -8.0f;
+                    scene.cameraPos_FOVX[2] = -5.0f;
 
                     scene.cameraAt_FOVY[0] = 2.78f;
                     scene.cameraAt_FOVY[1] = 2.73f;
                     scene.cameraAt_FOVY[2] = 0.0f;
 
-                    scene.nearPlaneDist_missColor_zw[0] = 0.1f;
-                    scene.nearPlaneDist_missColor_zw[1] = 0.0f;
+                    scene.nearPlaneDist_missColor = { 0.1f, 0.0f, 0.0f, 0.0f };
 
                     scene.numSpheres_numTris_numOBBs_numQuads = { 0.0f, 0.0f, 2.0f, 5.0f };
                 }
@@ -180,8 +176,8 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                 context,
                 [] (std::array<ShaderTypes::StructuredBuffers::OBBPrim, 10>& obbs)
                 {
-                    MakeOBB(obbs[0], { 1.855f, 0.825f, 1.69f }, { 0.825f, 0.825f, 0.825f }, { 0.0f, 1.0f, 0.0f }, DegreesToRadians(-17.0f), 1.0f, 0.0f);
-                    MakeOBB(obbs[1], { 3.685f, 1.65f, 3.5125f }, { 0.825f, 1.65f, 0.825f }, { 0.0f, 1.0f, 0.0f }, DegreesToRadians(107.0f), 1.0f, 0.0f);
+                    MakeOBB(obbs[0], { 1.855f, 0.825f, 1.69f }, { 0.825f, 0.825f, 0.825f }, { 0.0f, 1.0f, 0.0f }, DegreesToRadians(-17.0f), { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f });
+                    MakeOBB(obbs[1], { 3.685f, 1.65f, 3.5125f }, { 0.825f, 1.65f, 0.825f }, { 0.0f, 1.0f, 0.0f }, DegreesToRadians(107.0f), { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f });
                 }
             );
 
@@ -190,19 +186,19 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                 [] (std::array<ShaderTypes::StructuredBuffers::QuadPrim, 10>& Quads)
                 {
                     // Floor
-                    MakeQuad(Quads[1], { 5.528f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 5.592f }, { 5.496f, 0.0f, 5.592f }, 1.0f, 0.0f);
+                    MakeQuad(Quads[1], { 5.528f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 5.592f }, { 5.496f, 0.0f, 5.592f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f });
 
                     // Ceiling
-                    MakeQuad(Quads[2], { 5.560f, 5.488f,   0.0f }, { 5.56f, 5.488f, 5.592f }, { 0.0f, 5.488f, 5.592f }, { 0.0f, 5.488f,   0.0f }, 0.78f, 1.0f);
+                    MakeQuad(Quads[2], { 5.560f, 5.488f,   0.0f }, { 5.56f, 5.488f, 5.592f }, { 0.0f, 5.488f, 5.592f }, { 0.0f, 5.488f,   0.0f }, { 0.78f, 0.78f, 0.78f }, { 1.0f, 1.0f, 1.0f });
 
                     // Back Wall
-                    MakeQuad(Quads[3], { 5.496f,   0.0f, 5.592f }, { 0.0f,   0.0f, 5.592f }, { 0.0f, 5.488f, 5.592f }, { 5.56f, 5.488f, 5.592f }, 1.0f, 0.0f);
+                    MakeQuad(Quads[3], { 5.496f,   0.0f, 5.592f }, { 0.0f,   0.0f, 5.592f }, { 0.0f, 5.488f, 5.592f }, { 5.56f, 5.488f, 5.592f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f });
 
                     // Left Wall
-                    MakeQuad(Quads[4], { 0.0f,   0.0f, 5.592f }, { 0.0f,   0.0f, 0.0f }, { 0.0f, 5.488f, 0.0f }, { 0.0f, 5.488f, 5.592f }, 1.0f, 0.0f);
+                    MakeQuad(Quads[4], { 0.0f,   0.0f, 5.592f }, { 0.0f,   0.0f, 0.0f }, { 0.0f, 5.488f, 0.0f }, { 0.0f, 5.488f, 5.592f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, 0.0f });
 
                     // Right Wall
-                    MakeQuad(Quads[0], { 5.528f, 0.0f,   0.0f }, { 5.496f,   0.0f, 5.592f }, { 5.560f, 5.488f, 5.592f }, { 5.56f, 5.488f,   0.0f }, 1.0f, 0.0f);
+                    MakeQuad(Quads[0], { 5.528f, 0.0f,   0.0f }, { 5.496f,   0.0f, 5.592f }, { 5.560f, 5.488f, 5.592f }, { 5.56f, 5.488f,   0.0f }, { 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f });
                 }
             );
 
@@ -222,8 +218,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                     scene.cameraAt_FOVY[1] = 0.0f;
                     scene.cameraAt_FOVY[2] = 0.0f;
 
-                    scene.nearPlaneDist_missColor_zw[0] = 0.1f;
-                    scene.nearPlaneDist_missColor_zw[1] = 0.0f;
+                    scene.nearPlaneDist_missColor = { 0.1f, 0.0f, 0.0f, 0.0f };
 
                     scene.numSpheres_numTris_numOBBs_numQuads = { 2.0f, 0.0f, 0.0f, 0.0f };
                 }
@@ -233,8 +228,8 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                 context,
                 [] (std::array<ShaderTypes::StructuredBuffers::SpherePrim, 10>& spheres)
                 {
-                    MakeSphere(spheres[0], { 0.0f, 0.0f, 4.0f }, 2.0f, 1.0f, 0.0f);
-                    MakeSphere(spheres[1], { 0.0f, 0.0f, 0.0f }, 20.0f, 0.0f, 0.5f);
+                    MakeSphere(spheres[0], { 0.0f, 0.0f, 4.0f }, 2.0f, { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f });
+                    MakeSphere(spheres[1], { 0.0f, 0.0f, 0.0f }, 20.0f, { 0.0f, 0.0f, 0.0f }, { 0.5f, 0.5f, 0.5f });
                 }
             );
             break;

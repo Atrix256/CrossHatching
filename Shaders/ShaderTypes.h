@@ -13,7 +13,7 @@ Texture2D blueNoise256;
 RWTexture2D<float4> blueNoise256_rw;
 
 Texture2D pathTraceOutput;
-RWTexture2D<float> pathTraceOutput_rw;
+RWTexture2D<float4> pathTraceOutput_rw;
 
 //----------------------------------------------------------------------------
 //Constant Buffers
@@ -22,7 +22,7 @@ cbuffer ConstantsOnce
 {
   float4 cameraPos_FOVX;
   float4 cameraAt_FOVY;
-  float4 nearPlaneDist_missColor_zw;
+  float4 nearPlaneDist_missColor;
   float4 numSpheres_numTris_numOBBs_numQuads;
 };
 
@@ -46,33 +46,40 @@ struct Pos2D
 struct SpherePrim
 {
   float4 position_Radius;
-  float4 albedo_Emissive_zw;
+  float4 albedo_w;
+  float4 emissive_w;
 };
 
 struct TrianglePrim
 {
-  float4 positionA_Albedo;
-  float4 positionB_Emissive;
+  float4 positionA_w;
+  float4 positionB_w;
   float4 positionC_w;
   float4 normal_w;
+  float4 albedo_w;
+  float4 emissive_w;
 };
 
 struct QuadPrim
 {
-  float4 positionA_Albedo;
-  float4 positionB_Emissive;
+  float4 positionA_w;
+  float4 positionB_w;
   float4 positionC_w;
   float4 positionD_w;
   float4 normal_w;
+  float4 albedo_w;
+  float4 emissive_w;
 };
 
 struct OBBPrim
 {
-  float4 position_Albedo;
-  float4 radius_Emissive;
+  float4 position_w;
+  float4 radius_w;
   float4 XAxis_w;
   float4 YAxis_w;
   float4 ZAxis_w;
+  float4 albedo_w;
+  float4 emissive_w;
 };
 
 //----------------------------------------------------------------------------
