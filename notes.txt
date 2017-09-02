@@ -1,10 +1,3 @@
-* the cornell box has some strange dark areas. like the left wall in the front half is dark for some strange reason even though the right side isn't.
- * probably want to fix this...
- * maybe try replacing with obbs?
- * swapping names of ChangeBasis and UndoChangeBasis make the dark side switch to the right side of the box!
- * normalizing x,y,z axis in those basis functions didn't help.
- ? do we need to normalize result of change basis functions?
-
 * get rid of depth, depth test, and back face culling
  * i don't think we need a depth buffer since it'll all be path traced, so remove that (eventually)
 
@@ -19,9 +12,9 @@
 
 ! need to keep the rng seed from becoming so huge that small floats don't matter and it stops updating.
 
-show fps / mspf
+show fps / mspf. maybe in title bar?
 
-be able to move camera? reset sample count on camera move
+be able to move camera? reset sample count on camera move? WASD + mouse look?
 
 test x64 and release
 

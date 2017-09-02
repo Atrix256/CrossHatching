@@ -48,7 +48,6 @@ void CalculateRay (in float2 uv, out float3 rayPos, out float3 rayDir)
 {
     // calculate coordinate of pixel on the screen in [-1,1]
     float2 pixelClipSpace = 2.0f * uv - 1.0f;
-    pixelClipSpace *= -1.0f;
 
     // calculate camera vectors
     float3 cameraFwd = normalize(cameraAt_FOVY.xyz - cameraPos_FOVX.xyz);
@@ -70,7 +69,7 @@ void CalculateRay (in float2 uv, out float3 rayPos, out float3 rayDir)
 }
 
 //----------------------------------------------------------------------------
-void RayIntersectsAABB (in float3 rayPos, in float3 rayDir, in OBBPrim obb, inout SRayHitInfo rayHitInfo)
+bool RayIntersectsAABB (in float3 rayPos, in float3 rayDir, in OBBPrim obb, inout SRayHitInfo rayHitInfo)
 {
     float rayMinTime = 0.0;
     float rayMaxTime = FLT_MAX;
@@ -89,7 +88,7 @@ void RayIntersectsAABB (in float3 rayPos, in float3 rayDir, in OBBPrim obb, inou
         {
             //if the ray isn't in the box, bail out we know there's no intersection
             if (rayPos[axis] < axisMin || rayPos[axis] > axisMax)
-                return;
+                return false;
         }
         else
         {
@@ -114,7 +113,7 @@ void RayIntersectsAABB (in float3 rayPos, in float3 rayDir, in OBBPrim obb, inou
 
             //if our time slice shrinks to below zero of a time window, we don't intersect
             if (rayMinTime > rayMaxTime)
-                return;
+                return false;
         }
     }
 
@@ -128,7 +127,10 @@ void RayIntersectsAABB (in float3 rayPos, in float3 rayDir, in OBBPrim obb, inou
 
     //enforce a max distance if we should
     if (rayHitInfo.m_intersectTime >= 0.0 && collisionTime > rayHitInfo.m_intersectTime)
-        return;
+        return false;
+
+    if (collisionTime < 0.0f)
+        return false;
 
     float3 intersectionPoint = rayPos + rayDir * collisionTime;
 
@@ -162,6 +164,8 @@ void RayIntersectsAABB (in float3 rayPos, in float3 rayDir, in OBBPrim obb, inou
     rayHitInfo.m_surfaceNormal = normal;
     rayHitInfo.m_albedo = obb.position_Albedo.w;
     rayHitInfo.m_emissive = obb.radius_Emissive.w;
+
+    return true;
 }
 
 //----------------------------------------------------------------------------
@@ -172,8 +176,7 @@ void RayIntersectsOBB (in float3 rayPos, in float3 rayDir, in OBBPrim obb, inout
     float3 newRayDir = ChangeBasis(rayDir, obb.XAxis_w.xyz, obb.YAxis_w.xyz, obb.ZAxis_w.xyz);
 
     // do ray vs abb intersection
-    RayIntersectsAABB(newRayPos, newRayDir, obb, rayHitInfo);
-    if (rayHitInfo.m_intersectTime < 0.0f)
+    if (!RayIntersectsAABB(newRayPos, newRayDir, obb, rayHitInfo))
         return;
 
     // convert surface normal back to global space

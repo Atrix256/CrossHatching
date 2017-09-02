@@ -26,7 +26,7 @@ float4 ps_main(SPixelInput input) : SV_TARGET
 {
     // calculate the ray for this pixel and get the time of the first ray hit
     float3 rayPos, rayDir;
-    CalculateRay(input.uv, rayPos, rayDir);
+    CalculateRay(float2(1.0f, 1.0f) - input.uv, rayPos, rayDir);
     SRayHitInfo rayHitInfo = ClosestIntersection(rayPos, rayDir);
 
     // return the distance
@@ -34,8 +34,12 @@ float4 ps_main(SPixelInput input) : SV_TARGET
     //dist = dist / (dist + 1000.0f);
     //return float4(dist, dist, dist, 1.0f);
 
+    // TODO: temp! obb investigation
+    //float4 normals = pathTraceOutputNormals.Sample(SamplerLinearWrap, input.uv);
+    //return normals;
+
     // get the lit value and apply sRGB correction
-    float light = pathTraceOutput.Sample(SamplerLinearWrap, input.uv);
+    float light = pathTraceOutput.Sample(SamplerLinearWrap, float2(1.0f, 1.0f) - input.uv);
     light = pow(light, 1.0f / 2.0f);
 
     // return the value as greyscale
