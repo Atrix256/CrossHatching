@@ -12,8 +12,6 @@ public:
         bool vsync,
         HWND hWnd,
         bool fullscreen,
-        float screenDepth,
-        float screenNear,
         bool debug);
 
     void BeginScene (float red, float green, float blue, float alpha);
@@ -33,9 +31,6 @@ private:
     CAutoReleasePointer<ID3D11Device> m_device;
     CAutoReleasePointer<ID3D11DeviceContext> m_deviceContext;
     CAutoReleasePointer<ID3D11RenderTargetView> m_renderTargetView;
-    CAutoReleasePointer<ID3D11Texture2D> m_depthStencilBuffer;
-    CAutoReleasePointer<ID3D11DepthStencilState> m_depthStencilState;
-    CAutoReleasePointer<ID3D11DepthStencilView> m_depthStencilView;
     CAutoReleasePointer<ID3D11RasterizerState> m_rasterState;
 
     CAutoReleasePointer<ID3D11SamplerState> m_samplerLinearWrap;

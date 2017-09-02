@@ -6,7 +6,6 @@
 #include "Shader.h"
 #include "Model.h"
 #include "Texture.h"
-#include "RenderTarget.h"
 #include "Window.h"
 #include "ShaderTypes.h"
 #include "ConstantBuffer.h"
@@ -20,7 +19,7 @@ const bool c_fullScreen = false;
 const bool c_vsync = true;
 const bool c_shaderDebug = true;
 const bool c_d3ddebug = true;
-const float c_fovX = 0.698132f; // 40 degrees
+const float c_fovX = DegreesToRadians(40.0f);
 const float c_fovY = c_fovX * float(c_height) / float(c_width);
 const float c_nearPlane = 0.1f;
 const float3 c_cameraPos = { 0.0f, 0.0f, -10.0f };
@@ -291,7 +290,7 @@ bool init ()
 {
     WindowInit(c_width, c_height, c_fullScreen, OnKeyPress);
 
-    if (!g_d3d.Init(c_width, c_height, c_vsync, WindowGetHWND(), c_fullScreen, 100.0f, 0.01f, c_d3ddebug))
+    if (!g_d3d.Init(c_width, c_height, c_vsync, WindowGetHWND(), c_fullScreen, c_d3ddebug))
         return false;
 
     if (!WriteShaderTypesHLSL())

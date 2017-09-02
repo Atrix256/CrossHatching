@@ -1,7 +1,4 @@
-* get rid of depth, depth test, and back face culling
- * i don't think we need a depth buffer since it'll all be path traced, so remove that (eventually)
-
-* check out todo's here. if nothing pressing, get model loading / rendering working? bounding spheres (?) around triangles? or just triangle soup.
+* get model loading / rendering working? bounding spheres (?) around triangles? or just triangle soup.
 
 ? have c++ side send an iterative sum of golden ratio to shader?
  * or try just adding the random number per frame to it!
@@ -34,7 +31,7 @@ Sean said he'd be willing to give me textures.
 
 ================================= LATER IDEAS =================================
 
-* could do a lens and get depth of field effect. (actually, won't work with this technique)
+* could do a lens and get depth of field effect. (actually, won't work with this technique).. or will it? why wouldn't it work? (oh... trilinear mapping. would need to do lens flare as a post process!)
 * reflections. Probably needs to be done as a post step, but could do N samples and jitter them even.
 * anti aliasing? could render at 4x resolution and downsample final image (longer to render though)
 * caustics and refraction could be interesting

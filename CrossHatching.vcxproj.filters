@@ -6,7 +6,6 @@
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Window.cpp" />
-    <ClCompile Include="RenderTarget.cpp" />
     <ClCompile Include="Scenes.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -22,7 +21,6 @@
     <ClInclude Include="Texture.h" />
     <ClInclude Include="Window.h" />
     <ClInclude Include="Utils.h" />
-    <ClInclude Include="RenderTarget.h" />
     <ClInclude Include="ShaderTypesList.h" />
     <ClInclude Include="ShaderTypes.h" />
     <ClInclude Include="Shaders\ShaderTypes.h">

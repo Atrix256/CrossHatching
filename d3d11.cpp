@@ -12,8 +12,6 @@ bool CD3D11::Init (
     bool vsync,
     HWND hWnd,
     bool fullscreen,
-    float screenDepth,
-    float screenNear,
     bool debug)
 {
     HRESULT result;
@@ -26,9 +24,6 @@ bool CD3D11::Init (
     DXGI_SWAP_CHAIN_DESC swapChainDesc;
     D3D_FEATURE_LEVEL featureLevel;
     CAutoReleasePointer<ID3D11Texture2D> backBufferPtr;
-    D3D11_TEXTURE2D_DESC depthBufferDesc;
-    D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
-    D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
     D3D11_RASTERIZER_DESC rasterDesc;
     D3D11_VIEWPORT viewport;
 
@@ -175,87 +170,15 @@ bool CD3D11::Init (
         return false;
     }
 
-    // Initialize the description of the depth buffer.
-    ZeroMemory(&depthBufferDesc, sizeof(depthBufferDesc));
-
-    // Set up the description of the depth buffer.
-    depthBufferDesc.Width = (UINT)screenWidth;
-    depthBufferDesc.Height = (UINT)screenHeight;
-    depthBufferDesc.MipLevels = 1;
-    depthBufferDesc.ArraySize = 1;
-    depthBufferDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-    depthBufferDesc.SampleDesc.Count = 1;
-    depthBufferDesc.SampleDesc.Quality = 0;
-    depthBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-    depthBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-    depthBufferDesc.CPUAccessFlags = 0;
-    depthBufferDesc.MiscFlags = 0;
-
-    // Create the texture for the depth buffer using the filled out description.
-    result = m_device.m_ptr->CreateTexture2D(&depthBufferDesc, NULL, &m_depthStencilBuffer.m_ptr);
-    if (FAILED(result))
-    {
-        return false;
-    }
-
-    // Initialize the description of the stencil state.
-    ZeroMemory(&depthStencilDesc, sizeof(depthStencilDesc));
-
-    // Set up the description of the stencil state.
-    depthStencilDesc.DepthEnable = true;
-    depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-    depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
-
-    depthStencilDesc.StencilEnable = true;
-    depthStencilDesc.StencilReadMask = 0xFF;
-    depthStencilDesc.StencilWriteMask = 0xFF;
-
-    // Stencil operations if pixel is front-facing.
-    depthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-    depthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
-    depthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-    depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-
-    // Stencil operations if pixel is back-facing.
-    depthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-    depthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
-    depthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-    depthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-
-    // Create the depth stencil state.
-    result = m_device.m_ptr->CreateDepthStencilState(&depthStencilDesc, &m_depthStencilState.m_ptr);
-    if (FAILED(result))
-    {
-        return false;
-    }
-
-    // Set the depth stencil state.
-    m_deviceContext.m_ptr->OMSetDepthStencilState(m_depthStencilState.m_ptr, 1);
-
-    // Initialize the depth stencil view.
-    ZeroMemory(&depthStencilViewDesc, sizeof(depthStencilViewDesc));
-
-    // Set up the depth stencil view description.
-    depthStencilViewDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-    depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-    depthStencilViewDesc.Texture2D.MipSlice = 0;
-
-    // Create the depth stencil view.
-    result = m_device.m_ptr->CreateDepthStencilView(m_depthStencilBuffer.m_ptr, &depthStencilViewDesc, &m_depthStencilView.m_ptr);
-    if (FAILED(result))
-    {
-        return false;
-    }
-
-    // Bind the render target view and depth stencil buffer to the output render pipeline.
-    m_deviceContext.m_ptr->OMSetRenderTargets(1, &m_renderTargetView.m_ptr, m_depthStencilView.m_ptr);
+    // Bind the render target view
+    m_deviceContext.m_ptr->OMSetRenderTargets(1, &m_renderTargetView.m_ptr, NULL);
 
     // Setup the raster description which will determine how and what polygons will be drawn.
     rasterDesc.AntialiasedLineEnable = false;
-    rasterDesc.CullMode = D3D11_CULL_BACK;
+    rasterDesc.CullMode = D3D11_CULL_NONE;
     rasterDesc.DepthBias = 0;
     rasterDesc.DepthBiasClamp = 0.0f;
-    rasterDesc.DepthClipEnable = true;
+    rasterDesc.DepthClipEnable = false;
     rasterDesc.FillMode = D3D11_FILL_SOLID;
     rasterDesc.FrontCounterClockwise = false;
     rasterDesc.MultisampleEnable = false;
@@ -353,9 +276,6 @@ void CD3D11::BeginScene (float red, float green, float blue, float alpha)
 
     // Clear the back buffer.
     m_deviceContext.m_ptr->ClearRenderTargetView(m_renderTargetView.m_ptr, color);
-
-    // Clear the depth buffer.
-    m_deviceContext.m_ptr->ClearDepthStencilView(m_depthStencilView.m_ptr, D3D11_CLEAR_DEPTH, 1.0f, 0);
 }
 
 void CD3D11::EndScene ()

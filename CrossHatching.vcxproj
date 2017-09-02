@@ -144,7 +144,6 @@
   <ItemGroup>
     <ClCompile Include="d3d11.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="RenderTarget.cpp" />
     <ClCompile Include="Scenes.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="Texture.cpp" />
@@ -163,7 +162,6 @@
     <ClInclude Include="ConstantBuffer.h" />
     <ClInclude Include="d3d11.h" />
     <ClInclude Include="Model.h" />
-    <ClInclude Include="RenderTarget.h" />
     <ClInclude Include="Scenes.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Shaders\PathTrace.h">
