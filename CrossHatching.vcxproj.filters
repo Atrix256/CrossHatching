@@ -7,6 +7,7 @@
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Window.cpp" />
     <ClCompile Include="Scenes.cpp" />
+    <ClCompile Include="tiny_obj_loader.cc" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="notes.txt" />
@@ -32,6 +33,7 @@
     <ClInclude Include="Shaders\PathTrace.h">
       <Filter>Shaders</Filter>
     </ClInclude>
+    <ClInclude Include="tiny_obj_loader.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\ShowPathTrace.fx">

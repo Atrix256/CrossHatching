@@ -13,8 +13,8 @@
 #include "Scenes.h"
 
 // settings
-const size_t c_width = 1024;
-const size_t c_height = 768;
+const size_t c_width = 800;
+const size_t c_height = 600;
 const bool c_fullScreen = false;
 const bool c_vsync = true;
 const bool c_shaderDebug = false;
@@ -286,6 +286,8 @@ void OnKeyPress (unsigned char key, bool pressed)
         case '3': FillSceneData(EScene::CornellBox_SmallLight, g_d3d.Context()); break;
         case '4': FillSceneData(EScene::CornellBox_BigLight, g_d3d.Context()); break;
         case '5': FillSceneData(EScene::FurnaceTest, g_d3d.Context()); break;
+        case '6': FillSceneData(EScene::CornellObj, g_d3d.Context()); break;
+
         case 'G': g_showGray = !g_showGray; break;
     }
 }

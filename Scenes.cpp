@@ -1,5 +1,6 @@
 #include "Scenes.h"
 #include "ShaderTypes.h"
+#include "tiny_obj_loader.h"
 #include <d3d11.h>
 
 bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
@@ -233,6 +234,103 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                 }
             );
             break;
+        }
+        case EScene::CornellObj:
+        {
+            tinyobj::attrib_t attrib;
+            std::vector<tinyobj::shape_t> shapes;
+            std::vector<tinyobj::material_t> materials;
+
+            std::string err;
+            if(!tinyobj::LoadObj(&attrib, &shapes, &materials, &err, "Art/Models/cornell_box.obj", "./Art/Models/", true))
+                return false;
+
+            ret &= ShaderData::StructuredBuffers::Spheres.Write(
+                context,
+                [] (std::array<ShaderTypes::StructuredBuffers::SpherePrim, 10>& spheres)
+                {
+                    MakeSphere(spheres[0], { 450.0f, 250.0f, 200.0f }, 20.0f, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 75.0f });
+                }
+            );
+
+            size_t triangleIndex = 0;
+            ret &= ShaderData::StructuredBuffers::Triangles.Write(
+                context,
+                [&] (std::array<ShaderTypes::StructuredBuffers::TrianglePrim, 1000>& triangles)
+                {
+                    for (const tinyobj::shape_t& shape : shapes)
+                    {
+                        for (size_t srcIndex = 0; srcIndex < shape.mesh.indices.size(); srcIndex += 3)
+                        {
+                            float3 a, b, c;
+                            float3 albedo, emissive;
+                            
+                            int indexA = shape.mesh.indices[srcIndex + 0].vertex_index;
+                            int indexB = shape.mesh.indices[srcIndex + 1].vertex_index;
+                            int indexC = shape.mesh.indices[srcIndex + 2].vertex_index;
+
+                            a[0] = attrib.vertices[indexA * 3 + 0];
+                            a[1] = attrib.vertices[indexA * 3 + 1];
+                            a[2] = attrib.vertices[indexA * 3 + 2];
+
+                            b[0] = attrib.vertices[indexB * 3 + 0];
+                            b[1] = attrib.vertices[indexB * 3 + 1];
+                            b[2] = attrib.vertices[indexB * 3 + 2];
+
+                            c[0] = attrib.vertices[indexC * 3 + 0];
+                            c[1] = attrib.vertices[indexC * 3 + 1];
+                            c[2] = attrib.vertices[indexC * 3 + 2];
+
+                            int materialID = shape.mesh.material_ids[srcIndex / 3];
+                            if (materialID >= 0)
+                            {
+                                albedo[0] = materials[materialID].diffuse[0];
+                                albedo[1] = materials[materialID].diffuse[1];
+                                albedo[2] = materials[materialID].diffuse[2];
+
+                                emissive[0] = materials[materialID].ambient[0];
+                                emissive[1] = materials[materialID].ambient[1];
+                                emissive[2] = materials[materialID].ambient[2];
+                            }
+                            else
+                            {
+                                albedo = { 1.0f, 1.0f, 1.0f };
+                                emissive = { 0.0f, 0.0f, 0.0f };
+                            }
+
+                            MakeTriangle(triangles[triangleIndex], a, b, c, albedo, emissive);
+                            ++triangleIndex;
+
+                            // TODO: print an error if you bust the array size?
+                            if (triangleIndex >= triangles.size())
+                            {
+                                return;
+                            }
+                        }
+                    }
+                }
+            );
+
+            ret &= ShaderData::ConstantBuffers::ConstantsOnce.Write(
+                context,
+                [&](ShaderTypes::ConstantBuffers::ConstantsOnce& scene)
+                {
+                    scene.cameraPos_FOVX[0] = 278.0f;
+                    scene.cameraPos_FOVX[1] = 273.0f;
+                    scene.cameraPos_FOVX[2] = -500.0f;
+
+                    scene.cameraAt_FOVY[0] = 278.0f;
+                    scene.cameraAt_FOVY[1] = 273.0f;
+                    scene.cameraAt_FOVY[2] = 0.0f;
+
+                    scene.nearPlaneDist_missColor = { 0.1f, 0.0f, 0.0f, 0.0f };
+
+                    scene.numSpheres_numTris_numOBBs_numQuads = { 1.0f, float(triangleIndex), 0.0f, 0.0f };
+                }
+            );
+
+            break;
+
         }
         default:
         {

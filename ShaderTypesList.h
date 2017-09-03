@@ -135,7 +135,7 @@ STRUCTURED_BUFFER_BEGIN(Spheres, SpherePrim, 10)
     STRUCTURED_BUFFER_FIELD(emissive_w, float4)
 STRUCTURED_BUFFER_END
 
-STRUCTURED_BUFFER_BEGIN(Triangles, TrianglePrim, 10)
+STRUCTURED_BUFFER_BEGIN(Triangles, TrianglePrim, 1000)
     STRUCTURED_BUFFER_FIELD(positionA_w, float4)
     STRUCTURED_BUFFER_FIELD(positionB_w, float4)
     STRUCTURED_BUFFER_FIELD(positionC_w, float4)

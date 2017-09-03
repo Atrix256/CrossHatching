@@ -8,7 +8,8 @@ enum class EScene
     SphereOnPlane_RegularLight,
     CornellBox_SmallLight,
     CornellBox_BigLight,
-    FurnaceTest
+    FurnaceTest,
+    CornellObj,
 };
 
 bool FillSceneData (EScene scene, ID3D11DeviceContext* context);
