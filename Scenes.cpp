@@ -40,7 +40,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
 
             ret &= ShaderData::StructuredBuffers::Spheres.Write(
                 context,
-                [] (std::array<ShaderTypes::StructuredBuffers::SpherePrim, 10>& spheres)
+                [] (ShaderTypes::StructuredBuffers::TSpheres& spheres)
                 {
                     MakeSphere(spheres[0], { 4.0f, 4.0f, 6.0f }, 0.5f, { 0.0f, 0.0f, 0.0f }, { 10.0f, 10.0f, 10.0f });
                     MakeSphere(spheres[1], { 0.0f, 0.0f, 4.0f }, 2.0f, { 0.5f, 0.5f, 0.5f }, { 0.0f, 0.0f, 0.0f });
@@ -49,7 +49,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
 
             ret &= ShaderData::StructuredBuffers::Quads.Write(
                 context,
-                [] (std::array<ShaderTypes::StructuredBuffers::QuadPrim, 10>& Quads)
+                [] (ShaderTypes::StructuredBuffers::TQuads& Quads)
                 {
                     MakeQuad(Quads[0], { -4.0f, -3.0f, -4.0f }, { -4.0f, 2.0f, -4.0f }, { -4.0f, 2.0f, 12.0f }, { -4.0f, -3.0f, 12.0f }, { 0.1f, 0.9f, 0.1f }, { 0.0f, 0.0f, 0.0f });
                     MakeQuad(Quads[1], { -15.0f, -2.0f, 15.0f }, { 15.0f, -2.0f, 15.0f }, { 15.0f, -2.0f, -15.0f }, { -15.0f, -2.0f, -15.0f }, { 0.9f, 0.1f, 0.1f }, { 0.0f, 0.0f, 0.0f });
@@ -79,7 +79,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
 
             ret &= ShaderData::StructuredBuffers::Spheres.Write(
                 context,
-                [] (std::array<ShaderTypes::StructuredBuffers::SpherePrim, 10>& spheres)
+                [] (ShaderTypes::StructuredBuffers::TSpheres& spheres)
                 {
                     MakeSphere(spheres[0], { 4.0f, 4.0f, 6.0f }, 0.5f, { 0.0f, 0.0f, 0.0f }, { 10.0f, 10.0f, 10.0f });
                     MakeSphere(spheres[1], { 0.0f, 0.0f, 4.0f }, 2.0f, { 0.5f, 0.5f, 0.5f }, { 0.0f, 0.0f, 0.0f });
@@ -88,7 +88,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
 
             ret &= ShaderData::StructuredBuffers::Quads.Write(
                 context,
-                [] (std::array<ShaderTypes::StructuredBuffers::QuadPrim, 10>& Quads)
+                [] (ShaderTypes::StructuredBuffers::TQuads& Quads)
                 {
                     MakeQuad(Quads[0], { -4.0f, -3.0f, -4.0f }, { -4.0f, 2.0f, -4.0f }, { -4.0f, 2.0f, 12.0f }, { -4.0f, -3.0f, 12.0f }, { 0.1f, 0.9f, 0.1f }, { 0.0f, 0.0f, 0.0f });
                     MakeQuad(Quads[1], { -15.0f, -2.0f, 15.0f }, { 15.0f, -2.0f, 15.0f }, { 15.0f, -2.0f, -15.0f }, { -15.0f, -2.0f, -15.0f }, { 0.9f, 0.1f, 0.1f }, { 0.0f, 0.0f, 0.0f });
@@ -119,7 +119,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
 
             ret &= ShaderData::StructuredBuffers::OBBs.Write(
                 context,
-                [] (std::array<ShaderTypes::StructuredBuffers::OBBPrim, 10>& obbs)
+                [] (ShaderTypes::StructuredBuffers::TOBBs& obbs)
                 {
                     MakeOBB(obbs[0], { 1.855f, 0.825f, 1.69f }, { 0.825f, 0.825f, 0.825f }, { 0.0f, 1.0f, 0.0f }, DegreesToRadians(-17.0f), { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f });
                     MakeOBB(obbs[1], { 3.685f, 1.65f, 3.5125f }, { 0.825f, 1.65f, 0.825f }, { 0.0f, 1.0f, 0.0f }, DegreesToRadians(107.0f), { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f });
@@ -128,7 +128,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
 
             ret &= ShaderData::StructuredBuffers::Quads.Write(
                 context,
-                [] (std::array<ShaderTypes::StructuredBuffers::QuadPrim, 10>& Quads)
+                [] (ShaderTypes::StructuredBuffers::TQuads& Quads)
                 {
                     // Light
                     MakeQuad(Quads[0], { 3.43f, 5.486f, 2.27f }, { 3.43f, 5.486f, 3.32f }, { 2.13f, 5.486f, 3.32f }, { 2.13f, 5.486f, 2.27f }, { 0.78f, 0.78f, 0.78f }, { 25.0f, 25.0f, 25.0f });
@@ -175,7 +175,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
 
             ret &= ShaderData::StructuredBuffers::OBBs.Write(
                 context,
-                [] (std::array<ShaderTypes::StructuredBuffers::OBBPrim, 10>& obbs)
+                [] (ShaderTypes::StructuredBuffers::TOBBs& obbs)
                 {
                     MakeOBB(obbs[0], { 1.855f, 0.825f, 1.69f }, { 0.825f, 0.825f, 0.825f }, { 0.0f, 1.0f, 0.0f }, DegreesToRadians(-17.0f), { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f });
                     MakeOBB(obbs[1], { 3.685f, 1.65f, 3.5125f }, { 0.825f, 1.65f, 0.825f }, { 0.0f, 1.0f, 0.0f }, DegreesToRadians(107.0f), { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f });
@@ -184,7 +184,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
 
             ret &= ShaderData::StructuredBuffers::Quads.Write(
                 context,
-                [] (std::array<ShaderTypes::StructuredBuffers::QuadPrim, 10>& Quads)
+                [] (ShaderTypes::StructuredBuffers::TQuads& Quads)
                 {
                     // Floor
                     MakeQuad(Quads[1], { 5.528f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 5.592f }, { 5.496f, 0.0f, 5.592f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f });
@@ -227,7 +227,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
 
             ret &= ShaderData::StructuredBuffers::Spheres.Write(
                 context,
-                [] (std::array<ShaderTypes::StructuredBuffers::SpherePrim, 10>& spheres)
+                [] (ShaderTypes::StructuredBuffers::TSpheres& spheres)
                 {
                     MakeSphere(spheres[0], { 0.0f, 0.0f, 4.0f }, 2.0f, { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f });
                     MakeSphere(spheres[1], { 0.0f, 0.0f, 0.0f }, 20.0f, { 0.0f, 0.0f, 0.0f }, { 0.5f, 0.5f, 0.5f });
@@ -245,18 +245,10 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
             if(!tinyobj::LoadObj(&attrib, &shapes, &materials, &err, "Art/Models/cornell_box.obj", "./Art/Models/", true))
                 return false;
 
-            ret &= ShaderData::StructuredBuffers::Spheres.Write(
-                context,
-                [] (std::array<ShaderTypes::StructuredBuffers::SpherePrim, 10>& spheres)
-                {
-                    MakeSphere(spheres[0], { 450.0f, 250.0f, 200.0f }, 20.0f, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 75.0f });
-                }
-            );
-
             size_t triangleIndex = 0;
             ret &= ShaderData::StructuredBuffers::Triangles.Write(
                 context,
-                [&] (std::array<ShaderTypes::StructuredBuffers::TrianglePrim, 1000>& triangles)
+                [&] (ShaderTypes::StructuredBuffers::TTriangles& triangles)
                 {
                     for (const tinyobj::shape_t& shape : shapes)
                     {
@@ -325,7 +317,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
 
                     scene.nearPlaneDist_missColor = { 0.1f, 0.0f, 0.0f, 0.0f };
 
-                    scene.numSpheres_numTris_numOBBs_numQuads = { 1, (unsigned int)triangleIndex, 0, 0 };
+                    scene.numSpheres_numTris_numOBBs_numQuads = { 0, (unsigned int)triangleIndex, 0, 0 };
                 }
             );
 
@@ -338,12 +330,12 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
             std::vector<tinyobj::material_t> materials;
 
             std::string err;
-            if(!tinyobj::LoadObj(&attrib, &shapes, &materials, &err, "Art/Models/barel0-2.obj", "./Art/Models/", true))
+            if(!tinyobj::LoadObj(&attrib, &shapes, &materials, &err, "Art/Models/jet0-0.obj", "./Art/Models/", true))
                 return false;
 
             ret &= ShaderData::StructuredBuffers::Spheres.Write(
                 context,
-                [] (std::array<ShaderTypes::StructuredBuffers::SpherePrim, 10>& spheres)
+                [] (ShaderTypes::StructuredBuffers::TSpheres& spheres)
                 {
                     MakeSphere(spheres[0], { -2.0f, 0.0f, -3.0f }, 0.5f, { 0.0f, 0.0f, 0.0f }, { 10.0f, 10.0f, 10.0f });
                 }
@@ -352,7 +344,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
             size_t triangleIndex = 0;
             ret &= ShaderData::StructuredBuffers::Triangles.Write(
                 context,
-                [&] (std::array<ShaderTypes::StructuredBuffers::TrianglePrim, 1000>& triangles)
+                [&] (ShaderTypes::StructuredBuffers::TTriangles& triangles)
                 {
                     for (const tinyobj::shape_t& shape : shapes)
                     {
@@ -413,7 +405,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                 {
                     scene.cameraPos_FOVX[0] = 0.0f;
                     scene.cameraPos_FOVX[1] = 0.0f;
-                    scene.cameraPos_FOVX[2] = -5.0f;
+                    scene.cameraPos_FOVX[2] = -3.0f;
 
                     scene.cameraAt_FOVY[0] = 0.0f;
                     scene.cameraAt_FOVY[1] = 0.0f;

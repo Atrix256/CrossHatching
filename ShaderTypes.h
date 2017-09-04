@@ -29,6 +29,9 @@ namespace ShaderTypes
         #define STRUCTURED_BUFFER_FIELD(NAME, TYPE) TYPE NAME;
         #define STRUCTURED_BUFFER_END };
         #include "ShaderTypesList.h"
+
+        #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT) typedef std::array<ShaderTypes::StructuredBuffers::##TYPENAME, COUNT> T##NAME;
+        #include "ShaderTypesList.h"
     };
 
     // define the vertex format structs

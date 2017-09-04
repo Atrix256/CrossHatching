@@ -1,12 +1,13 @@
-! make it so the arrays aren't so hard coded. make each structured buffer have a "type" that lambdas take, which is the typedef of the array with size?
- * maybe make a function that populates triangles with a mesh. Would have to be called from within the triangle writing callback and take the triangle index as reference.
+* maybe make a function that populates triangles with a mesh. Would have to be called from within the triangle writing callback and take the triangle index as reference.
  * make it report an error if it busts the array size
  * maybe allow an offset and scale for the vertices?
+ * could also do rotation. unsure if we should clone verts or have a transform in / out of a bounding sphere?
 
 
 * Models at turbosquid! https://www.turbosquid.com/
  * and unity store
  * and here: https://github.com/movAX13h/HiOctaneTools/tree/master/Unpacked%20Assets/models
+ * if using those high octane assets, need to texture them with atlas.png i think.
 
 * get some fun models to use for testing, make some fun scenes.
 * make it use textures for shading - using the color to tint the non black parts of the textures. 
