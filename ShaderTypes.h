@@ -66,7 +66,7 @@ namespace ShaderData
     }
 };
 
-inline float Dot(const float3& a, const float3& b)
+inline float Dot (const float3& a, const float3& b)
 {
     return
         a[0] * b[0] +
@@ -116,6 +116,26 @@ inline void Normalize (std::array<float, N>& v)
     v[2] /= len;
 }
 
+inline float3 Normal (const std::array<float, 3>& a, const std::array<float, 3>& b, const std::array<float, 3>& c)
+{
+    float3 ab = b - a;
+    float3 ac = c - a;
+
+    float3 norm = Cross(ab, ac);
+    Normalize(norm);
+    return norm;
+}
+
+inline float3 ChangeBasis (const std::array<float, 3>& v, const std::array<float, 3>& xAxis, const std::array<float, 3>& yAxis, const std::array<float, 3>& zAxis)
+{
+    return
+    {
+        Dot(v, {xAxis[0], yAxis[0], zAxis[0]}),
+        Dot(v, {xAxis[1], yAxis[1], zAxis[1]}),
+        Dot(v, {xAxis[2], yAxis[2], zAxis[2]})
+    };
+}
+
 inline void MakeTriangle (
     ShaderTypes::StructuredBuffers::TrianglePrim& triangle,
     float3 a,
@@ -151,11 +171,7 @@ inline void MakeTriangle (
     triangle.emissive_w[3] = 0.0f;
 
     // calculate normal
-    float3 AB = b - a;
-    float3 AC = c - a;
-
-    float3 norm = Cross(AB, AC);
-    Normalize(norm);
+    float3 norm = Normal(a, b, c);
     triangle.normal_w[0] = norm[0];
     triangle.normal_w[1] = norm[1];
     triangle.normal_w[2] = norm[2];
@@ -203,11 +219,7 @@ inline void MakeQuad(
     quad.emissive_w[3] = 0.0f;
 
     // calculate normal
-    float3 AB = b - a;
-    float3 AC = c - a;
-
-    float3 norm = Cross(AB, AC);
-    Normalize(norm);
+    float3 norm = Normal(a, b, c);
     quad.normal_w[0] = norm[0];
     quad.normal_w[1] = norm[1];
     quad.normal_w[2] = norm[2];

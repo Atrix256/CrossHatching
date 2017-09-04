@@ -3,6 +3,165 @@
 #include "tiny_obj_loader.h"
 #include <d3d11.h>
 
+void AddMeshToTriangleSoup (const char* fileName, const char* basePath, ShaderTypes::StructuredBuffers::TTriangles& triangles, size_t& triangleIndex)
+{
+    tinyobj::attrib_t attrib;
+    std::vector<tinyobj::shape_t> shapes;
+    std::vector<tinyobj::material_t> materials;
+
+    // load the object if we can
+    std::string err;
+    if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &err, fileName, basePath, true))
+    {
+        printf("[LOAD OBJ ERROR] %s - %s\n", fileName, err.c_str());
+        return;
+    }
+
+    // write the triangles
+    for (const tinyobj::shape_t& shape : shapes)
+    {
+        for (size_t srcIndex = 0; srcIndex < shape.mesh.indices.size(); srcIndex += 3)
+        {
+            float3 a, b, c;
+            float3 albedo, emissive;
+
+            int indexA = shape.mesh.indices[srcIndex + 0].vertex_index;
+            int indexB = shape.mesh.indices[srcIndex + 1].vertex_index;
+            int indexC = shape.mesh.indices[srcIndex + 2].vertex_index;
+
+            a[0] = attrib.vertices[indexA * 3 + 0];
+            a[1] = attrib.vertices[indexA * 3 + 1];
+            a[2] = attrib.vertices[indexA * 3 + 2];
+
+            b[0] = attrib.vertices[indexB * 3 + 0];
+            b[1] = attrib.vertices[indexB * 3 + 1];
+            b[2] = attrib.vertices[indexB * 3 + 2];
+
+            c[0] = attrib.vertices[indexC * 3 + 0];
+            c[1] = attrib.vertices[indexC * 3 + 1];
+            c[2] = attrib.vertices[indexC * 3 + 2];
+
+            int materialID = shape.mesh.material_ids[srcIndex / 3];
+            if (materialID >= 0)
+            {
+                albedo[0] = materials[materialID].diffuse[0];
+                albedo[1] = materials[materialID].diffuse[1];
+                albedo[2] = materials[materialID].diffuse[2];
+
+                emissive[0] = materials[materialID].ambient[0];
+                emissive[1] = materials[materialID].ambient[1];
+                emissive[2] = materials[materialID].ambient[2];
+            }
+            else
+            {
+                albedo = { 1.0f, 1.0f, 1.0f };
+                emissive = { 0.0f, 0.0f, 0.0f };
+            }
+
+            MakeTriangle(triangles[triangleIndex], a, b, c, albedo, emissive);
+            ++triangleIndex;
+
+            if (triangleIndex >= triangles.size())
+            {
+                printf("[LOAD OBJ ERROR] %s - ran out of scene triangles!\n", fileName);
+                return;
+            }
+        }
+    }
+}
+
+void AddMeshToTriangleSoup (const char* fileName, const char* basePath, ShaderTypes::StructuredBuffers::TTriangles& triangles, size_t& triangleIndex, float3 position, float3 scale, float3 rotationAxis, float rotationAngle)
+{
+    // remember where the first triangle of the model is going to go
+    size_t startingTriangleIndex = triangleIndex;
+
+    // call function above to add the triangles
+    AddMeshToTriangleSoup(fileName, basePath, triangles, triangleIndex);
+
+    // bail out if no triangles added for this mesh
+    if (startingTriangleIndex == triangleIndex)
+        return;
+
+    // get the largest absolute valued position vector component so we can scale the mesh to fit within a normalized cube
+    float Max = 0.0f;
+    for (size_t i = startingTriangleIndex; i < triangleIndex; ++i)
+    {
+        for (size_t j = 0; j < 3; ++j)
+        {
+            Max = max(Max, abs(triangles[i].positionA_w[j]));
+            Max = max(Max, abs(triangles[i].positionB_w[j]));
+            Max = max(Max, abs(triangles[i].positionC_w[j]));
+        }
+    }
+
+    // combine the scale passed in with the normalization scale.
+    float normalizationScale = 1.0f / (2.0f * Max);
+    scale[0] *= normalizationScale;
+    scale[1] *= normalizationScale;
+    scale[2] *= normalizationScale;
+
+    // calculate basis axes for rotation
+    float cosTheta = cos(rotationAngle);
+    float sinTheta = sin(rotationAngle);
+    float3 xAxis =
+    {
+        cosTheta + rotationAxis[0] * rotationAxis[0] * (1.0f - cosTheta),
+        rotationAxis[0] * rotationAxis[1] * (1.0f - cosTheta) - rotationAxis[2] * sinTheta,
+        rotationAxis[0] * rotationAxis[2] * (1.0f - cosTheta) + rotationAxis[1] * sinTheta
+    };
+
+    float3 yAxis =
+    {
+        rotationAxis[1] * rotationAxis[0] * (1.0f - cosTheta) + rotationAxis[2] * sinTheta,
+        cosTheta + rotationAxis[1] * rotationAxis[1] * (1.0f - cosTheta),
+        rotationAxis[1] * rotationAxis[2] * (1.0f - cosTheta) - rotationAxis[0] * sinTheta
+    };
+
+    float3 zAxis =
+    {
+        rotationAxis[2] * rotationAxis[0] * (1.0f - cosTheta) - rotationAxis[1] * sinTheta,
+        rotationAxis[2] * rotationAxis[1] * (1.0f - cosTheta) + rotationAxis[0] * sinTheta,
+        cosTheta + rotationAxis[2] * rotationAxis[2] * (1.0f - cosTheta)
+    };
+
+    // transform the vertices
+    for (size_t i = startingTriangleIndex; i < triangleIndex; ++i)
+    {
+        // scale the vertices
+        for (size_t j = 0; j < 3; ++j)
+        {
+            triangles[i].positionA_w[j] *= scale[j];
+            triangles[i].positionB_w[j] *= scale[j];
+            triangles[i].positionC_w[j] *= scale[j];
+        }
+
+        // rotate the vertices
+        float3 a = ChangeBasis(XYZ(triangles[i].positionA_w), xAxis, yAxis, zAxis);
+        float3 b = ChangeBasis(XYZ(triangles[i].positionB_w), xAxis, yAxis, zAxis);
+        float3 c = ChangeBasis(XYZ(triangles[i].positionC_w), xAxis, yAxis, zAxis);
+        for (size_t j = 0; j < 3; ++j)
+        {
+            triangles[i].positionA_w[j] = a[j];
+            triangles[i].positionB_w[j] = b[j];
+            triangles[i].positionC_w[j] = c[j];
+        }
+
+        // translate the vertices
+        for (size_t j = 0; j < 3; ++j)
+        {
+            triangles[i].positionA_w[j] += position[j];
+            triangles[i].positionB_w[j] += position[j];
+            triangles[i].positionC_w[j] += position[j];
+        }
+
+        // recalculate the normal
+        float3 norm = Normal(XYZ(triangles[i].positionA_w), XYZ(triangles[i].positionB_w), XYZ(triangles[i].positionC_w));
+        triangles[i].normal_w[0] = norm[0];
+        triangles[i].normal_w[1] = norm[1];
+        triangles[i].normal_w[2] = norm[2];
+    }
+}
+
 bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
 {
     bool ret = true;
@@ -237,69 +396,12 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
         }
         case EScene::CornellObj:
         {
-            tinyobj::attrib_t attrib;
-            std::vector<tinyobj::shape_t> shapes;
-            std::vector<tinyobj::material_t> materials;
-
-            std::string err;
-            if(!tinyobj::LoadObj(&attrib, &shapes, &materials, &err, "Art/Models/cornell_box.obj", "./Art/Models/", true))
-                return false;
-
             size_t triangleIndex = 0;
             ret &= ShaderData::StructuredBuffers::Triangles.Write(
                 context,
                 [&] (ShaderTypes::StructuredBuffers::TTriangles& triangles)
                 {
-                    for (const tinyobj::shape_t& shape : shapes)
-                    {
-                        for (size_t srcIndex = 0; srcIndex < shape.mesh.indices.size(); srcIndex += 3)
-                        {
-                            float3 a, b, c;
-                            float3 albedo, emissive;
-                            
-                            int indexA = shape.mesh.indices[srcIndex + 0].vertex_index;
-                            int indexB = shape.mesh.indices[srcIndex + 1].vertex_index;
-                            int indexC = shape.mesh.indices[srcIndex + 2].vertex_index;
-
-                            a[0] = attrib.vertices[indexA * 3 + 0];
-                            a[1] = attrib.vertices[indexA * 3 + 1];
-                            a[2] = attrib.vertices[indexA * 3 + 2];
-
-                            b[0] = attrib.vertices[indexB * 3 + 0];
-                            b[1] = attrib.vertices[indexB * 3 + 1];
-                            b[2] = attrib.vertices[indexB * 3 + 2];
-
-                            c[0] = attrib.vertices[indexC * 3 + 0];
-                            c[1] = attrib.vertices[indexC * 3 + 1];
-                            c[2] = attrib.vertices[indexC * 3 + 2];
-
-                            int materialID = shape.mesh.material_ids[srcIndex / 3];
-                            if (materialID >= 0)
-                            {
-                                albedo[0] = materials[materialID].diffuse[0];
-                                albedo[1] = materials[materialID].diffuse[1];
-                                albedo[2] = materials[materialID].diffuse[2];
-
-                                emissive[0] = materials[materialID].ambient[0];
-                                emissive[1] = materials[materialID].ambient[1];
-                                emissive[2] = materials[materialID].ambient[2];
-                            }
-                            else
-                            {
-                                albedo = { 1.0f, 1.0f, 1.0f };
-                                emissive = { 0.0f, 0.0f, 0.0f };
-                            }
-
-                            MakeTriangle(triangles[triangleIndex], a, b, c, albedo, emissive);
-                            ++triangleIndex;
-
-                            // TODO: print an error if you bust the array size?
-                            if (triangleIndex >= triangles.size())
-                            {
-                                return;
-                            }
-                        }
-                    }
+                    AddMeshToTriangleSoup("Art/Models/cornell_box.obj", "./Art/Models/", triangles, triangleIndex);
                 }
             );
 
@@ -325,14 +427,6 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
         }
         case EScene::ObjTest:
         {
-            tinyobj::attrib_t attrib;
-            std::vector<tinyobj::shape_t> shapes;
-            std::vector<tinyobj::material_t> materials;
-
-            std::string err;
-            if(!tinyobj::LoadObj(&attrib, &shapes, &materials, &err, "Art/Models/jet0-0.obj", "./Art/Models/", true))
-                return false;
-
             ret &= ShaderData::StructuredBuffers::Spheres.Write(
                 context,
                 [] (ShaderTypes::StructuredBuffers::TSpheres& spheres)
@@ -346,56 +440,9 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                 context,
                 [&] (ShaderTypes::StructuredBuffers::TTriangles& triangles)
                 {
-                    for (const tinyobj::shape_t& shape : shapes)
-                    {
-                        for (size_t srcIndex = 0; srcIndex < shape.mesh.indices.size(); srcIndex += 3)
-                        {
-                            float3 a, b, c;
-                            float3 albedo, emissive;
-                            
-                            int indexA = shape.mesh.indices[srcIndex + 0].vertex_index;
-                            int indexB = shape.mesh.indices[srcIndex + 1].vertex_index;
-                            int indexC = shape.mesh.indices[srcIndex + 2].vertex_index;
+                    AddMeshToTriangleSoup("Art/Models/cornell_box.obj", "./Art/Models/", triangles, triangleIndex, {-2.5f, -2.5f, 1.0f}, { 10.0f, 10.0f, 10.0f }, { 0.0f, 1.0f, 0.0f }, 0.0f);
 
-                            a[0] = attrib.vertices[indexA * 3 + 0];
-                            a[1] = attrib.vertices[indexA * 3 + 1];
-                            a[2] = attrib.vertices[indexA * 3 + 2];
-
-                            b[0] = attrib.vertices[indexB * 3 + 0];
-                            b[1] = attrib.vertices[indexB * 3 + 1];
-                            b[2] = attrib.vertices[indexB * 3 + 2];
-
-                            c[0] = attrib.vertices[indexC * 3 + 0];
-                            c[1] = attrib.vertices[indexC * 3 + 1];
-                            c[2] = attrib.vertices[indexC * 3 + 2];
-
-                            int materialID = shape.mesh.material_ids[srcIndex / 3];
-                            if (materialID >= 0)
-                            {
-                                albedo[0] = materials[materialID].diffuse[0];
-                                albedo[1] = materials[materialID].diffuse[1];
-                                albedo[2] = materials[materialID].diffuse[2];
-
-                                emissive[0] = materials[materialID].ambient[0];
-                                emissive[1] = materials[materialID].ambient[1];
-                                emissive[2] = materials[materialID].ambient[2];
-                            }
-                            else
-                            {
-                                albedo = { 1.0f, 1.0f, 1.0f };
-                                emissive = { 0.0f, 0.0f, 0.0f };
-                            }
-
-                            MakeTriangle(triangles[triangleIndex], a, b, c, albedo, emissive);
-                            ++triangleIndex;
-
-                            // TODO: print an error if you bust the array size?
-                            if (triangleIndex >= triangles.size())
-                            {
-                                return;
-                            }
-                        }
-                    }
+                    AddMeshToTriangleSoup("Art/Models/jet0-0.obj", "./Art/Models/", triangles, triangleIndex, {-2.0f, -1.0f, 2.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f }, DegreesToRadians(0.0f));
                 }
             );
 

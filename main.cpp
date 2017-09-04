@@ -16,7 +16,7 @@
 const size_t c_width = 800;
 const size_t c_height = 600;
 const bool c_fullScreen = false;
-const bool c_vsync = true;
+const bool c_vsync = false;
 const bool c_shaderDebug = false;
 const bool c_d3ddebug = false;
 const float c_fovX = DegreesToRadians(40.0f);

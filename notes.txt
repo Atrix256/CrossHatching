@@ -1,8 +1,3 @@
-* maybe make a function that populates triangles with a mesh. Would have to be called from within the triangle writing callback and take the triangle index as reference.
- * make it report an error if it busts the array size
- * maybe allow an offset and scale for the vertices?
- * could also do rotation. unsure if we should clone verts or have a transform in / out of a bounding sphere?
-
 
 * Models at turbosquid! https://www.turbosquid.com/
  * and unity store
@@ -19,6 +14,7 @@
  * then re-use that as a starting point for each sample
 
 ! maybe do N samples per frame instead of the 1, may decrease time spent on (texture) memory read / write?
+ * maybe could also do N samples at each bounce (recursively?) not sure if helpful but maybe
 
 ? have c++ side send an iterative sum of golden ratio to shader?
  * or try just adding the random number per frame to it!
@@ -47,11 +43,14 @@ Sean said he'd be willing to give me textures.
 
 * make it spit out shader-error.txt even if there's just warnings?
 
-* could also directly sample the light to make it converge faster
+* could also directly sample the light to make it converge faster (i think you should, if it's unbiased!)
 
 * will eventually want to make videos probably. A thing to render a frame at a time and then use ffmpeg to combine? Would need logic for updating camera and objects over time. Fixed frame rate update obviously!
 
 ? HDR to SDR tone mapping?
+
+* could have a bounding shape on "instanced meshes" which if the ray hits, gives a start/stop triangle index range to test ray against.
+ * could also possibly have a scale, translation, rotation for instance.
 
 ================================= LATER IDEAS =================================
 
