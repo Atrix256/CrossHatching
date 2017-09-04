@@ -287,6 +287,7 @@ void OnKeyPress (unsigned char key, bool pressed)
         case '4': FillSceneData(EScene::CornellBox_BigLight, g_d3d.Context()); break;
         case '5': FillSceneData(EScene::FurnaceTest, g_d3d.Context()); break;
         case '6': FillSceneData(EScene::CornellObj, g_d3d.Context()); break;
+        case '7': FillSceneData(EScene::ObjTest, g_d3d.Context()); break;
 
         case 'G': g_showGray = !g_showGray; break;
     }
@@ -351,7 +352,7 @@ bool init ()
             data.cameraPos_FOVX = { 0.0f, 0.0f, 0.0f, c_fovX };
             data.cameraAt_FOVY = { 0.0f, 0.0f, 0.0f, c_fovY };
             data.nearPlaneDist_missColor = { 0.0f, 0.0f, 0.0f, 0.0f };
-            data.numSpheres_numTris_numOBBs_numQuads = { 0.0f, 0.0f, 0.0f, 0.0f };
+            data.numSpheres_numTris_numOBBs_numQuads = { 0, 0, 0, 0 };
         }
     );
     if (!writeOK)

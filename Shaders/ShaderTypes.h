@@ -23,7 +23,7 @@ cbuffer ConstantsOnce
   float4 cameraPos_FOVX;
   float4 cameraAt_FOVY;
   float4 nearPlaneDist_missColor;
-  float4 numSpheres_numTris_numOBBs_numQuads;
+  uint4 numSpheres_numTris_numOBBs_numQuads;
 };
 
 cbuffer ConstantsPerFrame

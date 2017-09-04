@@ -5,15 +5,19 @@
 
 
 * Models at turbosquid! https://www.turbosquid.com/
+ * and unity store
+ * and here: https://github.com/movAX13h/HiOctaneTools/tree/master/Unpacked%20Assets/models
 
-
-* get model loading / rendering working? bounding spheres (?) around triangles? or just triangle soup.
- * use tinyobjloader! https://github.com/syoyo/tinyobjloader
 * get some fun models to use for testing, make some fun scenes.
 * make it use textures for shading - using the color to tint the non black parts of the textures. 
 
 ? can we make it so you define shaders to load in the macro list, and specify defines there?
  * ie unify ShowPathTrace.fx and ShowPathTraceGrey.fx
+
+! could do a special shader when samplecount = 0, where it finds the first hit and stores time t of first hit in alpha channel. 
+ * then re-use that as a starting point for each sample
+
+! maybe do N samples per frame instead of the 1, may decrease time spent on (texture) memory read / write?
 
 ? have c++ side send an iterative sum of golden ratio to shader?
  * or try just adding the random number per frame to it!
