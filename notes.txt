@@ -1,17 +1,17 @@
 * load crosshatching textures 0-8 as a 3d volume texture. use uv's and (SDR) brightness to make uvw coordinate.
  * render!
- * probably need to convert them from png to tga too.
 
+! verify that the shaders are branchless w/ the const bool params.
 
 * try some minor optimizations to see if they help much. (write details in notes for blog post i guess)
  * re-use first hit of ray trace.  turn this on / off, see if it affects FPS on any scenes.
  * N samples per call, instead of just the 1.
  * bounding volume (box? sphere?) as pre-test for rays.
  ! actually maybe screw optimizations... the point is the cross hatching. although it would be better if it ran faster...but maybe crosshatching first, speed up investigations after
+ * 3 bounces is probably enough. maybe even 2.
 
 
-
-
+* if the path trace really is just outputting float32 R,G,B, maybe a structured buffer would be better than a texture? i dunno
 
 * Models at turbosquid! https://www.turbosquid.com/
  * and unity store
@@ -36,6 +36,9 @@
  * try and see if you can keep the seed in 0-1?
  * if this works out get rid of app rand and frame number and app time i think.
  ! i tried this 8/29 at lunch and it didn't work out, not sure what the problem is.
+ * white noise is probably better over area and time since you are doing more samples not fewer
+
+* bayesian integration would probably be better here since there's no specular. but there is occlusion so...
 
 ? get rid of vertex buffer and make it from vertex id
 

@@ -42,9 +42,6 @@
     <FxCompile Include="Shaders\PathTrace.fx">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\ShowPathTraceGrey.fx">
-      <Filter>Shaders</Filter>
-    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Shaders">

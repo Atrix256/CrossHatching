@@ -37,7 +37,7 @@ static void OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR*
     return;
 }
 
-bool CShader::Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, D3D11_INPUT_ELEMENT_DESC* vertexFormat, size_t vertexFormatElements, bool debug)
+bool CShader::Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, const char* vsentry, const char* psentry, D3D11_INPUT_ELEMENT_DESC* vertexFormat, size_t vertexFormatElements, bool debug)
 {
     HRESULT result;
     ID3D10Blob* errorMessage;
@@ -49,7 +49,7 @@ bool CShader::Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, D3D11_IN
         compileFlags |= D3D10_SHADER_DEBUG;
 
     // Compile the vertex shader code.
-    result = D3DCompileFromFile(fileName, NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE, "vs_main", "vs_5_0", compileFlags, 0,
+    result = D3DCompileFromFile(fileName, NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE, vsentry, "vs_5_0", compileFlags, 0,
         &m_vertexShaderBuffer.m_ptr, &errorMessage);
     if (FAILED(result))
     {
@@ -68,7 +68,7 @@ bool CShader::Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, D3D11_IN
     }
 
     // Compile the pixel shader code.
-    result = D3DCompileFromFile(fileName, NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE, "ps_main", "ps_5_0", compileFlags, 0,
+    result = D3DCompileFromFile(fileName, NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE, psentry, "ps_5_0", compileFlags, 0,
         &m_pixelShaderBuffer.m_ptr, &errorMessage);
     if (FAILED(result))
     {
@@ -136,7 +136,7 @@ void CShader::Draw (ID3D11DeviceContext* deviceContext, size_t indexCount)
     deviceContext->DrawIndexed((UINT)indexCount, 0, 0);
 }
 
-bool CComputeShader::Load(ID3D11Device* device, HWND hWnd, wchar_t* fileName, bool debug)
+bool CComputeShader::Load(ID3D11Device* device, HWND hWnd, wchar_t* fileName, const char* entry, bool debug)
 {
     HRESULT result;
     ID3D10Blob* errorMessage;
@@ -149,7 +149,7 @@ bool CComputeShader::Load(ID3D11Device* device, HWND hWnd, wchar_t* fileName, bo
         compileFlags |= D3D10_SHADER_DEBUG;
 
     // Compile the compute shader code.
-    result = D3DCompileFromFile(fileName, NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE, "cs_main", "cs_5_0", compileFlags, 0,
+    result = D3DCompileFromFile(fileName, NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE, entry, "cs_5_0", compileFlags, 0,
         &m_computeShaderBuffer.m_ptr, &errorMessage);
     if (FAILED(result))
     {

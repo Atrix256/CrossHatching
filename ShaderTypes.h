@@ -4,6 +4,7 @@
 #include "ConstantBuffer.h"
 #include "StructuredBuffer.h"
 #include "Texture.h"
+#include "Shader.h"
 
 typedef std::array<float, 2> float2;
 typedef std::array<float, 3> float3;
@@ -63,7 +64,14 @@ namespace ShaderData
         #define TEXTURE_IMAGE(NAME, FILENAME) extern CTexture NAME;
         #define TEXTURE_BUFFER(NAME, SHADERTYPE, FORMAT) extern CTexture NAME;
         #include "ShaderTypesList.h"
-    }
+    };
+
+    namespace Shaders
+    {
+        #define SHADER_CS(NAME, FILENAME, ENTRY) extern CComputeShader NAME;
+        #define SHADER_VSPS(NAME, FILENAME, VSENTRY, PSENTRY, VERTEXFORMAT) extern CShader NAME;
+        #include "ShaderTypesList.h"
+    };
 };
 
 inline float Dot (const float3& a, const float3& b)

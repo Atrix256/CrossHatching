@@ -60,6 +60,22 @@ TEXTURE_BUFFER(Name, ShaderType, Format)
   ShaderType - as declared in shader, such as float or float4
   Format     - d3d image format, like DXGI_FORMAT_R32_FLOAT or DXGI_FORMAT_R8G8B8A8_UNORM
 
+===================================================================
+                          Shaders
+===================================================================
+
+SHADER_VSPS(Name, FileName, VSEntry, PSEntry, VertexFormat)
+  Name         - the name of the shader
+  FileName     - the file name of the shader
+  VSEntry      - the name of the entry point for the vertex shader
+  PSEntry      - the name of the entry point for the pixel shader
+  VertexFormat - the name of the vertex format to use
+
+SHADER_CS(Name, FileName, Entry)
+  Name     - the name of the shader
+  FileName - the file name of the shader
+  VSEntry  - the name of the entry point for the compute shader
+
 */
 
 //=================================================================
@@ -107,6 +123,14 @@ TEXTURE_BUFFER(Name, ShaderType, Format)
 
 #ifndef TEXTURE_BUFFER
 #define TEXTURE_BUFFER(NAME, SHADERTYPE, FORMAT)
+#endif
+
+#ifndef SHADER_VSPS
+#define SHADER_VSPS(NAME, FILENAME, VSENTRY, PSENTRY, VERTEXFORMAT)
+#endif
+
+#ifndef SHADER_CS
+#define SHADER_CS(NAME, FILENAME, ENTRY)
 #endif
 
 //=================================================================
@@ -177,7 +201,26 @@ VERTEX_FORMAT_END
 //=================================================================
 
 TEXTURE_IMAGE(blueNoise256, "Art/BlueNoise256.tga")
+TEXTURE_IMAGE(crosshatch0, "Art/crosshatch0.tga")
+TEXTURE_IMAGE(crosshatch1, "Art/crosshatch1.tga")
+TEXTURE_IMAGE(crosshatch2, "Art/crosshatch2.tga")
+TEXTURE_IMAGE(crosshatch3, "Art/crosshatch3.tga")
+TEXTURE_IMAGE(crosshatch4, "Art/crosshatch4.tga")
+TEXTURE_IMAGE(crosshatch5, "Art/crosshatch5.tga")
+TEXTURE_IMAGE(crosshatch6, "Art/crosshatch6.tga")
+TEXTURE_IMAGE(crosshatch7, "Art/crosshatch7.tga")
+TEXTURE_IMAGE(crosshatch8, "Art/crosshatch8.tga")
 TEXTURE_BUFFER(pathTraceOutput, float4, DXGI_FORMAT_R32G32B32A32_FLOAT)
+
+//=================================================================
+//                       Shaders
+//=================================================================
+
+SHADER_CS(pathTrace, L"Shaders/PathTrace.fx", "cs_main")
+SHADER_VSPS(showPathTrace_Color_Shade, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_color_shade", Pos2D)
+SHADER_VSPS(showPathTrace_Grey_Shade, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_grey_shade", Pos2D)
+SHADER_VSPS(showPathTrace_Color_CrossHatch, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_color_crosshatch", Pos2D)
+SHADER_VSPS(showPathTrace_Grey_CrossHatch, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_grey_crosshatch", Pos2D)
 
 //=================================================================
 // undefine everything for the caller's convenience
@@ -192,3 +235,5 @@ TEXTURE_BUFFER(pathTraceOutput, float4, DXGI_FORMAT_R32G32B32A32_FLOAT)
 #undef VERTEX_FORMAT_END
 #undef TEXTURE_IMAGE
 #undef TEXTURE_BUFFER
+#undef SHADER_VSPS
+#undef SHADER_CS

@@ -28,13 +28,10 @@ const float3 c_cameraAt = { 0.0f, 0.0f, 0.0f };
 // globals
 CD3D11 g_d3d;
 
-bool g_showGray = false;
+bool g_showGrey = false;
+bool g_showCrossHatch = false;
 
 CModel<ShaderTypes::VertexFormats::Pos2D> g_fullScreenMesh;
-
-CComputeShader g_pathTrace;
-CShader g_shaderShowPathTrace;
-CShader g_shaderShowPathTraceGrey;
 
 float RandomFloat (float min, float max)
 {
@@ -65,6 +62,13 @@ namespace ShaderData
         #define TEXTURE_BUFFER(NAME, SHADERTYPE, FORMAT) CTexture NAME;
         #include "ShaderTypesList.h"
     }
+
+    namespace Shaders
+    {
+        #define SHADER_CS(NAME, FILENAME, ENTRY) CComputeShader NAME;
+        #define SHADER_VSPS(NAME, FILENAME, VSENTRY, PSENTRY, VERTEXFORMAT) CShader NAME;
+        #include "ShaderTypesList.h"
+    };
 
     namespace VertexFormats
     {
@@ -289,7 +293,8 @@ void OnKeyPress (unsigned char key, bool pressed)
         case '6': FillSceneData(EScene::CornellObj, g_d3d.Context()); break;
         case '7': FillSceneData(EScene::ObjTest, g_d3d.Context()); break;
 
-        case 'G': g_showGray = !g_showGray; break;
+        case 'C': g_showCrossHatch = !g_showCrossHatch; break;
+        case 'G': g_showGrey = !g_showGrey; break;
     }
 }
 
@@ -318,14 +323,12 @@ bool init ()
         if(!ShaderData::Textures::NAME.Create(g_d3d.Device(), g_d3d.Context(), c_width, c_height, FORMAT)) return false;
     #include "ShaderTypesList.h"
 
-    if (!g_pathTrace.Load(g_d3d.Device(), WindowGetHWND(), L"Shaders/PathTrace.fx", c_shaderDebug))
-        return false;
-
-    if (!g_shaderShowPathTrace.Load(g_d3d.Device(), WindowGetHWND(), L"Shaders/ShowPathTrace.fx", ShaderData::VertexFormats::Pos2D, ShaderData::VertexFormats::Pos2DElements, c_shaderDebug))
-        return false;
-
-    if (!g_shaderShowPathTraceGrey.Load(g_d3d.Device(), WindowGetHWND(), L"Shaders/ShowPathTraceGrey.fx", ShaderData::VertexFormats::Pos2D, ShaderData::VertexFormats::Pos2DElements, c_shaderDebug))
-        return false;
+    // create shaders
+    #define SHADER_CS(NAME, FILENAME, ENTRY) \
+        if (!ShaderData::Shaders::NAME.Load(g_d3d.Device(), WindowGetHWND(), FILENAME, ENTRY, c_shaderDebug)) return false;
+    #define SHADER_VSPS(NAME, FILENAME, VSENTRY, PSENTRY, VERTEXFORMAT) \
+        if (!ShaderData::Shaders::NAME.Load(g_d3d.Device(), WindowGetHWND(), FILENAME, VSENTRY, PSENTRY, ShaderData::VertexFormats::VERTEXFORMAT, ShaderData::VertexFormats::VERTEXFORMAT##Elements, c_shaderDebug)) return false;
+    #include "ShaderTypesList.h"
 
     // make a full screen triangle
    bool writeOK = g_fullScreenMesh.Create(
@@ -370,6 +373,24 @@ bool init ()
         return false;
 
     return true;
+}
+
+CShader& SelectShaderShowPathTrace ()
+{
+    if (g_showGrey)
+    {
+        if (g_showCrossHatch)
+            return ShaderData::Shaders::showPathTrace_Grey_CrossHatch;
+        else
+            return ShaderData::Shaders::showPathTrace_Grey_Shade;
+    }
+    else
+    {
+        if (g_showCrossHatch)
+            return ShaderData::Shaders::showPathTrace_Color_CrossHatch;
+        else
+            return ShaderData::Shaders::showPathTrace_Color_Shade;
+    }
 }
 
 int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow)
@@ -418,13 +439,12 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
                 done = true;
 
             // compute
-            FillShaderParams<EShaderType::compute>(g_d3d.Context(), g_pathTrace.GetReflector());
-            g_pathTrace.Dispatch(g_d3d.Context(), dispatchX, dispatchY, 1);
-            UnbindShaderTextures<EShaderType::compute>(g_d3d.Context(), g_pathTrace.GetReflector());
-
-            CShader& shader = g_showGray ? g_shaderShowPathTraceGrey : g_shaderShowPathTrace;
+            FillShaderParams<EShaderType::compute>(g_d3d.Context(), ShaderData::Shaders::pathTrace.GetReflector());
+            ShaderData::Shaders::pathTrace.Dispatch(g_d3d.Context(), dispatchX, dispatchY, 1);
+            UnbindShaderTextures<EShaderType::compute>(g_d3d.Context(), ShaderData::Shaders::pathTrace.GetReflector());
 
             // vs & ps
+            CShader& shader = SelectShaderShowPathTrace();
             FillShaderParams<EShaderType::vertex>(g_d3d.Context(), shader.GetVSReflector());
             FillShaderParams<EShaderType::pixel>(g_d3d.Context(), shader.GetPSReflector());
             g_fullScreenMesh.Render(g_d3d.Context());
