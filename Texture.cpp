@@ -254,10 +254,6 @@ bool CTexture::CreateVolume (ID3D11Device* device, ID3D11DeviceContext* deviceCo
         return false;
     }
 
-    // TODO: load textures into slices!
-    //deviceContext->UpdateSubresource(m_texture.m_ptr, 0, NULL, &targaData[0], rowPitch, 0);
-    //deviceContext->CopyResource(m_texture3D.m_ptr, slices[0].GetTexture2D());
-
     for (size_t i = 0; i < depth; ++i)
         deviceContext->CopySubresourceRegion(m_texture3D.m_ptr, 0, 0, 0, (UINT)i, slices[i].GetTexture2D(), 0, NULL);
 
