@@ -4,7 +4,7 @@ static const float c_pi = 3.14159265359f;
 static const float c_rayEpsilon = 0.001f;
 static const float FLT_MAX = 3.402823466e+38F;
 static const float GOLDEN_RATIO = 1.61803398875f;
-static const int c_numBounces = 5;
+static const int c_numBounces = 3;
 
 //----------------------------------------------------------------------------
 struct SRayHitInfo

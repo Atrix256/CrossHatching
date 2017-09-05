@@ -18,7 +18,7 @@ const size_t c_height = 600;
 const bool c_fullScreen = false;
 const bool c_vsync = false;
 const bool c_shaderDebug = false;
-const bool c_d3ddebug = false;
+const bool c_d3ddebug = true; // TODO: turn this off
 const float c_fovX = DegreesToRadians(40.0f);
 const float c_fovY = c_fovX * float(c_height) / float(c_width);
 const float c_nearPlane = 0.1f;
@@ -27,6 +27,9 @@ const float3 c_cameraAt = { 0.0f, 0.0f, 0.0f };
 
 // globals
 CD3D11 g_d3d;
+
+// TODO: temp
+CTexture crossHatching;
 
 bool g_showGrey = false;
 bool g_showCrossHatch = false;
@@ -252,6 +255,19 @@ void FillShaderParams (ID3D11DeviceContext* deviceContext, ID3D11ShaderReflectio
 
     #include "ShaderTypesList.h"
 
+    // TODO: temp! hard coded textures
+    result = reflector->GetResourceBindingDescByName("chvolume", &desc);
+    if (!FAILED(result))
+    {
+        ID3D11ShaderResourceView* srv = crossHatching.GetSRV();
+        if (SHADER_TYPE == EShaderType::vertex) 
+            deviceContext->VSSetShaderResources(desc.BindPoint, 1, &srv); 
+        else if (SHADER_TYPE == EShaderType::pixel) 
+            deviceContext->PSSetShaderResources(desc.BindPoint, 1, &srv); 
+        else 
+            deviceContext->CSSetShaderResources(desc.BindPoint, 1, &srv); 
+    }
+
     // hard coded samplers
     result = reflector->GetResourceBindingDescByName("SamplerLinearWrap", &desc);
     if (!FAILED(result))
@@ -404,6 +420,22 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
     const size_t dispatchY = 1 + c_height / 32;
 
     FillSceneData(EScene::SphereOnPlane_LowLight, g_d3d.Context());
+
+    // TODO: formalize this after it's working
+    CTexture slices[] = {
+        ShaderData::Textures::crosshatch0,
+        ShaderData::Textures::crosshatch1,
+        ShaderData::Textures::crosshatch2,
+        ShaderData::Textures::crosshatch3,
+        ShaderData::Textures::crosshatch4,
+        ShaderData::Textures::crosshatch5,
+        ShaderData::Textures::crosshatch6,
+        ShaderData::Textures::crosshatch7,
+        ShaderData::Textures::crosshatch8
+    };
+
+    if (!crossHatching.CreateVolume(g_d3d.Device(), g_d3d.Context(), 193, 193, 9, slices, DXGI_FORMAT_R8G8B8A8_UNORM))
+        return 0;
 
     bool done = false;
     while (!done)

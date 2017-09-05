@@ -1,5 +1,8 @@
 #include "PathTrace.h"
 
+// TODO: temp til volume textures are more formalized
+Texture3D chvolume;
+
 //----------------------------------------------------------------------------
 struct SPixelInput
 {
@@ -38,16 +41,13 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch)
         RayIntersectsSphere(rayPos, rayDir, fallbackSphere, rayHitInfo);
     }
 
-    // get the lit value
-    float3 light;
+    // get the lit value and brightness
+    float3 light = pathTraceOutput.Sample(SamplerLinearWrap, float2(1.0f, 1.0f) - input.uv).xyz;
+    float brightness = dot(light, float3(0.3f, 0.59f, 0.11f));
     if (greyScale)
-    {
-        light.xyz = dot(pathTraceOutput.Sample(SamplerLinearWrap, float2(1.0f, 1.0f) - input.uv).xyz, float3(0.3f, 0.59f, 0.11f));
-    }
-    else
-    {
-        light = pathTraceOutput.Sample(SamplerLinearWrap, float2(1.0f, 1.0f) - input.uv).xyz;
-    }
+        light.xyz = brightness;
+
+    // TODO: do HDR to SDR here?
 
     // apply cross hatching
     if (crossHatch)
@@ -60,15 +60,27 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch)
         float2 uvz = pixelPos.xy;
         
         // TODO: brightness of pixel needs to be used to select which crosshatch slice to use. (+do trilinear interpolation)
+        /*
         float crossHatchTexel =
             crosshatch5.Sample(SamplerLinearWrap, uvx).r * rayHitInfo.m_surfaceNormal.x +
             crosshatch5.Sample(SamplerLinearWrap, uvy).r * rayHitInfo.m_surfaceNormal.y +
             crosshatch5.Sample(SamplerLinearWrap, uvz).r * rayHitInfo.m_surfaceNormal.z;
+        */
+
+        // TODO: not sure if brightness is used correctly here. does it want a 0-1?
+        // TODO; also should be SDR brightness, right?
+        float crossHatchTexel =
+            chvolume.Sample(SamplerLinearWrap, float3(uvx, brightness)).r * rayHitInfo.m_surfaceNormal.x +
+            chvolume.Sample(SamplerLinearWrap, float3(uvy, brightness)).r * rayHitInfo.m_surfaceNormal.y +
+            chvolume.Sample(SamplerLinearWrap, float3(uvz, brightness)).r * rayHitInfo.m_surfaceNormal.z;
 
         crossHatchTexel = crossHatchTexel / (rayHitInfo.m_surfaceNormal.x + rayHitInfo.m_surfaceNormal.y + rayHitInfo.m_surfaceNormal.z);
 
         // apply crosshatching
-        light *= crossHatchTexel;
+        if (greyScale)
+            light = crossHatchTexel;
+        else
+            light *= crossHatchTexel;
     }
 
     // sRGB correct

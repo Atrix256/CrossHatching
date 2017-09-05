@@ -1,9 +1,19 @@
+* on spheres there is a weird thing happening to the textures, check it out (may be due to triplanar)
+* on greyscale crosshatching, it doesn't look correct. Should be choosing darker slices of the array but doesn't seem to be.
+
 * load crosshatching textures 0-8 as a 3d volume texture. use uv's and (SDR) brightness to make uvw coordinate.
  * render!
+
+* there is a crash on shutdown with autorelease pointers. showed up after adding the volume texture stuff. 3d texture pointer? or maybe an issue w/ how im doing volume tetxures?
+
+* anisotropic filtering may be more in order.
+ * could also try no mipmaps maybe?
 
 ! verify that the shaders are branchless w/ the const bool params.
 
 ! need to make sure ray never misses scene. maybe have a max distance sphere or something that it falls back to. Do this in the show path trace code so we don't have an extra primitive per sample!
+
+* use D3DX11CreateTextureFromFile() to load textures.
 
 * try some minor optimizations to see if they help much. (write details in notes for blog post i guess)
  * re-use first hit of ray trace.  turn this on / off, see if it affects FPS on any scenes.
