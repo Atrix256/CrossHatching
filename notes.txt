@@ -1,3 +1,17 @@
+* load crosshatching textures 0-8 as a 3d volume texture. use uv's and (SDR) brightness to make uvw coordinate.
+ * render!
+ * probably need to convert them from png to tga too.
+
+
+* try some minor optimizations to see if they help much. (write details in notes for blog post i guess)
+ * re-use first hit of ray trace.  turn this on / off, see if it affects FPS on any scenes.
+ * N samples per call, instead of just the 1.
+ * bounding volume (box? sphere?) as pre-test for rays.
+ ! actually maybe screw optimizations... the point is the cross hatching. although it would be better if it ran faster...but maybe crosshatching first, speed up investigations after
+
+
+
+
 
 * Models at turbosquid! https://www.turbosquid.com/
  * and unity store
@@ -51,6 +65,8 @@ Sean said he'd be willing to give me textures.
 
 * could have a bounding shape on "instanced meshes" which if the ray hits, gives a start/stop triangle index range to test ray against.
  * could also possibly have a scale, translation, rotation for instance.
+
+* get rid of unused models and textures when done
 
 ================================= LATER IDEAS =================================
 
