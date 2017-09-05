@@ -3,6 +3,8 @@
 
 ! verify that the shaders are branchless w/ the const bool params.
 
+! need to make sure ray never misses scene. maybe have a max distance sphere or something that it falls back to. Do this in the show path trace code so we don't have an extra primitive per sample!
+
 * try some minor optimizations to see if they help much. (write details in notes for blog post i guess)
  * re-use first hit of ray trace.  turn this on / off, see if it affects FPS on any scenes.
  * N samples per call, instead of just the 1.
@@ -10,8 +12,15 @@
  ! actually maybe screw optimizations... the point is the cross hatching. although it would be better if it ran faster...but maybe crosshatching first, speed up investigations after
  * 3 bounces is probably enough. maybe even 2.
 
+* need to figure out how to process the cross hatching textures. dilation filter, even color texture etc.
 
 * if the path trace really is just outputting float32 R,G,B, maybe a structured buffer would be better than a texture? i dunno
+
+? should source crosshatching textures be single channel?
+
+* color crosshatching:
+ * convert to hue / brightness. hue is tint for texture, brightness selects texture
+ * could also try using texture as a lerp value between a light and dark color
 
 * Models at turbosquid! https://www.turbosquid.com/
  * and unity store

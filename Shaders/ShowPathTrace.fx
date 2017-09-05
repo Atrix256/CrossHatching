@@ -29,10 +29,14 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch)
     CalculateRay(float2(1.0f, 1.0f) - input.uv, rayPos, rayDir);
     SRayHitInfo rayHitInfo = ClosestIntersection(rayPos, rayDir);
 
-    // return the distance
-    //float dist = rayHitInfo.m_intersectTime;
-    //dist = dist / (dist + 1000.0f);
-    //return float4(dist, dist, dist, 1.0f);
+    // have a fallback sphere in the sky to catch anything missed
+    if (rayHitInfo.m_intersectTime < 0.0f)
+    {
+        SpherePrim fallbackSphere;
+        fallbackSphere.position_Radius.xyz = cameraPos_FOVX.xyz;
+        fallbackSphere.position_Radius.w = 10.0f;
+        RayIntersectsSphere(rayPos, rayDir, fallbackSphere, rayHitInfo);
+    }
 
     // get the lit value
     float3 light;
@@ -45,10 +49,26 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch)
         light = pathTraceOutput.Sample(SamplerLinearWrap, float2(1.0f, 1.0f) - input.uv).xyz;
     }
 
+    // apply cross hatching
     if (crossHatch)
     {
-        // TODO: temp! need to do triplanar projection to get uv to sample here, don't use input uv
-        light *= crosshatch5.Sample(SamplerLinearWrap, float2(1.0f, 1.0f) - input.uv).xyz;
+        // sample the crosshatching with triplanar projection
+        float3 pixelPos = rayPos + rayDir * rayHitInfo.m_intersectTime;
+
+        float2 uvx = pixelPos.yz;
+        float2 uvy = pixelPos.xz;
+        float2 uvz = pixelPos.xy;
+        
+        // TODO: brightness of pixel needs to be used to select which crosshatch slice to use. (+do trilinear interpolation)
+        float crossHatchTexel =
+            crosshatch5.Sample(SamplerLinearWrap, uvx).r * rayHitInfo.m_surfaceNormal.x +
+            crosshatch5.Sample(SamplerLinearWrap, uvy).r * rayHitInfo.m_surfaceNormal.y +
+            crosshatch5.Sample(SamplerLinearWrap, uvz).r * rayHitInfo.m_surfaceNormal.z;
+
+        crossHatchTexel = crossHatchTexel / (rayHitInfo.m_surfaceNormal.x + rayHitInfo.m_surfaceNormal.y + rayHitInfo.m_surfaceNormal.z);
+
+        // apply crosshatching
+        light *= crossHatchTexel;
     }
 
     // sRGB correct
