@@ -25,6 +25,28 @@ SPixelInput vs_main(Pos2D input)
 }
 
 //----------------------------------------------------------------------------
+// TODO: put these color conversion functions in a header
+// TODO: may not need these in the end
+// from https://www.pcmag.com/encyclopedia/term/55166/yuv-rgb-conversion-formulas
+float3 RGBToYUV (float3 rgb)
+{
+	float3 yuv;
+	yuv.x = dot(rgb, float3(0.299f, 0.587f, 0.114f));
+	yuv.y = 0.492f * (rgb.b - yuv.x);
+	yuv.z = 0.877f * (rgb.r - yuv.x);
+	return yuv;
+}
+
+float3 YUVToRGB (float3 yuv)
+{
+	float3 rgb;
+	rgb.r = yuv.x + 1.140f*yuv.z;
+	rgb.g = yuv.x - 0.395f*yuv.y - 0.581f*yuv.z;
+	rgb.b = yuv.x + 2.032f*yuv.y;
+	return clamp(rgb, 0.0f, 1.0f);
+}
+
+//----------------------------------------------------------------------------
 float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch)
 {
     // calculate the ray for this pixel and get the time of the first ray hit
@@ -32,6 +54,7 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch)
     CalculateRay(float2(1.0f, 1.0f) - input.uv, rayPos, rayDir);
     SRayHitInfo rayHitInfo = ClosestIntersection(rayPos, rayDir);
 
+	// TODO: make this a fallback plane (triangle probably or quad) so the background isn't curved! But, should be regardless of camera direction.
     // have a fallback sphere in the sky to catch anything missed
     if (rayHitInfo.m_intersectTime < 0.0f)
     {
@@ -41,13 +64,19 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch)
         RayIntersectsSphere(rayPos, rayDir, fallbackSphere, rayHitInfo);
     }
 
-    // get the lit value and brightness
+    // get the lit value
     float3 light = pathTraceOutput.Sample(SamplerLinearWrap, float2(1.0f, 1.0f) - input.uv).xyz;
-    float brightness = dot(light, float3(0.3f, 0.59f, 0.11f));
-    if (greyScale)
-        light.xyz = brightness;
 
-    // TODO: do HDR to SDR here?
+	// reinhard operator to convert from HDR to SDR
+	light = light / (light + 1.0f);
+
+	// convert SDR RGB to YUV. Y is brightness and UV is hue.
+	float3 yuv = RGBToYUV(light);
+
+	// convert full bright UV back to RGB to get the fully bright color of this pixel
+	// TODO: honestly i think maybe the idea of full bright color is flawed. need to rethink this...
+	// TODO: how do we get full bright color??
+	//float3 fullBrightRGB = YUVToRGB(float3(0.5f, yuv.yz));
 
     // apply cross hatching
     if (crossHatch)
@@ -59,35 +88,27 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch)
         float2 uvy = pixelPos.xz;
         float2 uvz = pixelPos.xy;
         
-        // TODO: brightness of pixel needs to be used to select which crosshatch slice to use. (+do trilinear interpolation)
-        /*
+        // TODO: not sure if brightness is used correctly here. does it want a 0-1 for w of uvw? is it getting it?
         float crossHatchTexel =
-            crosshatch5.Sample(SamplerLinearWrap, uvx).r * rayHitInfo.m_surfaceNormal.x +
-            crosshatch5.Sample(SamplerLinearWrap, uvy).r * rayHitInfo.m_surfaceNormal.y +
-            crosshatch5.Sample(SamplerLinearWrap, uvz).r * rayHitInfo.m_surfaceNormal.z;
-        */
-
-        // TODO: not sure if brightness is used correctly here. does it want a 0-1?
-        // TODO; also should be SDR brightness, right?
-        float crossHatchTexel =
-            chvolume.Sample(SamplerLinearWrap, float3(uvx, brightness)).r * rayHitInfo.m_surfaceNormal.x +
-            chvolume.Sample(SamplerLinearWrap, float3(uvy, brightness)).r * rayHitInfo.m_surfaceNormal.y +
-            chvolume.Sample(SamplerLinearWrap, float3(uvz, brightness)).r * rayHitInfo.m_surfaceNormal.z;
+            chvolume.Sample(SamplerLinearWrap, float3(uvx, yuv.x)).r * rayHitInfo.m_surfaceNormal.x +
+            chvolume.Sample(SamplerLinearWrap, float3(uvy, yuv.x)).r * rayHitInfo.m_surfaceNormal.y +
+            chvolume.Sample(SamplerLinearWrap, float3(uvz, yuv.x)).r * rayHitInfo.m_surfaceNormal.z;
 
         crossHatchTexel = crossHatchTexel / (rayHitInfo.m_surfaceNormal.x + rayHitInfo.m_surfaceNormal.y + rayHitInfo.m_surfaceNormal.z);
 
         // apply crosshatching
-        if (greyScale)
-            light = crossHatchTexel;
-        else
-            light *= crossHatchTexel;
+		if (greyScale)
+			light = crossHatchTexel;
+		else
+			light *= crossHatchTexel;
     }
+	else if (greyScale)
+	{
+		light.xyz = yuv.x;
+	}
 
-    // sRGB correct
-    light = pow(light, 1.0f / 2.0f);
-
-    // return the value as greyscale
-    return float4(light, 1.0f);
+    // return sRGB corrected value
+    return pow(light, 1.0f / 2.0f);
 }
 
 //----------------------------------------------------------------------------
