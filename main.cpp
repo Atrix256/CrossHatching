@@ -372,6 +372,7 @@ bool init ()
             data.cameraAt_FOVY = { 0.0f, 0.0f, 0.0f, c_fovY };
             data.nearPlaneDist_missColor = { 0.0f, 0.0f, 0.0f, 0.0f };
             data.numSpheres_numTris_numOBBs_numQuads = { 0, 0, 0, 0 };
+			data.uvmultiplier_yzw = { 1.0f, 0.0f, 0.0f, 0.0f };
         }
     );
     if (!writeOK)

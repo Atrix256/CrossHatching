@@ -244,7 +244,6 @@ bool CTexture::CreateVolume (ID3D11Device* device, ID3D11DeviceContext* deviceCo
     textureDesc.CPUAccessFlags = 0;
     textureDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
 
-    // TODO: i don't think the bind flags are correct here or for the other textures. look into it!
     // TODO: can probably get width, height and format from desc of first CTexture.
 
     // Create the empty texture.

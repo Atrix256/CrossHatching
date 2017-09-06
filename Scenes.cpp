@@ -194,6 +194,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                     scene.nearPlaneDist_missColor = { 0.1f, 0.0f, 0.0f, 0.0f };
 
                     scene.numSpheres_numTris_numOBBs_numQuads = { 2, 0, 0, 2 };
+					scene.uvmultiplier_yzw = { 1.0f, 0.0f, 0.0f, 0.0f };
                 }
             );
 
@@ -233,6 +234,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                     scene.nearPlaneDist_missColor = { 0.1f, 0.1f, 0.4f, 1.0f };
 
                     scene.numSpheres_numTris_numOBBs_numQuads = { 2, 0, 0, 2 };
+					scene.uvmultiplier_yzw = { 1.0f, 0.0f, 0.0f, 0.0f };
                 }
             );
 
@@ -273,6 +275,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                     scene.nearPlaneDist_missColor = { 0.1f, 0.0f, 0.0f, 0.0f };
 
                     scene.numSpheres_numTris_numOBBs_numQuads = { 0, 0, 2, 6 };
+					scene.uvmultiplier_yzw = { 1.0f, 0.0f, 0.0f, 0.0f };
                 }
             );
 
@@ -329,6 +332,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                     scene.nearPlaneDist_missColor = { 0.1f, 0.0f, 0.0f, 0.0f };
 
                     scene.numSpheres_numTris_numOBBs_numQuads = { 0, 0, 2, 5 };
+					scene.uvmultiplier_yzw = { 1.0f, 0.0f, 0.0f, 0.0f };
                 }
             );
 
@@ -381,6 +385,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                     scene.nearPlaneDist_missColor = { 0.1f, 0.0f, 0.0f, 0.0f };
 
                     scene.numSpheres_numTris_numOBBs_numQuads = { 2, 0, 0, 0 };
+					scene.uvmultiplier_yzw = { 1.0f, 0.0f, 0.0f, 0.0f };
                 }
             );
 
@@ -420,6 +425,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                     scene.nearPlaneDist_missColor = { 0.1f, 0.0f, 0.0f, 0.0f };
 
                     scene.numSpheres_numTris_numOBBs_numQuads = { 0, (unsigned int)triangleIndex, 0, 0 };
+					scene.uvmultiplier_yzw = { 0.01f, 0.0f, 0.0f, 0.0f };
                 }
             );
 
@@ -461,6 +467,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                     scene.nearPlaneDist_missColor = { 0.1f, 0.0f, 0.0f, 0.0f };
 
                     scene.numSpheres_numTris_numOBBs_numQuads = { 1, (unsigned int)triangleIndex, 0, 0 };
+					scene.uvmultiplier_yzw = { 1.0f, 0.0f, 0.0f, 0.0f };
                 }
             );
 

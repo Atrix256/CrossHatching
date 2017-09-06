@@ -1,25 +1,10 @@
-? is the cross hatching texture lookup working correctly? it seems like it might not be.
-
-* need a cross hatching uv scale that the triplanar stuff multiplies position by to scale the uvs
-
-* on spheres there is a weird thing happening to the textures, check it out (may be due to triplanar)
-* on greyscale crosshatching, it doesn't look correct. Should be choosing darker slices of the array but doesn't seem to be.
+* on spheres there is a weird line on the textures, check it out (may be due to triplanar?)
 
 * if we do the thing where the first hit is in a special buffer that gets re-used, the show path tracing shaders can use that first hit info too without having to find it
 
-* load crosshatching textures 0-8 as a 3d volume texture. use uv's and (SDR) brightness to make uvw coordinate.
- * render!
-
-* there is a crash on shutdown with autorelease pointers. showed up after adding the volume texture stuff. 3d texture pointer? or maybe an issue w/ how im doing volume tetxures?
-
-* anisotropic filtering may be more in order.
+* anisotropic filtering may be in order for using the cross hatching texture
  * could also try no mipmaps maybe?
 
-! verify that the shaders are branchless w/ the const bool params.
-
-! need to make sure ray never misses scene. maybe have a max distance sphere or something that it falls back to. Do this in the show path trace code so we don't have an extra primitive per sample!
-
-* use D3DX11CreateTextureFromFile() to load textures.
 
 * try some minor optimizations to see if they help much. (write details in notes for blog post i guess)
  * re-use first hit of ray trace.  turn this on / off, see if it affects FPS on any scenes.
@@ -28,11 +13,25 @@
  ! actually maybe screw optimizations... the point is the cross hatching. although it would be better if it ran faster...but maybe crosshatching first, speed up investigations after
  * 3 bounces is probably enough. maybe even 2.
 
+! could do a special shader when samplecount = 0, where it finds the first hit and stores time t of first hit in alpha channel. 
+ * then re-use that as a starting point for each sample
+
+
+
+
+
+! for color cross hatching, try YCoCg-R? https://en.wikipedia.org/wiki/YCoCg
+
+! in greyscale crosshatch mode, the first scene is darker than the second! that doesn't seem correct
+
+* use D3DX11CreateTextureFromFile() to load textures so you can use PNG's etc
+
 * need to figure out how to process the cross hatching textures. dilation filter, even color texture etc.
+ * eventually write code that does this
 
 * if the path trace really is just outputting float32 R,G,B, maybe a structured buffer would be better than a texture? i dunno
 
-? should source crosshatching textures be single channel?
+? should source crosshatching textures be single channel? maybe doesn't matter
 
 * color crosshatching:
  * convert to hue / brightness. hue is tint for texture, brightness selects texture
@@ -44,13 +43,7 @@
  * if using those high octane assets, need to texture them with atlas.png i think.
 
 * get some fun models to use for testing, make some fun scenes.
-* make it use textures for shading - using the color to tint the non black parts of the textures. 
-
-? can we make it so you define shaders to load in the macro list, and specify defines there?
- * ie unify ShowPathTrace.fx and ShowPathTraceGrey.fx
-
-! could do a special shader when samplecount = 0, where it finds the first hit and stores time t of first hit in alpha channel. 
- * then re-use that as a starting point for each sample
+* make it use textures for shading - using the color to tint the non black parts of the textures.
 
 ! maybe do N samples per frame instead of the 1, may decrease time spent on (texture) memory read / write?
  * maybe could also do N samples at each bounce (recursively?) not sure if helpful but maybe
@@ -64,6 +57,7 @@
  * white noise is probably better over area and time since you are doing more samples not fewer
 
 * bayesian integration would probably be better here since there's no specular. but there is occlusion so...
+ * dunno how bayesian integration works. would be good to learn but maybe out of scope
 
 ? get rid of vertex buffer and make it from vertex id
 
@@ -89,12 +83,13 @@ Sean said he'd be willing to give me textures.
 
 * will eventually want to make videos probably. A thing to render a frame at a time and then use ffmpeg to combine? Would need logic for updating camera and objects over time. Fixed frame rate update obviously!
 
-? HDR to SDR tone mapping?
-
 * could have a bounding shape on "instanced meshes" which if the ray hits, gives a start/stop triangle index range to test ray against.
  * could also possibly have a scale, translation, rotation for instance.
 
 * get rid of unused models and textures when done
+
+* add russian roulette to the path tracing? https://computergraphics.stackexchange.com/questions/2316/is-russian-roulette-really-the-answer
+ * lets you get the benefits of more bounces without paying the full cost and doesn't add bias
 
 ================================= LATER IDEAS =================================
 
