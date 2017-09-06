@@ -12,19 +12,6 @@
 #include "StructuredBuffer.h"
 #include "Scenes.h"
 
-// settings
-const size_t c_width = 800;
-const size_t c_height = 600;
-const bool c_fullScreen = false;
-const bool c_vsync = false;
-const bool c_shaderDebug = true;
-const bool c_d3ddebug = true; // TODO: turn this off
-const float c_fovX = DegreesToRadians(40.0f);
-const float c_fovY = c_fovX * float(c_height) / float(c_width);
-const float c_nearPlane = 0.1f;
-const float3 c_cameraPos = { 0.0f, 0.0f, -10.0f };
-const float3 c_cameraAt = { 0.0f, 0.0f, 0.0f };
-
 // globals
 CD3D11 g_d3d;
 
@@ -55,7 +42,7 @@ namespace ShaderData
 
     namespace StructuredBuffers
     {
-        #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT) CStructuredBuffer<ShaderTypes::StructuredBuffers::##TYPENAME, COUNT> NAME;
+        #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT, CPUWRITES) CStructuredBuffer<ShaderTypes::StructuredBuffers::##TYPENAME, COUNT> NAME;
         #include "ShaderTypesList.h"
     };
 
@@ -121,14 +108,14 @@ bool WriteShaderTypesHLSL (void)
 
     // write the struct declarations for structured buffers
     fprintf(file, "//----------------------------------------------------------------------------\n//Structured Buffer Types\n//----------------------------------------------------------------------------\n");
-    #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT) fprintf(file, "struct " #TYPENAME "\n{\n");
+    #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT, CPUWRITES) fprintf(file, "struct " #TYPENAME "\n{\n");
     #define STRUCTURED_BUFFER_FIELD(NAME, TYPE) fprintf(file,"  " #TYPE " " #NAME ";\n");
     #define STRUCTURED_BUFFER_END fprintf(file, "};\n\n");
     #include "ShaderTypesList.h"
 
     // write the structured buffer declarations
     fprintf(file, "//----------------------------------------------------------------------------\n//Structured Buffers\n//----------------------------------------------------------------------------\n");
-    #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT) fprintf(file, "StructuredBuffer<" #TYPENAME "> " #NAME ";\n\n");
+    #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT, CPUWRITES) fprintf(file, "StructuredBuffer<" #TYPENAME "> " #NAME ";\nRWStructuredBuffer<" #TYPENAME "> " #NAME "_rw;\n\n");
     #include "ShaderTypesList.h"
 
     fclose(file);
@@ -203,7 +190,7 @@ void FillShaderParams (ID3D11DeviceContext* deviceContext, ID3D11ShaderReflectio
         }
     
     // reflect structured buffers
-    #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT) \
+    #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT, CPUWRITES) \
         result = reflector->GetResourceBindingDescByName(#NAME, &desc); \
         if (!FAILED(result)) { \
             ID3D11ShaderResourceView* srv = ShaderData::StructuredBuffers::##NAME.GetSRV(); \
@@ -213,6 +200,13 @@ void FillShaderParams (ID3D11DeviceContext* deviceContext, ID3D11ShaderReflectio
                 deviceContext->PSSetShaderResources(desc.BindPoint, 1, &srv); \
             else \
                 deviceContext->CSSetShaderResources(desc.BindPoint, 1, &srv); \
+        } \
+        result = reflector->GetResourceBindingDescByName(#NAME "_rw", &desc); \
+        if (!FAILED(result)) { \
+            UINT count = -1; \
+            ID3D11UnorderedAccessView* uav = ShaderData::StructuredBuffers::##NAME.GetUAV(); \
+            if (SHADER_TYPE == EShaderType::compute) \
+                deviceContext->CSSetUnorderedAccessViews(desc.BindPoint, 1, &uav, &count); \
         }
 
     // reflect textures
@@ -329,7 +323,7 @@ bool init ()
     #include "ShaderTypesList.h"
 
     // create structured buffers
-    #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT) if (!ShaderData::StructuredBuffers::NAME.Create(g_d3d.Device())) return false;
+    #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT, CPUWRITES) if (!ShaderData::StructuredBuffers::NAME.Create(g_d3d.Device(), CPUWRITES)) return false;
     #include "ShaderTypesList.h"
 
     // create textures
@@ -456,26 +450,42 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
         else
         {
             // update frame specific values
+			bool firstSample = false;
             std::chrono::duration<float> appTimeSeconds = std::chrono::high_resolution_clock::now() - appStart;
             bool writeOK = ShaderData::ConstantBuffers::ConstantsPerFrame.Write(
                 g_d3d.Context(),
-                [&appTimeSeconds] (ShaderTypes::ConstantBuffers::ConstantsPerFrame& data)
+                [&firstSample, &appTimeSeconds] (ShaderTypes::ConstantBuffers::ConstantsPerFrame& data)
                 {
                     data.frameRnd_appTime_zw[0] = RandomFloat(0.0f, 1.0f);
                     data.frameRnd_appTime_zw[1] = appTimeSeconds.count();
 
                     data.sampleCount_yzw[0]++;
+
+					firstSample = (data.sampleCount_yzw[0] == 1);
                 }
             );
             if (!writeOK)
                 done = true;
 
-            // compute
+            // TODO: only do this on sample 0
+            // TODO: make path tracing use this first hit info each time so it doesn't have to recalculate it
+            // TODO: make show path tracing use this first hit info so it doesn't have to recalculate it.
+
+			// if this is sample 0, we need to run the code that generates the first intersection that is re-used by the path tracing and the shader that shows the path tracing results
+            // TODO: temp!
+			if (1)//firstSample)
+			{
+                FillShaderParams<EShaderType::compute>(g_d3d.Context(), ShaderData::Shaders::pathTraceFirstHit.GetReflector());
+                ShaderData::Shaders::pathTraceFirstHit.Dispatch(g_d3d.Context(), dispatchX, dispatchY, 1);
+                UnbindShaderTextures<EShaderType::compute>(g_d3d.Context(), ShaderData::Shaders::pathTraceFirstHit.GetReflector());
+			}
+
+            // path tracing compute shader
             FillShaderParams<EShaderType::compute>(g_d3d.Context(), ShaderData::Shaders::pathTrace.GetReflector());
             ShaderData::Shaders::pathTrace.Dispatch(g_d3d.Context(), dispatchX, dispatchY, 1);
             UnbindShaderTextures<EShaderType::compute>(g_d3d.Context(), ShaderData::Shaders::pathTrace.GetReflector());
 
-            // vs & ps
+            // vs/ps to show the results of the path tracing
             CShader& shader = SelectShaderShowPathTrace();
             FillShaderParams<EShaderType::vertex>(g_d3d.Context(), shader.GetVSReflector());
             FillShaderParams<EShaderType::pixel>(g_d3d.Context(), shader.GetPSReflector());

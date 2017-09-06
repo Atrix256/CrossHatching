@@ -26,12 +26,12 @@ namespace ShaderTypes
     // define the structured buffer structs
     namespace StructuredBuffers
     {
-        #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT) struct TYPENAME {
+        #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT, CPUWRITES) struct TYPENAME {
         #define STRUCTURED_BUFFER_FIELD(NAME, TYPE) TYPE NAME;
         #define STRUCTURED_BUFFER_END };
         #include "ShaderTypesList.h"
 
-        #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT) typedef std::array<ShaderTypes::StructuredBuffers::##TYPENAME, COUNT> T##NAME;
+        #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT, CPUWRITES) typedef std::array<ShaderTypes::StructuredBuffers::##TYPENAME, COUNT> T##NAME;
         #include "ShaderTypesList.h"
     };
 
@@ -55,7 +55,7 @@ namespace ShaderData
 
     namespace StructuredBuffers
     {
-        #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT) extern CStructuredBuffer<ShaderTypes::StructuredBuffers::##TYPENAME, COUNT> NAME;
+        #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT, CPUWRITES) extern CStructuredBuffer<ShaderTypes::StructuredBuffers::##TYPENAME, COUNT> NAME;
         #include "ShaderTypesList.h"
     };
 

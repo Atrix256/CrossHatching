@@ -110,14 +110,28 @@ struct OBBPrim
   float4 emissive_w;
 };
 
+struct FirstRayHit
+{
+  float4 surfaceNormal_intersectTime;
+  float4 albedo_w;
+  float4 emissive_w;
+};
+
 //----------------------------------------------------------------------------
 //Structured Buffers
 //----------------------------------------------------------------------------
 StructuredBuffer<SpherePrim> Spheres;
+RWStructuredBuffer<SpherePrim> Spheres_rw;
 
 StructuredBuffer<TrianglePrim> Triangles;
+RWStructuredBuffer<TrianglePrim> Triangles_rw;
 
 StructuredBuffer<QuadPrim> Quads;
+RWStructuredBuffer<QuadPrim> Quads_rw;
 
 StructuredBuffer<OBBPrim> OBBs;
+RWStructuredBuffer<OBBPrim> OBBs_rw;
+
+StructuredBuffer<FirstRayHit> FirstRayHits;
+RWStructuredBuffer<FirstRayHit> FirstRayHits_rw;
 

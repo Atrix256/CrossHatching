@@ -7,15 +7,25 @@ class CStructuredBuffer
 {
 public:
 
-    bool Create (ID3D11Device* device)
+    bool Create (ID3D11Device* device, bool CPUWrites)
     {
         // CPU write, GPU read
         D3D11_BUFFER_DESC bufferDesc;
         ZeroMemory(&bufferDesc, sizeof(bufferDesc));
         bufferDesc.ByteWidth = NUMELEMENTS * sizeof(T);
-        bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-        bufferDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-        bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+        if (CPUWrites)
+        {
+            bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+            bufferDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+            bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+        }
+        else
+        {
+            bufferDesc.CPUAccessFlags = 0;
+            bufferDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
+            bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+        }
+        
         bufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
         bufferDesc.StructureByteStride = sizeof(T);
 
@@ -34,6 +44,24 @@ public:
         srvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
         srvDesc.Buffer.ElementWidth = NUMELEMENTS;
         result = device->CreateShaderResourceView(m_structuredBuffer.m_ptr, &srvDesc, &m_structuredBufferSRV.m_ptr);
+        if (FAILED(result))
+        {
+            return false;
+        }
+
+        if (CPUWrites)
+            return true;
+
+        // setup the unordered access view description
+        D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc;
+        uavDesc.Format = DXGI_FORMAT_UNKNOWN;
+        uavDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+        uavDesc.Buffer.FirstElement = 0;
+        uavDesc.Buffer.NumElements = NUMELEMENTS;
+        uavDesc.Buffer.Flags = 0;
+
+        // create the unordered access view for the texture.
+        result = device->CreateUnorderedAccessView(m_structuredBuffer.m_ptr, &uavDesc, &m_structuredBufferUAV.m_ptr);
         if (FAILED(result))
         {
             return false;
@@ -69,6 +97,7 @@ public:
     }
 
     ID3D11ShaderResourceView* GetSRV () { return m_structuredBufferSRV.m_ptr; }
+    ID3D11UnorderedAccessView* GetUAV() { return m_structuredBufferUAV.m_ptr; }
 
 private:
 
@@ -76,4 +105,5 @@ private:
 
     CAutoReleasePointer<ID3D11Buffer> m_structuredBuffer;
     CAutoReleasePointer<ID3D11ShaderResourceView> m_structuredBufferSRV;
+    CAutoReleasePointer<ID3D11UnorderedAccessView> m_structuredBufferUAV;
 };

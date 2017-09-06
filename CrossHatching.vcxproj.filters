@@ -34,6 +34,7 @@
       <Filter>Shaders</Filter>
     </ClInclude>
     <ClInclude Include="tiny_obj_loader.h" />
+    <ClInclude Include="Settings.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\ShowPathTrace.fx">

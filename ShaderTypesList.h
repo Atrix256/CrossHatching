@@ -20,10 +20,11 @@ CONSTANT_BUFFER_END() : ends a constant buffer definition
                       Structured Buffers
 ===================================================================
 
-STRUCTURED_BUFFER_BEGIN(Name, TypeName, Count) : starts a structured buffer definition
-  Name     - the name of the structured buffer to begin
-  TypeName - the name of the individual struct type
-  Count    - how many items there are in the buffer
+STRUCTURED_BUFFER_BEGIN(Name, TypeName, Count, CPUWrites) : starts a structured buffer definition
+  Name      - the name of the structured buffer to begin
+  TypeName  - the name of the individual struct type
+  Count     - how many items there are in the buffer
+  CPUWrites - if true, written by CPU, read by GPU. If false, written/read by GPU
 
 STRUCTURED_BUFFER_FIELD(Name, Type) : defines a field
   Name - the name of the field
@@ -78,6 +79,8 @@ SHADER_CS(Name, FileName, Entry)
 
 */
 
+#include "Settings.h"
+
 //=================================================================
 // define anything the caller didn't define for convenience
 
@@ -94,7 +97,7 @@ SHADER_CS(Name, FileName, Entry)
 #endif
 
 #ifndef STRUCTURED_BUFFER_BEGIN
-#define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT)
+#define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT, CPUWRITES)
 #endif
 
 #ifndef STRUCTURED_BUFFER_FIELD
@@ -154,13 +157,13 @@ CONSTANT_BUFFER_END
 //                    Structured Buffers
 //=================================================================
 
-STRUCTURED_BUFFER_BEGIN(Spheres, SpherePrim, 10)
+STRUCTURED_BUFFER_BEGIN(Spheres, SpherePrim, 10, true)
     STRUCTURED_BUFFER_FIELD(position_Radius, float4)
     STRUCTURED_BUFFER_FIELD(albedo_w, float4)
     STRUCTURED_BUFFER_FIELD(emissive_w, float4)
 STRUCTURED_BUFFER_END
 
-STRUCTURED_BUFFER_BEGIN(Triangles, TrianglePrim, 1000)
+STRUCTURED_BUFFER_BEGIN(Triangles, TrianglePrim, 1000, true)
     STRUCTURED_BUFFER_FIELD(positionA_w, float4)
     STRUCTURED_BUFFER_FIELD(positionB_w, float4)
     STRUCTURED_BUFFER_FIELD(positionC_w, float4)
@@ -169,7 +172,7 @@ STRUCTURED_BUFFER_BEGIN(Triangles, TrianglePrim, 1000)
     STRUCTURED_BUFFER_FIELD(emissive_w, float4)
 STRUCTURED_BUFFER_END
 
-STRUCTURED_BUFFER_BEGIN(Quads, QuadPrim, 10)
+STRUCTURED_BUFFER_BEGIN(Quads, QuadPrim, 10, true)
     STRUCTURED_BUFFER_FIELD(positionA_w, float4)
     STRUCTURED_BUFFER_FIELD(positionB_w, float4)
     STRUCTURED_BUFFER_FIELD(positionC_w, float4)
@@ -179,12 +182,18 @@ STRUCTURED_BUFFER_BEGIN(Quads, QuadPrim, 10)
     STRUCTURED_BUFFER_FIELD(emissive_w, float4)
 STRUCTURED_BUFFER_END
 
-STRUCTURED_BUFFER_BEGIN(OBBs, OBBPrim, 10)
+STRUCTURED_BUFFER_BEGIN(OBBs, OBBPrim, 10, true)
     STRUCTURED_BUFFER_FIELD(position_w, float4)
     STRUCTURED_BUFFER_FIELD(radius_w, float4)
     STRUCTURED_BUFFER_FIELD(XAxis_w, float4)
     STRUCTURED_BUFFER_FIELD(YAxis_w, float4)
     STRUCTURED_BUFFER_FIELD(ZAxis_w, float4)
+    STRUCTURED_BUFFER_FIELD(albedo_w, float4)
+    STRUCTURED_BUFFER_FIELD(emissive_w, float4)
+STRUCTURED_BUFFER_END
+
+STRUCTURED_BUFFER_BEGIN(FirstRayHits, FirstRayHit, c_width * c_height, false)
+    STRUCTURED_BUFFER_FIELD(surfaceNormal_intersectTime, float4)
     STRUCTURED_BUFFER_FIELD(albedo_w, float4)
     STRUCTURED_BUFFER_FIELD(emissive_w, float4)
 STRUCTURED_BUFFER_END
@@ -218,6 +227,7 @@ TEXTURE_BUFFER(pathTraceOutput, float4, DXGI_FORMAT_R32G32B32A32_FLOAT)
 //=================================================================
 
 SHADER_CS(pathTrace, L"Shaders/PathTrace.fx", "cs_main")
+SHADER_CS(pathTraceFirstHit, L"Shaders/PathTrace.fx", "cs_main_FirstHit")
 SHADER_VSPS(showPathTrace_Color_Shade, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_color_shade", Pos2D)
 SHADER_VSPS(showPathTrace_Grey_Shade, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_grey_shade", Pos2D)
 SHADER_VSPS(showPathTrace_Color_CrossHatch, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_color_crosshatch", Pos2D)
