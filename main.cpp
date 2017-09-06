@@ -422,17 +422,16 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
     FillSceneData(EScene::SphereOnPlane_LowLight, g_d3d.Context());
 
     // TODO: formalize this after it's working
-    CTexture slices[] = {
-        ShaderData::Textures::crosshatch0,
-        ShaderData::Textures::crosshatch1,
-        ShaderData::Textures::crosshatch2,
-        ShaderData::Textures::crosshatch3,
-        ShaderData::Textures::crosshatch4,
-        ShaderData::Textures::crosshatch5,
-        ShaderData::Textures::crosshatch6,
-        ShaderData::Textures::crosshatch7,
-        ShaderData::Textures::crosshatch8
-    };
+    std::vector<CTexture*> slices;
+    slices.push_back(&ShaderData::Textures::crosshatch0);
+    slices.push_back(&ShaderData::Textures::crosshatch1);
+    slices.push_back(&ShaderData::Textures::crosshatch2);
+    slices.push_back(&ShaderData::Textures::crosshatch3);
+    slices.push_back(&ShaderData::Textures::crosshatch4);
+    slices.push_back(&ShaderData::Textures::crosshatch5);
+    slices.push_back(&ShaderData::Textures::crosshatch6);
+    slices.push_back(&ShaderData::Textures::crosshatch7);
+    slices.push_back(&ShaderData::Textures::crosshatch8);
 
     if (!crossHatching.CreateVolume(g_d3d.Device(), g_d3d.Context(), 193, 193, 9, slices, DXGI_FORMAT_R8G8B8A8_UNORM))
         return 0;

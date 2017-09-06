@@ -227,7 +227,7 @@ bool CTexture::Create (ID3D11Device* device, ID3D11DeviceContext* deviceContext,
     return true;
 }
 
-bool CTexture::CreateVolume (ID3D11Device* device, ID3D11DeviceContext* deviceContext, size_t width, size_t height, size_t depth, CTexture* slices, DXGI_FORMAT format)
+bool CTexture::CreateVolume (ID3D11Device* device, ID3D11DeviceContext* deviceContext, size_t width, size_t height, size_t depth, const std::vector<CTexture*>& slices, DXGI_FORMAT format)
 {
     D3D11_TEXTURE3D_DESC textureDesc;
     HRESULT hResult;
@@ -255,7 +255,7 @@ bool CTexture::CreateVolume (ID3D11Device* device, ID3D11DeviceContext* deviceCo
     }
 
     for (size_t i = 0; i < depth; ++i)
-        deviceContext->CopySubresourceRegion(m_texture3D.m_ptr, 0, 0, 0, (UINT)i, slices[i].GetTexture2D(), 0, NULL);
+        deviceContext->CopySubresourceRegion(m_texture3D.m_ptr, 0, 0, 0, (UINT)i, slices[i]->GetTexture2D(), 0, NULL);
 
     // Setup the shader resource view description.
     srvDesc.Format = textureDesc.Format;

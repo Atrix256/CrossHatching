@@ -2,6 +2,7 @@
 
 #include <d3d11.h>
 #include "Utils.h"
+#include <vector>
 
 class CTexture
 {
@@ -10,7 +11,7 @@ public:
 
     bool Create (ID3D11Device* device, ID3D11DeviceContext* deviceContext, size_t width, size_t height, DXGI_FORMAT format);
 
-    bool CreateVolume (ID3D11Device* device, ID3D11DeviceContext* deviceContext, size_t width, size_t height, size_t depth, CTexture* slices, DXGI_FORMAT format);
+    bool CreateVolume (ID3D11Device* device, ID3D11DeviceContext* deviceContext, size_t width, size_t height, size_t depth, const std::vector<CTexture*>& slices, DXGI_FORMAT format);
     
     ID3D11ShaderResourceView* GetSRV () { return m_textureSRV.m_ptr; }
 
