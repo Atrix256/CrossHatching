@@ -1,5 +1,11 @@
+? is the cross hatching texture lookup working correctly? it seems like it might not be.
+
+* need a cross hatching uv scale that the triplanar stuff multiplies position by to scale the uvs
+
 * on spheres there is a weird thing happening to the textures, check it out (may be due to triplanar)
 * on greyscale crosshatching, it doesn't look correct. Should be choosing darker slices of the array but doesn't seem to be.
+
+* if we do the thing where the first hit is in a special buffer that gets re-used, the show path tracing shaders can use that first hit info too without having to find it
 
 * load crosshatching textures 0-8 as a 3d volume texture. use uv's and (SDR) brightness to make uvw coordinate.
  * render!
