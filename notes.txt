@@ -2,6 +2,7 @@
  * maybe you need to compress the lights and darks?
  ? maybe w is calculated incorrectly?
 
+* the problem / difference from real paper may be texture scale differences.
 
 * try some minor optimizations to see if they help much. (write details in notes for blog post i guess)
  * N samples per call, instead of just the 1.  may decrease time spent on (texture) memory read / write?
