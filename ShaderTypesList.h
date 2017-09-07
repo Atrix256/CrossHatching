@@ -240,6 +240,7 @@ TEXTURE_IMAGE(crosshatch5, "Art/crosshatch5.tga")
 TEXTURE_IMAGE(crosshatch6, "Art/crosshatch6.tga")
 TEXTURE_IMAGE(crosshatch7, "Art/crosshatch7.tga")
 TEXTURE_IMAGE(crosshatch8, "Art/crosshatch8.tga")
+
 TEXTURE_BUFFER(pathTraceOutput, float4, DXGI_FORMAT_R32G32B32A32_FLOAT)
 
 TEXTURE_VOLUME_BEGIN(crosshatchvolume)

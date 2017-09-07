@@ -5,6 +5,7 @@
 //----------------------------------------------------------------------------
 SamplerState SamplerLinearWrap;
 SamplerState SamplerNearestWrap;
+SamplerState SamplerAnisoWrap;
 
 //----------------------------------------------------------------------------
 //Textures

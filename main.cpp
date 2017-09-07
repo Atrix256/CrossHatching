@@ -82,7 +82,7 @@ bool WriteShaderTypesHLSL (void)
 
     // hard coded sampler states
     fprintf(file, "//----------------------------------------------------------------------------\n//Samplers\n//----------------------------------------------------------------------------\n");
-    fprintf(file, "SamplerState SamplerLinearWrap;\nSamplerState SamplerNearestWrap;\n\n");
+    fprintf(file, "SamplerState SamplerLinearWrap;\nSamplerState SamplerNearestWrap;\nSamplerState SamplerAnisoWrap;\n\n");
 
     // write the texture declarations
     fprintf(file, "//----------------------------------------------------------------------------\n//Textures\n//----------------------------------------------------------------------------\n");
@@ -316,6 +316,17 @@ void FillShaderParams (ID3D11DeviceContext* deviceContext, ID3D11ShaderReflectio
         else
             deviceContext->CSSetSamplers(desc.BindPoint, 1, &sampler);
     }
+    result = reflector->GetResourceBindingDescByName("SamplerAnisoWrap", &desc);
+    if (!FAILED(result))
+    {
+        ID3D11SamplerState* sampler = g_d3d.SamplerAnisoWrap();
+        if (SHADER_TYPE == EShaderType::vertex)
+            deviceContext->VSSetSamplers(desc.BindPoint, 1, &sampler);
+        else if (SHADER_TYPE == EShaderType::pixel)
+            deviceContext->PSSetSamplers(desc.BindPoint, 1, &sampler);
+        else
+            deviceContext->CSSetSamplers(desc.BindPoint, 1, &sampler);
+    }
 }
 
 void OnKeyPress (unsigned char key, bool pressed)
@@ -496,8 +507,6 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
             );
             if (!writeOK)
                 done = true;
-
-            // TODO: profile with and without this first hit info re-use (when plugged in or at work!)
 
 			// if this is sample 0, we need to run the code that generates the first intersection that is re-used by the path tracing and the shader that shows the path tracing results
 			if (firstSample)

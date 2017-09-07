@@ -1,35 +1,20 @@
-* on spheres there is a weird line on the textures, check it out (may be due to triplanar?)
-
-* if we do the thing where the first hit is in a special buffer that gets re-used, the show path tracing shaders can use that first hit info too without having to find it
-
-* anisotropic filtering may be in order for using the cross hatching texture
- * could also try no mipmaps maybe?
+? in scene 3, why isn't the light more obvious?
+ * maybe you need to compress the lights and darks?
+ ? maybe w is calculated incorrectly?
 
 
 * try some minor optimizations to see if they help much. (write details in notes for blog post i guess)
- * re-use first hit of ray trace.  turn this on / off, see if it affects FPS on any scenes.
- * N samples per call, instead of just the 1.
- * bounding volume (box? sphere?) as pre-test for rays.
- ! actually maybe screw optimizations... the point is the cross hatching. although it would be better if it ran faster...but maybe crosshatching first, speed up investigations after
- * 3 bounces is probably enough. maybe even 2.
+ * N samples per call, instead of just the 1.  may decrease time spent on (texture) memory read / write?
+ * bounding volume (box? sphere?) as pre-test for rays for meshes.
 
-! could do a special shader when samplecount = 0, where it finds the first hit and stores time t of first hit in alpha channel. 
- * then re-use that as a starting point for each sample
+ * on spheres there is a weird line on the textures, check it out (may be due to triplanar?)
 
-
-
-
-
-! for color cross hatching, try YCoCg-R? https://en.wikipedia.org/wiki/YCoCg
-
-! in greyscale crosshatch mode, the first scene is darker than the second! that doesn't seem correct
+! for color cross hatching, try YCoCg-R instead of YUV? https://en.wikipedia.org/wiki/YCoCg
 
 * use D3DX11CreateTextureFromFile() to load textures so you can use PNG's etc
 
 * need to figure out how to process the cross hatching textures. dilation filter, even color texture etc.
  * eventually write code that does this
-
-* if the path trace really is just outputting float32 R,G,B, maybe a structured buffer would be better than a texture? i dunno
 
 ? should source crosshatching textures be single channel? maybe doesn't matter
 
@@ -45,9 +30,6 @@
 * get some fun models to use for testing, make some fun scenes.
 * make it use textures for shading - using the color to tint the non black parts of the textures.
 
-! maybe do N samples per frame instead of the 1, may decrease time spent on (texture) memory read / write?
- * maybe could also do N samples at each bounce (recursively?) not sure if helpful but maybe
-
 ? have c++ side send an iterative sum of golden ratio to shader?
  * or try just adding the random number per frame to it!
   * i tried that and it looked aweful, maybe my prng sucks with seeds that are in 0-1?
@@ -58,8 +40,6 @@
 
 * bayesian integration would probably be better here since there's no specular. but there is occlusion so...
  * dunno how bayesian integration works. would be good to learn but maybe out of scope
-
-? get rid of vertex buffer and make it from vertex id
 
 ! the path on cornell box has red wall on left, but the "showpathtrace" flips it correctly to red wall on right. should fix that minor wrinkle
 
@@ -90,6 +70,8 @@ Sean said he'd be willing to give me textures.
 
 * add russian roulette to the path tracing? https://computergraphics.stackexchange.com/questions/2316/is-russian-roulette-really-the-answer
  * lets you get the benefits of more bounces without paying the full cost and doesn't add bias
+
+? could try jittering the first hit. anti alias may be fine shrug.
 
 ================================= LATER IDEAS =================================
 

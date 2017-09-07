@@ -49,7 +49,7 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch)
     // get our first ray hit info from the FirstRayHits buffer
     uint dimsX, dimsY;
     pathTraceOutput.GetDimensions(dimsX, dimsY);
-    uint2 pixelPos = uint2(input.uv * float2(dimsX, dimsY));
+    uint2 pixelPos = uint2((float2(1.0f, 1.0f) - input.uv) * float2(dimsX, dimsY));
     uint pixelIndex = pixelPos.y * dimsX + pixelPos.x;
     SRayHitInfo rayHitInfo;
     rayHitInfo.m_surfaceNormal = FirstRayHits[pixelIndex].surfaceNormal_intersectTime.xyz;
@@ -61,15 +61,13 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch)
     float3 rayPos, rayDir;
     CalculateRay(float2(1.0f, 1.0f) - input.uv, rayPos, rayDir);
 
-	// TODO: make this a fallback plane (triangle probably or quad) so the background isn't curved! But, should be regardless of camera direction.
-    // have a fallback sphere in the sky to catch anything missed
+    // if the ray didn't hit anything, fake a planar hit for shading purposes
     if (rayHitInfo.m_intersectTime < 0.0f)
     {
-        SpherePrim fallbackSphere;
-        fallbackSphere.position_Radius.xyz = cameraPos_FOVX.xyz;
-        fallbackSphere.position_Radius.w = 10.0f;
-        RayIntersectsSphere(rayPos, rayDir, fallbackSphere, rayHitInfo);
-		rayHitInfo.m_intersectTime /= uvmultiplier_yzw.x;
+        rayHitInfo.m_intersectTime = 2.0f / uvmultiplier_yzw.x;
+        rayHitInfo.m_surfaceNormal = normalize(cameraPos_FOVX.xyz - cameraAt_FOVY.xyz);
+        rayHitInfo.m_albedo = float3(0.0f, 0.0f, 0.0f);
+        rayHitInfo.m_emissive = float3(0.0f, 0.0f, 0.0f);
     }
 
     // get the lit value
@@ -105,9 +103,9 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch)
         
 		// triplanar projection sample the crosshatching texture
         float crossHatchTexel =
-            crosshatchvolume.Sample(SamplerLinearWrap, float3(uvx, w)).r * rayHitInfo.m_surfaceNormal.x +
-            crosshatchvolume.Sample(SamplerLinearWrap, float3(uvy, w)).r * rayHitInfo.m_surfaceNormal.y +
-            crosshatchvolume.Sample(SamplerLinearWrap, float3(uvz, w)).r * rayHitInfo.m_surfaceNormal.z;
+            crosshatchvolume.Sample(SamplerAnisoWrap, float3(uvx, w)).r * rayHitInfo.m_surfaceNormal.x +
+            crosshatchvolume.Sample(SamplerAnisoWrap, float3(uvy, w)).r * rayHitInfo.m_surfaceNormal.y +
+            crosshatchvolume.Sample(SamplerAnisoWrap, float3(uvz, w)).r * rayHitInfo.m_surfaceNormal.z;
         crossHatchTexel = crossHatchTexel / (rayHitInfo.m_surfaceNormal.x + rayHitInfo.m_surfaceNormal.y + rayHitInfo.m_surfaceNormal.z);
 
         // apply crosshatching texture

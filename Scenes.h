@@ -9,8 +9,8 @@ enum class EScene
     CornellBox_SmallLight,
     CornellBox_BigLight,
     FurnaceTest,
-    CornellObj, // TODO: temp
-    ObjTest,    // TODO: temp
+    CornellObj,
+    ObjTest,
 };
 
 bool FillSceneData (EScene scene, ID3D11DeviceContext* context);
