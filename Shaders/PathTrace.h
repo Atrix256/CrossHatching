@@ -474,3 +474,21 @@ float3 Light_Incoming (in float3 rayPos, in float3 rayDir, inout float rngSeed)
     // else, return the amount of light coming towards us from that point on the object we hit
     return Light_Outgoing(rayHitInfo, rayPos + rayDir * rayHitInfo.m_intersectTime, rngSeed);
 }
+
+//----------------------------------------------------------------------------
+float3 Light_Incoming (in float3 rayPos, in float3 rayDir, inout float rngSeed, in FirstRayHit firstRayHit)
+{
+    // get our first ray hit from the info provided
+    SRayHitInfo rayHitInfo;
+    rayHitInfo.m_surfaceNormal = firstRayHit.surfaceNormal_intersectTime.xyz;
+    rayHitInfo.m_intersectTime = firstRayHit.surfaceNormal_intersectTime.w;
+    rayHitInfo.m_albedo = firstRayHit.albedo_w.xyz;
+    rayHitInfo.m_emissive = firstRayHit.emissive_w.xyz;
+
+    // if it missed, return the miss color
+    if (rayHitInfo.m_intersectTime < 0.0f)
+        return nearPlaneDist_missColor.yzw;
+
+    // else, return the amount of light coming towards us from that point on the object we hit
+    return Light_Outgoing(rayHitInfo, rayPos + rayDir * rayHitInfo.m_intersectTime, rngSeed);
+}

@@ -167,6 +167,26 @@ void UnbindShaderTextures (ID3D11DeviceContext* deviceContext, ID3D11ShaderRefle
                 deviceContext->CSSetUnorderedAccessViews(desc.BindPoint, 1, &uav, &count); \
         }
 
+    // reflect structured buffers
+    #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT, CPUWRITES) \
+        result = reflector->GetResourceBindingDescByName(#NAME, &desc); \
+        if (!FAILED(result)) { \
+            ID3D11ShaderResourceView* srv = nullptr; \
+            if (SHADER_TYPE == EShaderType::vertex) \
+                deviceContext->VSSetShaderResources(desc.BindPoint, 1, &srv); \
+            else if (SHADER_TYPE == EShaderType::pixel) \
+                deviceContext->PSSetShaderResources(desc.BindPoint, 1, &srv); \
+            else \
+                deviceContext->CSSetShaderResources(desc.BindPoint, 1, &srv); \
+        } \
+        result = reflector->GetResourceBindingDescByName(#NAME "_rw", &desc); \
+        if (!FAILED(result)) { \
+            UINT count = -1; \
+            ID3D11UnorderedAccessView* uav = nullptr; \
+            if (SHADER_TYPE == EShaderType::compute) \
+                deviceContext->CSSetUnorderedAccessViews(desc.BindPoint, 1, &uav, &count); \
+        }
+
     #include "ShaderTypesList.h"
 }
 
@@ -467,13 +487,10 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
             if (!writeOK)
                 done = true;
 
-            // TODO: only do this on sample 0
-            // TODO: make path tracing use this first hit info each time so it doesn't have to recalculate it
-            // TODO: make show path tracing use this first hit info so it doesn't have to recalculate it.
+            // TODO: profile with and without this first hit info re-use (when plugged in or at work!)
 
 			// if this is sample 0, we need to run the code that generates the first intersection that is re-used by the path tracing and the shader that shows the path tracing results
-            // TODO: temp!
-			if (1)//firstSample)
+			if (firstSample)
 			{
                 FillShaderParams<EShaderType::compute>(g_d3d.Context(), ShaderData::Shaders::pathTraceFirstHit.GetReflector());
                 ShaderData::Shaders::pathTraceFirstHit.Dispatch(g_d3d.Context(), dispatchX, dispatchY, 1);

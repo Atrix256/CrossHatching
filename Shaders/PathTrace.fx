@@ -30,7 +30,8 @@ void cs_main (
     CalculateRay(uv, rayPos, rayDir);
 
     // path trace
-    float3 light = Light_Incoming(rayPos, rayDir, rngSeed);
+    uint pixelIndex = dispatchThreadID.y * dimsX + dispatchThreadID.x;
+    float3 light = Light_Incoming(rayPos, rayDir, rngSeed, FirstRayHits[pixelIndex]);
 
     // use lerping for incremental averageing:  https://blog.demofox.org/2016/08/23/incremental-averaging/
     // lerp from the old value to the current and write it back out

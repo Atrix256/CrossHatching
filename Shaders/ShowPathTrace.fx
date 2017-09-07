@@ -49,10 +49,20 @@ float3 YUVToRGB (float3 yuv)
 //----------------------------------------------------------------------------
 float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch)
 {
+    // get our first ray hit info from the FirstRayHits buffer
+    uint dimsX, dimsY;
+    pathTraceOutput.GetDimensions(dimsX, dimsY);
+    uint2 pixelPos = uint2(input.uv * float2(dimsX, dimsY));
+    uint pixelIndex = pixelPos.y * dimsX + pixelPos.x;
+    SRayHitInfo rayHitInfo;
+    rayHitInfo.m_surfaceNormal = FirstRayHits[pixelIndex].surfaceNormal_intersectTime.xyz;
+    rayHitInfo.m_intersectTime = FirstRayHits[pixelIndex].surfaceNormal_intersectTime.w;
+    rayHitInfo.m_albedo = FirstRayHits[pixelIndex].albedo_w.xyz;
+    rayHitInfo.m_emissive = FirstRayHits[pixelIndex].emissive_w.xyz;
+
     // calculate the ray for this pixel and get the time of the first ray hit
     float3 rayPos, rayDir;
     CalculateRay(float2(1.0f, 1.0f) - input.uv, rayPos, rayDir);
-    SRayHitInfo rayHitInfo = ClosestIntersection(rayPos, rayDir);
 
 	// TODO: make this a fallback plane (triangle probably or quad) so the background isn't curved! But, should be regardless of camera direction.
     // have a fallback sphere in the sky to catch anything missed
