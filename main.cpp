@@ -15,9 +15,6 @@
 // globals
 CD3D11 g_d3d;
 
-// TODO: temp
-CTexture crossHatching;
-
 bool g_showGrey = false;
 bool g_showCrossHatch = false;
 
@@ -50,6 +47,7 @@ namespace ShaderData
     {
         #define TEXTURE_IMAGE(NAME, FILENAME) CTexture NAME;
         #define TEXTURE_BUFFER(NAME, SHADERTYPE, FORMAT) CTexture NAME;
+        #define TEXTURE_VOLUME_BEGIN(NAME) CTexture NAME;
         #include "ShaderTypesList.h"
     }
 
@@ -90,6 +88,7 @@ bool WriteShaderTypesHLSL (void)
     fprintf(file, "//----------------------------------------------------------------------------\n//Textures\n//----------------------------------------------------------------------------\n");
     #define TEXTURE_IMAGE(NAME, FILENAME) fprintf(file, "Texture2D " #NAME ";\nRWTexture2D<float4> " #NAME "_rw;\n\n");
     #define TEXTURE_BUFFER(NAME, SHADERTYPE, FORMAT) fprintf(file, "Texture2D " #NAME ";\nRWTexture2D<" #SHADERTYPE "> " #NAME "_rw;\n\n");
+    #define TEXTURE_VOLUME_BEGIN(NAME) fprintf(file, "Texture3D " #NAME ";\n\n");
     #include "ShaderTypesList.h"
 
     // write the cbuffer declarations
@@ -166,6 +165,18 @@ void UnbindShaderTextures (ID3D11DeviceContext* deviceContext, ID3D11ShaderRefle
             if (SHADER_TYPE == EShaderType::compute) \
                 deviceContext->CSSetUnorderedAccessViews(desc.BindPoint, 1, &uav, &count); \
         }
+
+    #define TEXTURE_VOLUME_BEGIN(NAME) \
+        result = reflector->GetResourceBindingDescByName(#NAME, &desc); \
+        if (!FAILED(result)) { \
+            ID3D11ShaderResourceView* srv = nullptr; \
+            if (SHADER_TYPE == EShaderType::vertex) \
+                deviceContext->VSSetShaderResources(desc.BindPoint, 1, &srv); \
+            else if (SHADER_TYPE == EShaderType::pixel) \
+                deviceContext->PSSetShaderResources(desc.BindPoint, 1, &srv); \
+            else \
+                deviceContext->CSSetShaderResources(desc.BindPoint, 1, &srv); \
+        } 
 
     // reflect structured buffers
     #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT, CPUWRITES) \
@@ -248,6 +259,7 @@ void FillShaderParams (ID3D11DeviceContext* deviceContext, ID3D11ShaderReflectio
             if (SHADER_TYPE == EShaderType::compute) \
                 deviceContext->CSSetUnorderedAccessViews(desc.BindPoint, 1, &uav, &count); \
         }
+
     #define TEXTURE_BUFFER(NAME, SHADERTYPE, FORMAT) \
         result = reflector->GetResourceBindingDescByName(#NAME, &desc); \
         if (!FAILED(result)) { \
@@ -267,20 +279,19 @@ void FillShaderParams (ID3D11DeviceContext* deviceContext, ID3D11ShaderReflectio
                 deviceContext->CSSetUnorderedAccessViews(desc.BindPoint, 1, &uav, &count); \
         }
 
-    #include "ShaderTypesList.h"
+    #define TEXTURE_VOLUME_BEGIN(NAME) \
+        result = reflector->GetResourceBindingDescByName(#NAME, &desc); \
+        if (!FAILED(result)) { \
+            ID3D11ShaderResourceView* srv = ShaderData::Textures::##NAME.GetSRV(); \
+            if (SHADER_TYPE == EShaderType::vertex) \
+                deviceContext->VSSetShaderResources(desc.BindPoint, 1, &srv); \
+            else if (SHADER_TYPE == EShaderType::pixel) \
+                deviceContext->PSSetShaderResources(desc.BindPoint, 1, &srv); \
+            else \
+                deviceContext->CSSetShaderResources(desc.BindPoint, 1, &srv); \
+        }
 
-    // TODO: temp! hard coded textures
-    result = reflector->GetResourceBindingDescByName("chvolume", &desc);
-    if (!FAILED(result))
-    {
-        ID3D11ShaderResourceView* srv = crossHatching.GetSRV();
-        if (SHADER_TYPE == EShaderType::vertex) 
-            deviceContext->VSSetShaderResources(desc.BindPoint, 1, &srv); 
-        else if (SHADER_TYPE == EShaderType::pixel) 
-            deviceContext->PSSetShaderResources(desc.BindPoint, 1, &srv); 
-        else 
-            deviceContext->CSSetShaderResources(desc.BindPoint, 1, &srv); 
-    }
+    #include "ShaderTypesList.h"
 
     // hard coded samplers
     result = reflector->GetResourceBindingDescByName("SamplerLinearWrap", &desc);
@@ -352,6 +363,20 @@ bool init ()
     #define TEXTURE_BUFFER(NAME, SHADERTYPE, FORMAT) \
         if(!ShaderData::Textures::NAME.Create(g_d3d.Device(), g_d3d.Context(), c_width, c_height, FORMAT)) return false;
     #include "ShaderTypesList.h"
+
+    // create volume textures
+    #define TEXTURE_VOLUME_BEGIN(NAME) CTexture* slices##NAME [] = {
+    #define TEXTURE_VOLUME_SLICE(TEXTURE) &ShaderData::Textures::##TEXTURE,
+    #define TEXTURE_VOLUME_END };
+    #include "ShaderTypesList.h"
+
+    #define TEXTURE_VOLUME_BEGIN(NAME) \
+        size_t numSlices##NAME = sizeof(slices##NAME) / sizeof(slices##NAME[0]);\
+        if (!ShaderData::Textures::NAME.CreateVolume(g_d3d.Device(), g_d3d.Context(), slices##NAME, numSlices##NAME)) return false;
+    #include "ShaderTypesList.h"
+
+    //if (!crossHatching.CreateVolume(g_d3d.Device(), g_d3d.Context(), 193, 193, 9, slices, DXGI_FORMAT_R8G8B8A8_UNORM))
+    //    return 0;
 
     // create shaders
     #define SHADER_CS(NAME, FILENAME, ENTRY) \
@@ -435,21 +460,6 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
     const size_t dispatchY = 1 + c_height / 32;
 
     FillSceneData(EScene::SphereOnPlane_LowLight, g_d3d.Context());
-
-    // TODO: formalize this after it's working
-    std::vector<CTexture*> slices;
-    slices.push_back(&ShaderData::Textures::crosshatch0);
-    slices.push_back(&ShaderData::Textures::crosshatch1);
-    slices.push_back(&ShaderData::Textures::crosshatch2);
-    slices.push_back(&ShaderData::Textures::crosshatch3);
-    slices.push_back(&ShaderData::Textures::crosshatch4);
-    slices.push_back(&ShaderData::Textures::crosshatch5);
-    slices.push_back(&ShaderData::Textures::crosshatch6);
-    slices.push_back(&ShaderData::Textures::crosshatch7);
-    slices.push_back(&ShaderData::Textures::crosshatch8);
-
-    if (!crossHatching.CreateVolume(g_d3d.Device(), g_d3d.Context(), 193, 193, 9, slices, DXGI_FORMAT_R8G8B8A8_UNORM))
-        return 0;
 
     bool done = false;
     while (!done)

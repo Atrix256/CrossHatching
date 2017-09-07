@@ -61,6 +61,14 @@ TEXTURE_BUFFER(Name, ShaderType, Format)
   ShaderType - as declared in shader, such as float or float4
   Format     - d3d image format, like DXGI_FORMAT_R32_FLOAT or DXGI_FORMAT_R8G8B8A8_UNORM
 
+TEXTURE_VOLUME_BEGIN(Name)
+  Name       - The name of the volume texture as it appears in C++ and in the shader
+
+TEXTURE_VOLUME_SLICE(Texture)
+  Texture    - The name of the texture to use for a slice of the volume texture
+
+TEXTURE_VOLUME_END
+
 ===================================================================
                           Shaders
 ===================================================================
@@ -126,6 +134,18 @@ SHADER_CS(Name, FileName, Entry)
 
 #ifndef TEXTURE_BUFFER
 #define TEXTURE_BUFFER(NAME, SHADERTYPE, FORMAT)
+#endif
+
+#ifndef TEXTURE_VOLUME_BEGIN
+#define TEXTURE_VOLUME_BEGIN(NAME)
+#endif
+
+#ifndef TEXTURE_VOLUME_SLICE
+#define TEXTURE_VOLUME_SLICE(TEXTURE)
+#endif
+
+#ifndef TEXTURE_VOLUME_END
+#define TEXTURE_VOLUME_END
 #endif
 
 #ifndef SHADER_VSPS
@@ -222,6 +242,18 @@ TEXTURE_IMAGE(crosshatch7, "Art/crosshatch7.tga")
 TEXTURE_IMAGE(crosshatch8, "Art/crosshatch8.tga")
 TEXTURE_BUFFER(pathTraceOutput, float4, DXGI_FORMAT_R32G32B32A32_FLOAT)
 
+TEXTURE_VOLUME_BEGIN(crosshatchvolume)
+    TEXTURE_VOLUME_SLICE(crosshatch0)
+    TEXTURE_VOLUME_SLICE(crosshatch1)
+    TEXTURE_VOLUME_SLICE(crosshatch2)
+    TEXTURE_VOLUME_SLICE(crosshatch3)
+    TEXTURE_VOLUME_SLICE(crosshatch4)
+    TEXTURE_VOLUME_SLICE(crosshatch5)
+    TEXTURE_VOLUME_SLICE(crosshatch6)
+    TEXTURE_VOLUME_SLICE(crosshatch7)
+    TEXTURE_VOLUME_SLICE(crosshatch8)
+TEXTURE_VOLUME_END
+
 //=================================================================
 //                       Shaders
 //=================================================================
@@ -246,5 +278,8 @@ SHADER_VSPS(showPathTrace_Grey_CrossHatch, L"Shaders/ShowPathTrace.fx", "vs_main
 #undef VERTEX_FORMAT_END
 #undef TEXTURE_IMAGE
 #undef TEXTURE_BUFFER
+#undef TEXTURE_VOLUME_BEGIN
+#undef TEXTURE_VOLUME_SLICE
+#undef TEXTURE_VOLUME_END
 #undef SHADER_VSPS
 #undef SHADER_CS

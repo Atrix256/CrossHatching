@@ -1,8 +1,5 @@
 #include "PathTrace.h"
 
-// TODO: temp til volume textures are more formalized
-Texture3D chvolume;
-
 //----------------------------------------------------------------------------
 struct SPixelInput
 {
@@ -103,14 +100,14 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch)
 		// This is necesary because values reside in the center of pixels, even in volume textures.
 		// For instance, brightness 0 isn't the darkest value. brightess at pixel depth 0.5 is.
 		uint volumeDimsX, volumeDimsY, volumeDimsZ;
-		chvolume.GetDimensions(volumeDimsX, volumeDimsY, volumeDimsZ);
+        crosshatchvolume.GetDimensions(volumeDimsX, volumeDimsY, volumeDimsZ);
 		float w = yuv.x * float(volumeDimsZ - 1) / float(volumeDimsZ) + 1.0f / float(volumeDimsZ * 2);
         
 		// triplanar projection sample the crosshatching texture
         float crossHatchTexel =
-            chvolume.Sample(SamplerLinearWrap, float3(uvx, w)).r * rayHitInfo.m_surfaceNormal.x +
-            chvolume.Sample(SamplerLinearWrap, float3(uvy, w)).r * rayHitInfo.m_surfaceNormal.y +
-            chvolume.Sample(SamplerLinearWrap, float3(uvz, w)).r * rayHitInfo.m_surfaceNormal.z;
+            crosshatchvolume.Sample(SamplerLinearWrap, float3(uvx, w)).r * rayHitInfo.m_surfaceNormal.x +
+            crosshatchvolume.Sample(SamplerLinearWrap, float3(uvy, w)).r * rayHitInfo.m_surfaceNormal.y +
+            crosshatchvolume.Sample(SamplerLinearWrap, float3(uvz, w)).r * rayHitInfo.m_surfaceNormal.z;
         crossHatchTexel = crossHatchTexel / (rayHitInfo.m_surfaceNormal.x + rayHitInfo.m_surfaceNormal.y + rayHitInfo.m_surfaceNormal.z);
 
         // apply crosshatching texture

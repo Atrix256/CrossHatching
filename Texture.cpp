@@ -227,24 +227,25 @@ bool CTexture::Create (ID3D11Device* device, ID3D11DeviceContext* deviceContext,
     return true;
 }
 
-bool CTexture::CreateVolume (ID3D11Device* device, ID3D11DeviceContext* deviceContext, size_t width, size_t height, size_t depth, const std::vector<CTexture*>& slices, DXGI_FORMAT format)
+bool CTexture::CreateVolume (ID3D11Device* device, ID3D11DeviceContext* deviceContext, CTexture** slices, size_t numSlices)
 {
     D3D11_TEXTURE3D_DESC textureDesc;
     HRESULT hResult;
     D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
 
+    D3D11_TEXTURE2D_DESC srcTextureDesc;
+    slices[0]->GetTexture2D()->GetDesc(&srcTextureDesc);
+
     // Setup the description of the texture.
-    textureDesc.Height = (UINT)height;
-    textureDesc.Width = (UINT)width;
+    textureDesc.Height = (UINT)srcTextureDesc.Height;
+    textureDesc.Width = (UINT)srcTextureDesc.Width;
     textureDesc.MipLevels = 0;
-    textureDesc.Depth = (UINT)depth;
-    textureDesc.Format = format;
+    textureDesc.Depth = (UINT)numSlices;
+    textureDesc.Format = srcTextureDesc.Format;
     textureDesc.Usage = D3D11_USAGE_DEFAULT;
     textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET | D3D11_BIND_UNORDERED_ACCESS;
     textureDesc.CPUAccessFlags = 0;
     textureDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
-
-    // TODO: can probably get width, height and format from desc of first CTexture.
 
     // Create the empty texture.
     hResult = device->CreateTexture3D(&textureDesc, NULL, &m_texture3D.m_ptr);
@@ -253,7 +254,7 @@ bool CTexture::CreateVolume (ID3D11Device* device, ID3D11DeviceContext* deviceCo
         return false;
     }
 
-    for (size_t i = 0; i < depth; ++i)
+    for (size_t i = 0; i < numSlices; ++i)
         deviceContext->CopySubresourceRegion(m_texture3D.m_ptr, 0, 0, 0, (UINT)i, slices[i]->GetTexture2D(), 0, NULL);
 
     // Setup the shader resource view description.
@@ -272,6 +273,5 @@ bool CTexture::CreateVolume (ID3D11Device* device, ID3D11DeviceContext* deviceCo
     // Generate mipmaps for this texture.
     deviceContext->GenerateMips(m_textureSRV.m_ptr);
 
-    // TODO: don't reflect a UAV for volume textures in shader code!
     return true;
 }

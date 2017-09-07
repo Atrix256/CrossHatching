@@ -42,6 +42,8 @@ RWTexture2D<float4> crosshatch8_rw;
 Texture2D pathTraceOutput;
 RWTexture2D<float4> pathTraceOutput_rw;
 
+Texture3D crosshatchvolume;
+
 //----------------------------------------------------------------------------
 //Constant Buffers
 //----------------------------------------------------------------------------
