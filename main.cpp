@@ -444,7 +444,8 @@ bool InitIMGUI()
     io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
     // TODO: At this points you've got the texture data and you need to upload that your your graphic system:
     CTexture* texture = new CTexture;
-    texture->LoadFromPixels(g_d3d.Device(), g_d3d.Context(), pixels, width, height);
+    if (!texture->LoadFromPixels(g_d3d.Device(), g_d3d.Context(), pixels, width, height))
+        return false;
 
     //MyTexture* texture = MyEngine::CreateTextureFromMemoryPixels(pixels, width, height, TEXTURE_TYPE_RGBA)
     // TODO: Store your texture pointer/identifier (whatever your engine uses) in 'io.Fonts->TexID'. This will be passed back to your via the renderer.
