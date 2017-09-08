@@ -44,7 +44,7 @@ float3 YUVToRGB (float3 yuv)
 }
 
 //----------------------------------------------------------------------------
-float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch)
+float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch, bool smoothStep)
 {
     // get our first ray hit info from the FirstRayHits buffer
     uint dimsX, dimsY;
@@ -64,7 +64,7 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch)
     // if the ray didn't hit anything, fake a planar hit for shading purposes
     if (rayHitInfo.m_intersectTime < 0.0f)
     {
-        rayHitInfo.m_intersectTime = 2.0f / uvmultiplier_yzw.x;
+        rayHitInfo.m_intersectTime = 2.0f / uvmultiplier_blackPoint_whitePoint_w.x;
         rayHitInfo.m_surfaceNormal = normalize(cameraPos_FOVX.xyz - cameraAt_FOVY.xyz);
         rayHitInfo.m_albedo = float3(0.0f, 0.0f, 0.0f);
         rayHitInfo.m_emissive = float3(0.0f, 0.0f, 0.0f);
@@ -79,6 +79,12 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch)
 	// convert SDR RGB to YUV. Y is brightness and UV is hue.
 	float3 yuv = RGBToYUV(light);
 
+    // apply the black / white point adjustments and smoothstep if necesary
+    if (smoothStep)
+        yuv.x = smoothstep(uvmultiplier_blackPoint_whitePoint_w.y, uvmultiplier_blackPoint_whitePoint_w.z, yuv.x);
+    else
+        yuv.x = clamp(yuv.x, uvmultiplier_blackPoint_whitePoint_w.y, uvmultiplier_blackPoint_whitePoint_w.z);
+
 	// convert full bright UV back to RGB to get the fully bright color of this pixel
 	// TODO: honestly i think maybe the idea of full bright color is flawed. need to rethink this...
 	// TODO: how do we get full bright color??
@@ -90,9 +96,9 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch)
         // sample the crosshatching with triplanar projection
         float3 pixelPos = rayPos + rayDir * rayHitInfo.m_intersectTime;
 
-        float2 uvx = pixelPos.yz * uvmultiplier_yzw.x;
-        float2 uvy = pixelPos.xz * uvmultiplier_yzw.x;
-        float2 uvz = pixelPos.xy * uvmultiplier_yzw.x;
+        float2 uvx = pixelPos.yz * uvmultiplier_blackPoint_whitePoint_w.x;
+        float2 uvy = pixelPos.xz * uvmultiplier_blackPoint_whitePoint_w.x;
+        float2 uvz = pixelPos.xy * uvmultiplier_blackPoint_whitePoint_w.x;
 
 		// convert brightness to a w for a uvw coordinate.
 		// This is necesary because values reside in the center of pixels, even in volume textures.
@@ -124,29 +130,57 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch)
 }
 
 //----------------------------------------------------------------------------
-float4 ps_main_color_shade(SPixelInput input) : SV_TARGET
+float4 ps_main_color_shade_smoothstep(SPixelInput input) : SV_TARGET
 {
-    float3 light = GetPixelColor(input, false, false);
+    float3 light = GetPixelColor(input, false, false, true);
     return float4(light, 1.0f);
 }
 
 //----------------------------------------------------------------------------
-float4 ps_main_grey_shade(SPixelInput input) : SV_TARGET
+float4 ps_main_grey_shade_smoothstep(SPixelInput input) : SV_TARGET
 {
-    float3 light = GetPixelColor(input, true, false);
+    float3 light = GetPixelColor(input, true, false, true);
     return float4(light, 1.0f);
 }
 
 //----------------------------------------------------------------------------
-float4 ps_main_color_crosshatch(SPixelInput input) : SV_TARGET
+float4 ps_main_color_crosshatch_smoothstep(SPixelInput input) : SV_TARGET
 {
-    float3 light = GetPixelColor(input, false, true);
+    float3 light = GetPixelColor(input, false, true, true);
     return float4(light, 1.0f);
 }
 
 //----------------------------------------------------------------------------
-float4 ps_main_grey_crosshatch(SPixelInput input) : SV_TARGET
+float4 ps_main_grey_crosshatch_smoothstep(SPixelInput input) : SV_TARGET
 {
-    float3 light = GetPixelColor(input, true, true);
+    float3 light = GetPixelColor(input, true, true, true);
+    return float4(light, 1.0f);
+}
+
+//----------------------------------------------------------------------------
+float4 ps_main_color_shade_no(SPixelInput input) : SV_TARGET
+{
+    float3 light = GetPixelColor(input, false, false, false);
+    return float4(light, 1.0f);
+}
+
+//----------------------------------------------------------------------------
+float4 ps_main_grey_shade_no(SPixelInput input) : SV_TARGET
+{
+    float3 light = GetPixelColor(input, true, false, false);
+    return float4(light, 1.0f);
+}
+
+//----------------------------------------------------------------------------
+float4 ps_main_color_crosshatch_no(SPixelInput input) : SV_TARGET
+{
+    float3 light = GetPixelColor(input, false, true, false);
+    return float4(light, 1.0f);
+}
+
+//----------------------------------------------------------------------------
+float4 ps_main_grey_crosshatch_no(SPixelInput input) : SV_TARGET
+{
+    float3 light = GetPixelColor(input, true, true, false);
     return float4(light, 1.0f);
 }

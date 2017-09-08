@@ -165,7 +165,7 @@ CONSTANT_BUFFER_BEGIN(ConstantsOnce)
     CONSTANT_BUFFER_FIELD(cameraAt_FOVY, float4)
     CONSTANT_BUFFER_FIELD(nearPlaneDist_missColor, float4)
     CONSTANT_BUFFER_FIELD(numSpheres_numTris_numOBBs_numQuads, uint4)
-	CONSTANT_BUFFER_FIELD(uvmultiplier_yzw, float4)
+	CONSTANT_BUFFER_FIELD(uvmultiplier_blackPoint_whitePoint_w, float4)
 CONSTANT_BUFFER_END
 
 CONSTANT_BUFFER_BEGIN(ConstantsPerFrame)
@@ -261,10 +261,17 @@ TEXTURE_VOLUME_END
 
 SHADER_CS(pathTrace, L"Shaders/PathTrace.fx", "cs_main")
 SHADER_CS(pathTraceFirstHit, L"Shaders/PathTrace.fx", "cs_main_FirstHit")
-SHADER_VSPS(showPathTrace_Color_Shade, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_color_shade", Pos2D)
-SHADER_VSPS(showPathTrace_Grey_Shade, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_grey_shade", Pos2D)
-SHADER_VSPS(showPathTrace_Color_CrossHatch, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_color_crosshatch", Pos2D)
-SHADER_VSPS(showPathTrace_Grey_CrossHatch, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_grey_crosshatch", Pos2D)
+
+SHADER_VSPS(showPathTrace_Color_Shade_SmoothStep, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_color_shade_smoothstep", Pos2D)
+SHADER_VSPS(showPathTrace_Grey_Shade_SmoothStep, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_grey_shade_smoothstep", Pos2D)
+SHADER_VSPS(showPathTrace_Color_CrossHatch_SmoothStep, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_color_crosshatch_smoothstep", Pos2D)
+SHADER_VSPS(showPathTrace_Grey_CrossHatch_SmoothStep, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_grey_crosshatch_smoothstep", Pos2D)
+
+SHADER_VSPS(showPathTrace_Color_Shade_No, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_color_shade_no", Pos2D)
+SHADER_VSPS(showPathTrace_Grey_Shade_No, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_grey_shade_no", Pos2D)
+SHADER_VSPS(showPathTrace_Color_CrossHatch_No, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_color_crosshatch_no", Pos2D)
+SHADER_VSPS(showPathTrace_Grey_CrossHatch_No, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_grey_crosshatch_no", Pos2D)
+
 
 //=================================================================
 // undefine everything for the caller's convenience

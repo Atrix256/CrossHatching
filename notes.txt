@@ -1,3 +1,22 @@
+* could try smoothstep to push greys towards black and white more
+ * also could adjust the black / white point
+ * need to make key presses that adjust the min / max up and down
+
+? why does smoothstep have such little effect on scene 2?
+
+* printf and/or debug output settings changes so people can see if something is off or on (smoothstep / aniso!)
+ * or maybe get imgui working... make it collapse to a small button (or a button press to open / close it?)
+ 
+? maybe toggle for smoothstep vs not?
+
+? maybe better way to handle shader permutations?
+ * could do the #define route
+ * could generate the cs_main functions that are called
+
+* fix seems in whatever of the cross hatching textures have them.
+
+* key to toggle aniso
+
 ? in scene 3, why isn't the light more obvious?
  * maybe you need to compress the lights and darks?
  ? maybe w is calculated incorrectly?
@@ -73,6 +92,8 @@ Sean said he'd be willing to give me textures.
  * lets you get the benefits of more bounces without paying the full cost and doesn't add bias
 
 ? could try jittering the first hit. anti alias may be fine shrug.
+
+* could try hard coding the scenes by writing functions to test intersection with them into shader files that are included
 
 ================================= LATER IDEAS =================================
 

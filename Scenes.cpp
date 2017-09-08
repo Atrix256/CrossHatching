@@ -194,7 +194,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                     scene.nearPlaneDist_missColor = { 0.1f, 0.0f, 0.0f, 0.0f };
 
                     scene.numSpheres_numTris_numOBBs_numQuads = { 2, 0, 0, 2 };
-					scene.uvmultiplier_yzw = { 1.0f, 0.0f, 0.0f, 0.0f };
+					scene.uvmultiplier_blackPoint_whitePoint_w = { 0.25f, 0.0f, 1.0f, 0.0f };
                 }
             );
 
@@ -234,7 +234,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                     scene.nearPlaneDist_missColor = { 0.1f, 0.1f, 0.4f, 1.0f };
 
                     scene.numSpheres_numTris_numOBBs_numQuads = { 2, 0, 0, 2 };
-					scene.uvmultiplier_yzw = { 1.0f, 0.0f, 0.0f, 0.0f };
+					scene.uvmultiplier_blackPoint_whitePoint_w = { 0.25f, 0.0f, 1.0f, 0.0f };
                 }
             );
 
@@ -275,7 +275,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                     scene.nearPlaneDist_missColor = { 0.1f, 0.0f, 0.0f, 0.0f };
 
                     scene.numSpheres_numTris_numOBBs_numQuads = { 0, 0, 2, 6 };
-					scene.uvmultiplier_yzw = { 1.0f, 0.0f, 0.0f, 0.0f };
+                    scene.uvmultiplier_blackPoint_whitePoint_w = { 0.25f, 0.0f, 1.0f, 0.0f };
                 }
             );
 
@@ -332,7 +332,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                     scene.nearPlaneDist_missColor = { 0.1f, 0.0f, 0.0f, 0.0f };
 
                     scene.numSpheres_numTris_numOBBs_numQuads = { 0, 0, 2, 5 };
-					scene.uvmultiplier_yzw = { 1.0f, 0.0f, 0.0f, 0.0f };
+                    scene.uvmultiplier_blackPoint_whitePoint_w = { 0.25f, 0.0f, 1.0f, 0.0f };
                 }
             );
 
@@ -382,10 +382,10 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                     scene.cameraAt_FOVY[1] = 0.0f;
                     scene.cameraAt_FOVY[2] = 0.0f;
 
-                    scene.nearPlaneDist_missColor = { 0.1f, 0.0f, 0.0f, 0.0f };
+                    scene.nearPlaneDist_missColor = { 0.1f, 0.5f, 0.5f, 0.5f };
 
-                    scene.numSpheres_numTris_numOBBs_numQuads = { 2, 0, 0, 0 };
-					scene.uvmultiplier_yzw = { 1.0f, 0.0f, 0.0f, 0.0f };
+                    scene.numSpheres_numTris_numOBBs_numQuads = { 1, 0, 0, 0 };
+                    scene.uvmultiplier_blackPoint_whitePoint_w = { 0.25f, 0.0f, 1.0f, 0.0f };
                 }
             );
 
@@ -394,7 +394,6 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                 [] (ShaderTypes::StructuredBuffers::TSpheres& spheres)
                 {
                     MakeSphere(spheres[0], { 0.0f, 0.0f, 4.0f }, 2.0f, { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f });
-                    MakeSphere(spheres[1], { 0.0f, 0.0f, 0.0f }, 20.0f, { 0.0f, 0.0f, 0.0f }, { 0.5f, 0.5f, 0.5f });
                 }
             );
             break;
@@ -406,7 +405,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                 context,
                 [&] (ShaderTypes::StructuredBuffers::TTriangles& triangles)
                 {
-                    AddMeshToTriangleSoup("Art/Models/cornell_box.obj", "./Art/Models/", triangles, triangleIndex);
+                    AddMeshToTriangleSoup("Art/Models/cornell_box.obj", "./Art/Models/", triangles, triangleIndex, { -2.5f, -2.5f, 1.0f }, { 10.0f, 10.0f, 10.0f }, { 0.0f, 1.0f, 0.0f }, 0.0f);
                 }
             );
 
@@ -414,18 +413,18 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                 context,
                 [&](ShaderTypes::ConstantBuffers::ConstantsOnce& scene)
                 {
-                    scene.cameraPos_FOVX[0] = 278.0f;
-                    scene.cameraPos_FOVX[1] = 273.0f;
-                    scene.cameraPos_FOVX[2] = -500.0f;
+                    scene.cameraPos_FOVX[0] = 0.0f;
+                    scene.cameraPos_FOVX[1] = 0.0f;
+                    scene.cameraPos_FOVX[2] = -3.0f;
 
-                    scene.cameraAt_FOVY[0] = 278.0f;
-                    scene.cameraAt_FOVY[1] = 273.0f;
+                    scene.cameraAt_FOVY[0] = 0.0f;
+                    scene.cameraAt_FOVY[1] = 0.0f;
                     scene.cameraAt_FOVY[2] = 0.0f;
 
                     scene.nearPlaneDist_missColor = { 0.1f, 0.0f, 0.0f, 0.0f };
 
                     scene.numSpheres_numTris_numOBBs_numQuads = { 0, (unsigned int)triangleIndex, 0, 0 };
-					scene.uvmultiplier_yzw = { 0.01f, 0.0f, 0.0f, 0.0f };
+                    scene.uvmultiplier_blackPoint_whitePoint_w = { 0.25f, 0.0f, 1.0f, 0.0f };
                 }
             );
 
@@ -467,7 +466,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                     scene.nearPlaneDist_missColor = { 0.1f, 0.0f, 0.0f, 0.0f };
 
                     scene.numSpheres_numTris_numOBBs_numQuads = { 1, (unsigned int)triangleIndex, 0, 0 };
-					scene.uvmultiplier_yzw = { 1.0f, 0.0f, 0.0f, 0.0f };
+                    scene.uvmultiplier_blackPoint_whitePoint_w = { 0.25f, 0.0f, 1.0f, 0.0f };
                 }
             );
 

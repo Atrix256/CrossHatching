@@ -17,6 +17,7 @@ CD3D11 g_d3d;
 
 bool g_showGrey = false;
 bool g_showCrossHatch = false;
+bool g_smoothStep = false;
 
 CModel<ShaderTypes::VertexFormats::Pos2D> g_fullScreenMesh;
 
@@ -345,8 +346,9 @@ void OnKeyPress (unsigned char key, bool pressed)
         case '6': FillSceneData(EScene::CornellObj, g_d3d.Context()); break;
         case '7': FillSceneData(EScene::ObjTest, g_d3d.Context()); break;
 
-        case 'C': g_showCrossHatch = !g_showCrossHatch; break;
-        case 'G': g_showGrey = !g_showGrey; break;
+        case 'Q': g_showCrossHatch = !g_showCrossHatch; break;
+        case 'W': g_showGrey = !g_showGrey; break;
+        case 'E': g_smoothStep = !g_smoothStep; break;
     }
 }
 
@@ -422,7 +424,7 @@ bool init ()
             data.cameraAt_FOVY = { 0.0f, 0.0f, 0.0f, c_fovY };
             data.nearPlaneDist_missColor = { 0.0f, 0.0f, 0.0f, 0.0f };
             data.numSpheres_numTris_numOBBs_numQuads = { 0, 0, 0, 0 };
-			data.uvmultiplier_yzw = { 1.0f, 0.0f, 0.0f, 0.0f };
+			data.uvmultiplier_blackPoint_whitePoint_w = { 1.0f, 0.0f, 1.0f, 0.0f };
         }
     );
     if (!writeOK)
@@ -447,16 +449,36 @@ CShader& SelectShaderShowPathTrace ()
     if (g_showGrey)
     {
         if (g_showCrossHatch)
-            return ShaderData::Shaders::showPathTrace_Grey_CrossHatch;
+        {
+            if (g_smoothStep)
+                return ShaderData::Shaders::showPathTrace_Grey_CrossHatch_SmoothStep;
+            else
+                return ShaderData::Shaders::showPathTrace_Grey_CrossHatch_No;
+        }
         else
-            return ShaderData::Shaders::showPathTrace_Grey_Shade;
+        {
+            if (g_smoothStep)
+                return ShaderData::Shaders::showPathTrace_Grey_Shade_SmoothStep;
+            else
+                return ShaderData::Shaders::showPathTrace_Grey_Shade_No;
+        }
     }
     else
     {
         if (g_showCrossHatch)
-            return ShaderData::Shaders::showPathTrace_Color_CrossHatch;
+        {
+            if (g_smoothStep)
+                return ShaderData::Shaders::showPathTrace_Color_CrossHatch_SmoothStep;
+            else
+                return ShaderData::Shaders::showPathTrace_Color_CrossHatch_No;
+        }
         else
-            return ShaderData::Shaders::showPathTrace_Color_Shade;
+        {
+            if (g_smoothStep)
+                return ShaderData::Shaders::showPathTrace_Color_Shade_SmoothStep;
+            else
+                return ShaderData::Shaders::showPathTrace_Color_Shade_No;
+        }
     }
 }
 
