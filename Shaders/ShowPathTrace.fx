@@ -79,11 +79,13 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch, bool s
 	// convert SDR RGB to YUV. Y is brightness and UV is hue.
 	float3 yuv = RGBToYUV(light);
 
-    // apply the black / white point adjustments and smoothstep if necesary
+    // remap the brightness using the black point / white point
+    yuv.x = uvmultiplier_blackPoint_whitePoint_w.y + yuv.x * (uvmultiplier_blackPoint_whitePoint_w.z - uvmultiplier_blackPoint_whitePoint_w.y);
+
+    // smoothstep the result if we are supposed to
+    // TODO: should we do this before remapping or after? maybe see what that other article does....
     if (smoothStep)
-        yuv.x = smoothstep(uvmultiplier_blackPoint_whitePoint_w.y, uvmultiplier_blackPoint_whitePoint_w.z, yuv.x);
-    else
-        yuv.x = clamp(yuv.x, uvmultiplier_blackPoint_whitePoint_w.y, uvmultiplier_blackPoint_whitePoint_w.z);
+        yuv.x = smoothstep(0.0f, 1.0f, yuv.x);
 
 	// convert full bright UV back to RGB to get the fully bright color of this pixel
 	// TODO: honestly i think maybe the idea of full bright color is flawed. need to rethink this...
@@ -106,6 +108,7 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch, bool s
 		uint volumeDimsX, volumeDimsY, volumeDimsZ;
         crosshatchvolume.GetDimensions(volumeDimsX, volumeDimsY, volumeDimsZ);
 		float w = yuv.x * float(volumeDimsZ - 1) / float(volumeDimsZ) + 1.0f / float(volumeDimsZ * 2);
+        w = saturate(w);
         
 		// triplanar projection sample the crosshatching texture
         float crossHatchTexel =

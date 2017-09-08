@@ -1,33 +1,27 @@
-* could try smoothstep to push greys towards black and white more
- * also could adjust the black / white point
- * need to make key presses that adjust the min / max up and down
+! get imgui working. Needed to be able to fine tune parameters
+ * make it collapsable.
+
+* convert all keyboard commands into imgui things
+
+* formalize shader permutations.
+ * do this by generating an include file for #defines that each shader includes during compile.
+ * make a shader permutation for aniso vs regular 
 
 ? why does smoothstep have such little effect on scene 2?
-
-* printf and/or debug output settings changes so people can see if something is off or on (smoothstep / aniso!)
- * or maybe get imgui working... make it collapse to a small button (or a button press to open / close it?)
- 
-? maybe toggle for smoothstep vs not?
 
 ? maybe better way to handle shader permutations?
  * could do the #define route
  * could generate the cs_main functions that are called
 
 * fix seems in whatever of the cross hatching textures have them.
-
-* key to toggle aniso
-
-? in scene 3, why isn't the light more obvious?
- * maybe you need to compress the lights and darks?
- ? maybe w is calculated incorrectly?
-
-* the problem / difference from real paper may be texture scale differences.
+ * and/or get/make better textures!
 
 * try some minor optimizations to see if they help much. (write details in notes for blog post i guess)
  * N samples per call, instead of just the 1.  may decrease time spent on (texture) memory read / write?
  * bounding volume (box? sphere?) as pre-test for rays for meshes.
 
- * on spheres there is a weird line on the textures, check it out (may be due to triplanar?)
+* on spheres there is a weird line on the textures, check it out (may be due to triplanar?)
+ * may disappear with other textures.
 
 ! for color cross hatching, try YCoCg-R instead of YUV? https://en.wikipedia.org/wiki/YCoCg
 
@@ -36,7 +30,7 @@
 * need to figure out how to process the cross hatching textures. dilation filter, even color texture etc.
  * eventually write code that does this
 
-? should source crosshatching textures be single channel? maybe doesn't matter
+? should source crosshatching textures be single channel? maybe doesn't matter that much. Only really care for perf / efficiency.
 
 * color crosshatching:
  * convert to hue / brightness. hue is tint for texture, brightness selects texture
@@ -66,18 +60,18 @@
 ! need to keep the rng seed from becoming so huge that small floats don't matter and it stops updating.
 
 show fps / mspf. maybe in title bar? also number of samples?
+ * part of imgui display.
 
-be able to move camera? reset sample count on camera move? WASD + mouse look?
-
-test x64 and release
+be able to move camera? reset sample count on camera move. WASD + mouse look.
 
 TODO's in code
 
 Sean said he'd be willing to give me textures.
 
 ? I'm thinking we probably want window borders / close button on this window.
+ * imgui may be enough, but escape to exit may not be most obvious...
 
-* make it spit out shader-error.txt even if there's just warnings?
+* make it spit out shader-error.txt even if there are just warnings?
 
 * could also directly sample the light to make it converge faster (i think you should, if it's unbiased!)
 
@@ -85,6 +79,7 @@ Sean said he'd be willing to give me textures.
 
 * could have a bounding shape on "instanced meshes" which if the ray hits, gives a start/stop triangle index range to test ray against.
  * could also possibly have a scale, translation, rotation for instance.
+ * try only if actually needed.
 
 * get rid of unused models and textures when done
 
@@ -94,6 +89,7 @@ Sean said he'd be willing to give me textures.
 ? could try jittering the first hit. anti alias may be fine shrug.
 
 * could try hard coding the scenes by writing functions to test intersection with them into shader files that are included
+ * may increase perf, not sure.
 
 ================================= LATER IDEAS =================================
 
@@ -112,10 +108,14 @@ Sean said he'd be willing to give me textures.
 
 ================================= NOTES =================================
 
-DX11 guid: http://www.rastertek.com/dx11tut02.html
+DX11 guide: http://www.rastertek.com/dx11tut02.html
 
 * when writing a CPU path tracer, each time i needed a random number, i just called rand() basically. very easy.
  * on gpu, not so easy to generate random numbers! (could show problems of doign it incorrectly)
  * ended up using a blue noise texture as initial seed, and adding frame number * golden ratio to make it a low discrepancy sequence over time.
 
 * free blue nois textures: http://momentsingraphics.de/?p=127
+
+* tiny obj loader: https://github.com/syoyo/tinyobjloader
+
+* a similar, interesting technique: http://www.floored.com/blog/2014sketch-rendering/

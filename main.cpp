@@ -349,6 +349,50 @@ void OnKeyPress (unsigned char key, bool pressed)
         case 'Q': g_showCrossHatch = !g_showCrossHatch; break;
         case 'W': g_showGrey = !g_showGrey; break;
         case 'E': g_smoothStep = !g_smoothStep; break;
+        case 'A': 
+        {
+            ShaderData::ConstantBuffers::ConstantsOnce.Write(
+                g_d3d.Context(),
+                [] (ShaderTypes::ConstantBuffers::ConstantsOnce& data)
+                {
+                    data.uvmultiplier_blackPoint_whitePoint_w[1] += 0.1f;
+                }
+            );
+            break;
+        }
+        case 'S': 
+        {
+            ShaderData::ConstantBuffers::ConstantsOnce.Write(
+                g_d3d.Context(),
+                [] (ShaderTypes::ConstantBuffers::ConstantsOnce& data)
+                {
+                    data.uvmultiplier_blackPoint_whitePoint_w[1] -= 0.1f;
+                }
+            );
+            break;
+        }
+        case 'D': 
+        {
+            ShaderData::ConstantBuffers::ConstantsOnce.Write(
+                g_d3d.Context(),
+                [] (ShaderTypes::ConstantBuffers::ConstantsOnce& data)
+                {
+                    data.uvmultiplier_blackPoint_whitePoint_w[2] += 0.1f;
+                }
+            );
+            break;
+        }
+        case 'F': 
+        {
+            ShaderData::ConstantBuffers::ConstantsOnce.Write(
+                g_d3d.Context(),
+                [] (ShaderTypes::ConstantBuffers::ConstantsOnce& data)
+                {
+                    data.uvmultiplier_blackPoint_whitePoint_w[2] -= 0.1f;
+                }
+            );
+            break;
+        }
     }
 }
 
