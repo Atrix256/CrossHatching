@@ -119,3 +119,5 @@ DX11 guide: http://www.rastertek.com/dx11tut02.html
 * tiny obj loader: https://github.com/syoyo/tinyobjloader
 
 * a similar, interesting technique: http://www.floored.com/blog/2014sketch-rendering/
+
+* imgui: https://github.com/ocornut/imgui

@@ -8,6 +8,8 @@ class CTexture
 public:
     bool LoadTGA (ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* filename);
 
+    bool LoadFromPixels(ID3D11Device* device, ID3D11DeviceContext* deviceContext, unsigned char* pixels, int width, int height);
+
     bool Create (ID3D11Device* device, ID3D11DeviceContext* deviceContext, size_t width, size_t height, DXGI_FORMAT format);
 
     bool CreateVolume (ID3D11Device* device, ID3D11DeviceContext* deviceContext, CTexture** slices, size_t numSlices);

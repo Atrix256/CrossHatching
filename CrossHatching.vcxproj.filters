@@ -8,6 +8,15 @@
     <ClCompile Include="Window.cpp" />
     <ClCompile Include="Scenes.cpp" />
     <ClCompile Include="tiny_obj_loader.cc" />
+    <ClCompile Include="imgui\imgui.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui\imgui_demo.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui\imgui_draw.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="notes.txt" />
@@ -35,6 +44,24 @@
     </ClInclude>
     <ClInclude Include="tiny_obj_loader.h" />
     <ClInclude Include="Settings.h" />
+    <ClInclude Include="imgui\imconfig.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\imgui.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\imgui_internal.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\stb_rect_pack.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\stb_textedit.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\stb_truetype.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\ShowPathTrace.fx">
@@ -47,6 +74,9 @@
   <ItemGroup>
     <Filter Include="Shaders">
       <UniqueIdentifier>{6344b81d-fa2a-4458-8f3c-3a380ef94119}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="imgui">
+      <UniqueIdentifier>{ad365d65-11ac-4380-be33-c4943038eb74}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
