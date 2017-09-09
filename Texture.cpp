@@ -175,7 +175,6 @@ bool CTexture::LoadTGA (ID3D11Device* device, ID3D11DeviceContext* deviceContext
 // TODO: make LoadTGA use this function too!
 bool CTexture::LoadFromPixels (ID3D11Device* device, ID3D11DeviceContext* deviceContext, unsigned char* pixels, int width, int height)
 {
-    bool result;
     D3D11_TEXTURE2D_DESC textureDesc;
     HRESULT hResult;
     unsigned int rowPitch;

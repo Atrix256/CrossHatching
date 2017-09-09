@@ -1,5 +1,13 @@
+? with greyscale crosshatch, why isn't the background in scene 1 black??
+
 ! get imgui working. Needed to be able to fine tune parameters
  * make it collapsable.
+
+* could try adding a black and white slice.
+* try erode / dilute in gimp.  Not sure how to do the "even brightness" thing the paper talks about though.
+
+* try making all albedo white.
+ * an option for this? pathtrace.h just doesn't take ray hit albedo!
 
 * convert all keyboard commands into imgui things
 
@@ -121,3 +129,6 @@ DX11 guide: http://www.rastertek.com/dx11tut02.html
 * a similar, interesting technique: http://www.floored.com/blog/2014sketch-rendering/
 
 * imgui: https://github.com/ocornut/imgui
+
+@Jontology - saw some screenshots of my "stuck" results and had some ideas of what was going wrong.
+

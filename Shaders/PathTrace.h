@@ -438,6 +438,7 @@ float3 Light_Outgoing (in SRayHitInfo rayHitInfo, in float3 rayHitPos, inout flo
     {
         // update our light sum and future light multiplier
         lightSum += rayHitInfo.m_emissive * lightMultiplier;
+        // TODO: no albedo? maybe an option for this?
         lightMultiplier *= rayHitInfo.m_albedo;
 
         // add a random recursive sample for global illumination

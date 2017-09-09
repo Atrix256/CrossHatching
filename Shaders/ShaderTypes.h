@@ -10,8 +10,40 @@ SamplerState SamplerAnisoWrap;
 //----------------------------------------------------------------------------
 //Textures
 //----------------------------------------------------------------------------
+Texture2D pathTraceOutput;
+RWTexture2D<float4> pathTraceOutput_rw;
+
 Texture2D blueNoise256;
 RWTexture2D<float4> blueNoise256_rw;
+
+Texture2D circleneg4;
+RWTexture2D<float4> circleneg4_rw;
+
+Texture2D circleneg3;
+RWTexture2D<float4> circleneg3_rw;
+
+Texture2D circleneg2;
+RWTexture2D<float4> circleneg2_rw;
+
+Texture2D circleneg1;
+RWTexture2D<float4> circleneg1_rw;
+
+Texture2D circles0;
+RWTexture2D<float4> circles0_rw;
+
+Texture2D circles1;
+RWTexture2D<float4> circles1_rw;
+
+Texture2D circles2;
+RWTexture2D<float4> circles2_rw;
+
+Texture2D circles3;
+RWTexture2D<float4> circles3_rw;
+
+Texture2D circles4;
+RWTexture2D<float4> circles4_rw;
+
+Texture3D circlesvolume;
 
 Texture2D crosshatch0;
 RWTexture2D<float4> crosshatch0_rw;
@@ -39,9 +71,6 @@ RWTexture2D<float4> crosshatch7_rw;
 
 Texture2D crosshatch8;
 RWTexture2D<float4> crosshatch8_rw;
-
-Texture2D pathTraceOutput;
-RWTexture2D<float4> pathTraceOutput_rw;
 
 Texture3D crosshatchvolume;
 

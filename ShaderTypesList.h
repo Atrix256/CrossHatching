@@ -230,7 +230,34 @@ VERTEX_FORMAT_END
 //                       Textures
 //=================================================================
 
+TEXTURE_BUFFER(pathTraceOutput, float4, DXGI_FORMAT_R32G32B32A32_FLOAT)
+
 TEXTURE_IMAGE(blueNoise256, "Art/BlueNoise256.tga")
+
+TEXTURE_IMAGE(circleneg4, "Art/circlesneg4.tga")
+TEXTURE_IMAGE(circleneg3, "Art/circlesneg3.tga")
+TEXTURE_IMAGE(circleneg2, "Art/circlesneg2.tga")
+TEXTURE_IMAGE(circleneg1, "Art/circlesneg1.tga")
+TEXTURE_IMAGE(circles0, "Art/circles0.tga")
+TEXTURE_IMAGE(circles1, "Art/circles1.tga")
+TEXTURE_IMAGE(circles2, "Art/circles2.tga")
+TEXTURE_IMAGE(circles3, "Art/circles3.tga")
+TEXTURE_IMAGE(circles4, "Art/circles4.tga")
+
+TEXTURE_VOLUME_BEGIN(circlesvolume)
+    TEXTURE_VOLUME_SLICE(circles4)
+    TEXTURE_VOLUME_SLICE(circles3)
+    TEXTURE_VOLUME_SLICE(circles2)
+    TEXTURE_VOLUME_SLICE(circles1)
+    TEXTURE_VOLUME_SLICE(circles0)
+    TEXTURE_VOLUME_SLICE(circleneg1)
+    TEXTURE_VOLUME_SLICE(circleneg2)
+    TEXTURE_VOLUME_SLICE(circleneg3)
+    TEXTURE_VOLUME_SLICE(circleneg4)
+TEXTURE_VOLUME_END
+
+// TODO: clear out unused textures when done
+
 TEXTURE_IMAGE(crosshatch0, "Art/crosshatch0.tga")
 TEXTURE_IMAGE(crosshatch1, "Art/crosshatch1.tga")
 TEXTURE_IMAGE(crosshatch2, "Art/crosshatch2.tga")
@@ -240,8 +267,6 @@ TEXTURE_IMAGE(crosshatch5, "Art/crosshatch5.tga")
 TEXTURE_IMAGE(crosshatch6, "Art/crosshatch6.tga")
 TEXTURE_IMAGE(crosshatch7, "Art/crosshatch7.tga")
 TEXTURE_IMAGE(crosshatch8, "Art/crosshatch8.tga")
-
-TEXTURE_BUFFER(pathTraceOutput, float4, DXGI_FORMAT_R32G32B32A32_FLOAT)
 
 TEXTURE_VOLUME_BEGIN(crosshatchvolume)
     TEXTURE_VOLUME_SLICE(crosshatch0)

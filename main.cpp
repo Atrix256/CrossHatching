@@ -347,8 +347,8 @@ void OnKeyPress (unsigned char key, bool pressed)
         case '6': FillSceneData(EScene::CornellObj, g_d3d.Context()); break;
         case '7': FillSceneData(EScene::ObjTest, g_d3d.Context()); break;
 
-        case 'Q': g_showCrossHatch = !g_showCrossHatch; break;
-        case 'W': g_showGrey = !g_showGrey; break;
+        case 'Q': g_showGrey = !g_showGrey; break;
+        case 'W': g_showCrossHatch = !g_showCrossHatch; break;
         case 'E': g_smoothStep = !g_smoothStep; break;
         case 'A': 
         {

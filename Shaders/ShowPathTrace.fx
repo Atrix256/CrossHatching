@@ -61,6 +61,9 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch, bool s
     float3 rayPos, rayDir;
     CalculateRay(float2(1.0f, 1.0f) - input.uv, rayPos, rayDir);
 
+    // get the lit value
+    float3 light = pathTraceOutput.Sample(SamplerLinearWrap, float2(1.0f, 1.0f) - input.uv).xyz;
+
     // if the ray didn't hit anything, fake a planar hit for shading purposes
     if (rayHitInfo.m_intersectTime < 0.0f)
     {
@@ -68,10 +71,8 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch, bool s
         rayHitInfo.m_surfaceNormal = normalize(cameraPos_FOVX.xyz - cameraAt_FOVY.xyz);
         rayHitInfo.m_albedo = float3(0.0f, 0.0f, 0.0f);
         rayHitInfo.m_emissive = float3(0.0f, 0.0f, 0.0f);
+        light = nearPlaneDist_missColor.yzw;
     }
-
-    // get the lit value
-    float3 light = pathTraceOutput.Sample(SamplerLinearWrap, float2(1.0f, 1.0f) - input.uv).xyz;
 
 	// reinhard operator to convert from HDR to SDR
 	light = light / (light + 1.0f);
@@ -106,15 +107,15 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch, bool s
 		// This is necesary because values reside in the center of pixels, even in volume textures.
 		// For instance, brightness 0 isn't the darkest value. brightess at pixel depth 0.5 is.
 		uint volumeDimsX, volumeDimsY, volumeDimsZ;
-        crosshatchvolume.GetDimensions(volumeDimsX, volumeDimsY, volumeDimsZ);
-		float w = yuv.x * float(volumeDimsZ - 1) / float(volumeDimsZ) + 1.0f / float(volumeDimsZ * 2);
+        circlesvolume.GetDimensions(volumeDimsX, volumeDimsY, volumeDimsZ);
+        float w = yuv.x * float(volumeDimsZ - 1) / float(volumeDimsZ) + 1.0f / float(volumeDimsZ * 2);
         w = saturate(w);
         
 		// triplanar projection sample the crosshatching texture
         float crossHatchTexel =
-            crosshatchvolume.Sample(SamplerAnisoWrap, float3(uvx, w)).r * rayHitInfo.m_surfaceNormal.x +
-            crosshatchvolume.Sample(SamplerAnisoWrap, float3(uvy, w)).r * rayHitInfo.m_surfaceNormal.y +
-            crosshatchvolume.Sample(SamplerAnisoWrap, float3(uvz, w)).r * rayHitInfo.m_surfaceNormal.z;
+            circlesvolume.Sample(SamplerAnisoWrap, float3(uvx, w)).r * rayHitInfo.m_surfaceNormal.x +
+            circlesvolume.Sample(SamplerAnisoWrap, float3(uvy, w)).r * rayHitInfo.m_surfaceNormal.y +
+            circlesvolume.Sample(SamplerAnisoWrap, float3(uvz, w)).r * rayHitInfo.m_surfaceNormal.z;
         crossHatchTexel = crossHatchTexel / (rayHitInfo.m_surfaceNormal.x + rayHitInfo.m_surfaceNormal.y + rayHitInfo.m_surfaceNormal.z);
 
         // apply crosshatching texture
@@ -122,6 +123,9 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch, bool s
 			light = crossHatchTexel;
 		else
 			light *= crossHatchTexel;
+
+        // TODO: temp!
+        //light.xyz = w;
     }
 	else if (greyScale)
 	{
