@@ -1,4 +1,7 @@
 ? with greyscale crosshatch, why isn't the background in scene 1 black??
+ * i think it has to do with mips. mips are grey!
+
+* the numbering of the circle images is backwards i think. neg1 should swap with 1 etc
 
 ! get imgui working. Needed to be able to fine tune parameters
  * make it collapsable.
@@ -98,6 +101,8 @@ Sean said he'd be willing to give me textures.
 
 * could try hard coding the scenes by writing functions to test intersection with them into shader files that are included
  * may increase perf, not sure.
+
+ * somehow there are leaks (d3d11 warning of live objects) on shutdown
 
 ================================= LATER IDEAS =================================
 

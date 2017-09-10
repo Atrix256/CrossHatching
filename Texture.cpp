@@ -341,3 +341,59 @@ bool CTexture::CreateVolume (ID3D11Device* device, ID3D11DeviceContext* deviceCo
 
     return true;
 }
+
+bool CTexture::CreateArray (ID3D11Device* device, ID3D11DeviceContext* deviceContext, CTexture** slices, size_t numSlices)
+{
+    D3D11_TEXTURE2D_DESC textureDesc;
+    HRESULT hResult;
+    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+
+    D3D11_TEXTURE2D_DESC srcTextureDesc;
+    slices[0]->GetTexture2D()->GetDesc(&srcTextureDesc);
+
+    // Setup the description of the texture.
+    textureDesc.Height = (UINT)srcTextureDesc.Height;
+    textureDesc.Width = (UINT)srcTextureDesc.Width;
+    textureDesc.MipLevels = 0;
+    textureDesc.ArraySize = (UINT)numSlices;
+    textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    textureDesc.SampleDesc.Count = 1;
+    textureDesc.SampleDesc.Quality = 0;
+    textureDesc.Usage = D3D11_USAGE_DEFAULT;
+    textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET | D3D11_BIND_UNORDERED_ACCESS;
+    textureDesc.CPUAccessFlags = 0;
+    textureDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
+
+    // Create the empty texture.
+    hResult = device->CreateTexture2D(&textureDesc, NULL, &m_texture.m_ptr);
+    if (FAILED(hResult))
+    {
+        return false;
+    }
+
+    D3D11_TEXTURE2D_DESC createdDesc;
+    m_texture.m_ptr->GetDesc(&createdDesc);
+
+    for (size_t i = 0; i < numSlices; ++i)
+        deviceContext->CopySubresourceRegion(m_texture.m_ptr, (UINT)i * createdDesc.MipLevels, 0, 0, 0, slices[i]->GetTexture2D(), 0, NULL);
+
+    // Setup the shader resource view description.
+    srvDesc.Format = textureDesc.Format;
+    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
+    srvDesc.Texture2DArray.FirstArraySlice = 0;
+    srvDesc.Texture2DArray.ArraySize = (UINT)numSlices;
+    srvDesc.Texture2DArray.MostDetailedMip = 0;
+    srvDesc.Texture2DArray.MipLevels = -1;
+
+    // Create the shader resource view for the texture.
+    hResult = device->CreateShaderResourceView(m_texture.m_ptr, &srvDesc, &m_textureSRV.m_ptr);
+    if (FAILED(hResult))
+    {
+        return false;
+    }
+
+    // Generate mipmaps for this texture.
+    deviceContext->GenerateMips(m_textureSRV.m_ptr);
+
+    return true;
+}

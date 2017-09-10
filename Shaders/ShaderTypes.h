@@ -43,36 +43,7 @@ RWTexture2D<float4> circles3_rw;
 Texture2D circles4;
 RWTexture2D<float4> circles4_rw;
 
-Texture3D circlesvolume;
-
-Texture2D crosshatch0;
-RWTexture2D<float4> crosshatch0_rw;
-
-Texture2D crosshatch1;
-RWTexture2D<float4> crosshatch1_rw;
-
-Texture2D crosshatch2;
-RWTexture2D<float4> crosshatch2_rw;
-
-Texture2D crosshatch3;
-RWTexture2D<float4> crosshatch3_rw;
-
-Texture2D crosshatch4;
-RWTexture2D<float4> crosshatch4_rw;
-
-Texture2D crosshatch5;
-RWTexture2D<float4> crosshatch5_rw;
-
-Texture2D crosshatch6;
-RWTexture2D<float4> crosshatch6_rw;
-
-Texture2D crosshatch7;
-RWTexture2D<float4> crosshatch7_rw;
-
-Texture2D crosshatch8;
-RWTexture2D<float4> crosshatch8_rw;
-
-Texture3D crosshatchvolume;
+Texture2DArray circlesarray;
 
 //----------------------------------------------------------------------------
 //Constant Buffers

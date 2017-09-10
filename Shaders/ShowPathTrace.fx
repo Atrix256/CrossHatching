@@ -103,29 +103,32 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch, bool s
         float2 uvy = pixelPos.xz * uvmultiplier_blackPoint_whitePoint_w.x;
         float2 uvz = pixelPos.xy * uvmultiplier_blackPoint_whitePoint_w.x;
 
-		// convert brightness to a w for a uvw coordinate.
-		// This is necesary because values reside in the center of pixels, even in volume textures.
-		// For instance, brightness 0 isn't the darkest value. brightess at pixel depth 0.5 is.
+        // caclulate the array slice to read
 		uint volumeDimsX, volumeDimsY, volumeDimsZ;
-        circlesvolume.GetDimensions(volumeDimsX, volumeDimsY, volumeDimsZ);
-        float w = yuv.x * float(volumeDimsZ - 1) / float(volumeDimsZ) + 1.0f / float(volumeDimsZ * 2);
-        w = saturate(w);
+        circlesarray.GetDimensions(volumeDimsX, volumeDimsY, volumeDimsZ);
+        float w = yuv.x * float(volumeDimsZ);
         
 		// triplanar projection sample the crosshatching texture
-        float crossHatchTexel =
-            circlesvolume.Sample(SamplerAnisoWrap, float3(uvx, w)).r * rayHitInfo.m_surfaceNormal.x +
-            circlesvolume.Sample(SamplerAnisoWrap, float3(uvy, w)).r * rayHitInfo.m_surfaceNormal.y +
-            circlesvolume.Sample(SamplerAnisoWrap, float3(uvz, w)).r * rayHitInfo.m_surfaceNormal.z;
-        crossHatchTexel = crossHatchTexel / (rayHitInfo.m_surfaceNormal.x + rayHitInfo.m_surfaceNormal.y + rayHitInfo.m_surfaceNormal.z);
+        // we need to manually lerp to get trilinear interpolation between slice samples
+        float crossHatchTexelFloor =
+            circlesarray.Sample(SamplerAnisoWrap, float3(uvx, floor(w))).r * rayHitInfo.m_surfaceNormal.x +
+            circlesarray.Sample(SamplerAnisoWrap, float3(uvy, floor(w))).r * rayHitInfo.m_surfaceNormal.y +
+            circlesarray.Sample(SamplerAnisoWrap, float3(uvz, floor(w))).r * rayHitInfo.m_surfaceNormal.z;
+        crossHatchTexelFloor /= (rayHitInfo.m_surfaceNormal.x + rayHitInfo.m_surfaceNormal.y + rayHitInfo.m_surfaceNormal.z);
+
+        float crossHatchTexelCeil =
+            circlesarray.Sample(SamplerAnisoWrap, float3(uvx, ceil(w))).r * rayHitInfo.m_surfaceNormal.x +
+            circlesarray.Sample(SamplerAnisoWrap, float3(uvy, ceil(w))).r * rayHitInfo.m_surfaceNormal.y +
+            circlesarray.Sample(SamplerAnisoWrap, float3(uvz, ceil(w))).r * rayHitInfo.m_surfaceNormal.z;
+        crossHatchTexelCeil /= (rayHitInfo.m_surfaceNormal.x + rayHitInfo.m_surfaceNormal.y + rayHitInfo.m_surfaceNormal.z);
+
+        float crossHatchTexel = lerp(crossHatchTexelFloor, crossHatchTexelCeil, frac(w));
 
         // apply crosshatching texture
 		if (greyScale)
 			light = crossHatchTexel;
 		else
 			light *= crossHatchTexel;
-
-        // TODO: temp!
-        //light.xyz = w;
     }
 	else if (greyScale)
 	{
