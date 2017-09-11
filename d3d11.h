@@ -16,6 +16,11 @@ public:
 
     void Present ();
 
+    void SetScissor (size_t x1, size_t y1, size_t x2, size_t y2);
+    void ClearScissor ();
+
+    void EnableAlphaBlend (bool enable);
+
     ID3D11Device* Device() { return m_device.m_ptr; }
     ID3D11DeviceContext* Context () { return m_deviceContext.m_ptr; }
 
@@ -36,4 +41,7 @@ private:
     CAutoReleasePointer<ID3D11SamplerState> m_samplerLinearWrap;
     CAutoReleasePointer<ID3D11SamplerState> m_samplerNearestWrap;
     CAutoReleasePointer<ID3D11SamplerState> m_samplerAnisoWrap;
+
+    size_t m_screenWidth;
+    size_t m_screenHeight;
 };

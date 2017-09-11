@@ -39,11 +39,12 @@ STRUCTURED_BUFFER_END() : ends a structured buffer definition
 VERTEX_FORMAT_BEGIN(Name)
   Name - the name of the vertex format in both c++ and shader code
 
-VERTEX_FORMAT_FIELD(Name, Semantic, Index, Type, Format)
+VERTEX_FORMAT_FIELD(Name, Semantic, Index, CppType, ShaderType, Format)
   Name - the name of the field
   Semantic - the shader semantic
   Index - the semantic index
-  Type - the data type
+  CppType - the data type on C++ side
+  ShaderType - the data type on the shader side
   Format - the format
 
 VERTEX_FORMAT_END
@@ -129,7 +130,7 @@ SHADER_CS(Name, FileName, Entry)
 #endif
 
 #ifndef VERTEX_FORMAT_FIELD
-#define VERTEX_FORMAT_FIELD(NAME, SEMANTIC, INDEX, TYPE, FORMAT)
+#define VERTEX_FORMAT_FIELD(NAME, SEMANTIC, INDEX, CPPTYPE, SHADERTYPE, FORMAT)
 #endif
 
 #ifndef VERTEX_FORMAT_END
@@ -181,6 +182,7 @@ SHADER_CS(Name, FileName, Entry)
 //=================================================================
 
 CONSTANT_BUFFER_BEGIN(ConstantsOnce)
+    CONSTANT_BUFFER_FIELD(width_height_zw, float4)
     CONSTANT_BUFFER_FIELD(cameraPos_FOVX, float4)
     CONSTANT_BUFFER_FIELD(cameraAt_FOVY, float4)
     CONSTANT_BUFFER_FIELD(nearPlaneDist_missColor, float4)
@@ -242,8 +244,16 @@ STRUCTURED_BUFFER_END
 //                     Vertex Formats
 //=================================================================
 
+// TODO: color needs to be uint32 in c++, but float4 in the shader
+// TODO: can position and uv be split up into 2 float2's?
+
+VERTEX_FORMAT_BEGIN(IMGUI)
+    VERTEX_FORMAT_FIELD(position_uv, POSITION, 0, float4, float4, DXGI_FORMAT_R32G32B32A32_FLOAT)
+    VERTEX_FORMAT_FIELD(color, COLOR, 0, uint32_t, float4, DXGI_FORMAT_R8G8B8A8_UNORM)
+VERTEX_FORMAT_END
+
 VERTEX_FORMAT_BEGIN(Pos2D)
-    VERTEX_FORMAT_FIELD(position, POSITION, 0, float4, DXGI_FORMAT_R32G32B32A32_FLOAT)
+    VERTEX_FORMAT_FIELD(position, POSITION, 0, float4, float4, DXGI_FORMAT_R32G32B32A32_FLOAT)
 VERTEX_FORMAT_END
 
 //=================================================================
@@ -280,6 +290,8 @@ TEXTURE_ARRAY_END
 //                       Shaders
 //=================================================================
 
+SHADER_VSPS(IMGUI, L"Shaders/IMGUI.fx", "vs_main", "ps_main", IMGUI)
+
 SHADER_CS(pathTrace, L"Shaders/PathTrace.fx", "cs_main")
 SHADER_CS(pathTraceFirstHit, L"Shaders/PathTrace.fx", "cs_main_FirstHit")
 
@@ -292,7 +304,6 @@ SHADER_VSPS(showPathTrace_Color_Shade_No, L"Shaders/ShowPathTrace.fx", "vs_main"
 SHADER_VSPS(showPathTrace_Grey_Shade_No, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_grey_shade_no", Pos2D)
 SHADER_VSPS(showPathTrace_Color_CrossHatch_No, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_color_crosshatch_no", Pos2D)
 SHADER_VSPS(showPathTrace_Grey_CrossHatch_No, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_grey_crosshatch_no", Pos2D)
-
 
 //=================================================================
 // undefine everything for the caller's convenience

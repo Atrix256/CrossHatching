@@ -30,6 +30,8 @@ bool CD3D11::Init (
     // Store the vsync setting (only available in full screen mode)
     vsync = vsync && fullscreen;
     m_vsync_enabled = vsync;
+    m_screenWidth = screenWidth;
+    m_screenHeight = screenHeight;
 
     // Create a DirectX graphics interface factory.
     result = CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)&factory.m_ptr);
@@ -182,7 +184,7 @@ bool CD3D11::Init (
     rasterDesc.FillMode = D3D11_FILL_SOLID;
     rasterDesc.FrontCounterClockwise = false;
     rasterDesc.MultisampleEnable = false;
-    rasterDesc.ScissorEnable = false;
+    rasterDesc.ScissorEnable = true;
     rasterDesc.SlopeScaledDepthBias = 0.0f;
 
     // Create the rasterizer state from the description we just filled out.
@@ -298,4 +300,39 @@ void CD3D11::Present ()
         // Present as fast as possible.
         m_swapChain.m_ptr->Present(0, 0);
     }
+}
+
+void CD3D11::SetScissor (size_t x1, size_t y1, size_t x2, size_t y2)
+{
+    D3D11_RECT scissor;
+    scissor.left = (LONG)x1;
+    scissor.top = (LONG)y1;
+    scissor.right = (LONG)x2;
+    scissor.bottom = (LONG)y2;
+    Context()->RSSetScissorRects(1, &scissor);
+}
+
+void CD3D11::ClearScissor ()
+{
+    SetScissor(0, 0, m_screenWidth, m_screenHeight);
+}
+
+void CD3D11::EnableAlphaBlend (bool enable)
+{
+    ID3D11BlendState* d3dBlendState;
+    D3D11_BLEND_DESC omDesc;
+    ZeroMemory(&omDesc, sizeof(D3D11_BLEND_DESC));
+    omDesc.RenderTarget[0].BlendEnable = enable;
+    omDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+    omDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+    omDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+    omDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+    omDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+    omDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+    omDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+    if (FAILED(Device()->CreateBlendState(&omDesc, &d3dBlendState)))
+        return;
+
+    Context()->OMSetBlendState(d3dBlendState, 0, 0xffffffff);
 }

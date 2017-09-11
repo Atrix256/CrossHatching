@@ -14,6 +14,7 @@ typedef std::array<unsigned int, 4> uint4;
 
 namespace ShaderTypes
 {
+#pragma pack(1)
     // define the constant buffer structs
     namespace ConstantBuffers 
     {
@@ -39,10 +40,11 @@ namespace ShaderTypes
     namespace VertexFormats
     {
         #define VERTEX_FORMAT_BEGIN(NAME) struct NAME {
-        #define VERTEX_FORMAT_FIELD(NAME, SEMANTIC, INDEX, TYPE, FORMAT) TYPE NAME;
+        #define VERTEX_FORMAT_FIELD(NAME, SEMANTIC, INDEX, CPPTYPE, SHADERTYPE, FORMAT) CPPTYPE NAME;
         #define VERTEX_FORMAT_END };
         #include "ShaderTypesList.h"
     };
+#pragma pack()
 };
 
 namespace ShaderData

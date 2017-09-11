@@ -50,6 +50,7 @@ Texture2DArray circlesarray;
 //----------------------------------------------------------------------------
 cbuffer ConstantsOnce
 {
+  float4 width_height_zw;
   float4 cameraPos_FOVX;
   float4 cameraAt_FOVY;
   float4 nearPlaneDist_missColor;
@@ -66,6 +67,12 @@ cbuffer ConstantsPerFrame
 //----------------------------------------------------------------------------
 //Vertex Formats
 //----------------------------------------------------------------------------
+struct IMGUI
+{
+  float4 position_uv : POSITION0;
+  float4 color : COLOR0;
+};
+
 struct Pos2D
 {
   float4 position : POSITION0;

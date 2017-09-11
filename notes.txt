@@ -20,6 +20,10 @@
 
 ? why does smoothstep have such little effect on scene 2?
 
+* "render" function of mesh should be named something else. like bind model or something
+
+* may want to seperate rendering a mesh into 3 steps: set mesh, set shader, draw using both. imgui could benefit
+
 ? maybe better way to handle shader permutations?
  * could do the #define route
  * could generate the cs_main functions that are called
@@ -136,4 +140,4 @@ DX11 guide: http://www.rastertek.com/dx11tut02.html
 * imgui: https://github.com/ocornut/imgui
 
 @Jontology - saw some screenshots of my "stuck" results and had some ideas of what was going wrong.
-
+* unreal: https://github.com/JonGreenberg/Crosshatching

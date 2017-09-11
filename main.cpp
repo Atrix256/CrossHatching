@@ -21,6 +21,7 @@ bool g_showCrossHatch = false;
 bool g_smoothStep = false;
 
 CModel<ShaderTypes::VertexFormats::Pos2D> g_fullScreenMesh;
+CModel<ShaderTypes::VertexFormats::IMGUI> g_IMGUIMesh;
 
 float RandomFloat (float min, float max)
 {
@@ -64,7 +65,7 @@ namespace ShaderData
     namespace VertexFormats
     {
         #define VERTEX_FORMAT_BEGIN(NAME) D3D11_INPUT_ELEMENT_DESC NAME [] = {
-        #define VERTEX_FORMAT_FIELD(NAME, SEMANTIC, INDEX, TYPE, FORMAT) \
+        #define VERTEX_FORMAT_FIELD(NAME, SEMANTIC, INDEX, CPPTYPE, SHADERTYPE, FORMAT) \
             {#SEMANTIC, INDEX, FORMAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
         #define VERTEX_FORMAT_END };
         #include "ShaderTypesList.h"
@@ -105,7 +106,7 @@ bool WriteShaderTypesHLSL (void)
     // write the vertex formats
     fprintf(file, "//----------------------------------------------------------------------------\n//Vertex Formats\n//----------------------------------------------------------------------------\n");
     #define VERTEX_FORMAT_BEGIN(NAME) fprintf(file, "struct " #NAME "\n{\n");
-    #define VERTEX_FORMAT_FIELD(NAME, SEMANTIC, INDEX, TYPE, FORMAT) fprintf(file, "  " #TYPE " " #NAME " : " #SEMANTIC #INDEX ";\n");
+    #define VERTEX_FORMAT_FIELD(NAME, SEMANTIC, INDEX, CPPTYPE, SHADERTYPE, FORMAT) fprintf(file, "  " #SHADERTYPE " " #NAME " : " #SEMANTIC #INDEX ";\n");
     #define VERTEX_FORMAT_END fprintf(file, "};\n\n");
     #include "ShaderTypesList.h"
 
@@ -423,11 +424,14 @@ void OnKeyPress (unsigned char key, bool pressed)
     }
 }
 
-void MyRenderFunction(ImDrawData* draw_data)
+void IMGUIRenderFunction(ImDrawData* draw_data)
 {
-    // TODO: Setup render state: alpha-blending enabled, no face culling, no depth testing, scissor enabled
-    // TODO: Setup viewport, orthographic projection matrix
-    // TODO: Setup shader: vertex { float2 pos, float2 uv, u32 color }, fragment shader sample color from 1 texture, multiply by vertex color.
+    FillShaderParams<EShaderType::vertex>(g_d3d.Context(), ShaderData::Shaders::IMGUI.GetVSReflector());
+    FillShaderParams<EShaderType::pixel>(g_d3d.Context(), ShaderData::Shaders::IMGUI.GetPSReflector());
+
+    // Usually you'd setup render states but the render states it wants are the same that we use.
+    // render state: alpha-blending enabled, no face culling, no depth testing, scissor enabled
+    g_d3d.EnableAlphaBlend(true);
     for (int n = 0; n < draw_data->CmdListsCount; n++)
     {
         ImDrawList* cmd_list = draw_data->CmdLists[n];
@@ -443,15 +447,50 @@ void MyRenderFunction(ImDrawData* draw_data)
             }
             else
             {
-                // TODO: this stuff
+                // set scissor rect
+                g_d3d.SetScissor((size_t)pcmd->ClipRect.x, (size_t)pcmd->ClipRect.y, (size_t)pcmd->ClipRect.z, (size_t)pcmd->ClipRect.w);
+
+                // bind the texture
+                CTexture* texture = (CTexture*)pcmd->TextureId;
+                ID3D11ShaderResourceView* srv = texture->GetSRV();
+                g_d3d.Context()->PSSetShaderResources(0, 1, &srv);
+
+                // TODO: the vertex shader needs to do some kind of ortho projection - to put position into clip space.
+
+                // TODO: verify here in C++ that the output vertices and indices match the inputs!
+
+                // TODO: copy the source mesh data into the destination mesh data.
+                // TODO: alternately could pass this data in instead of copying it to the intermediate storage
+
+                g_IMGUIMesh.Write(
+                    g_d3d.Context(),
+                    [&] (std::vector<ShaderTypes::VertexFormats::IMGUI>& vertexData, std::vector<unsigned long>& indexData)
+                    {
+                        memcpy(&vertexData[0], vtx_buffer, sizeof(vertexData[0]) * pcmd->ElemCount);
+                        memcpy(&indexData[0], idx_buffer, sizeof(indexData[0]) * pcmd->ElemCount);
+
+                        // TODO: temp
+                        int ijkl = 0;
+                    }
+                );
+
+                // run the shader
+                g_IMGUIMesh.Render(g_d3d.Context());
+                ShaderData::Shaders::IMGUI.Draw(g_d3d.Context(), pcmd->ElemCount / 3);
+
+                int ijkl = 0;
+                // TODO: clean up after this all works
                 // Render 'pcmd->ElemCount/3' texture triangles
-                //MyEngineBindTexture(pcmd->TextureId);
-                //MyEngineScissor((int)pcmd->ClipRect.x, (int)pcmd->ClipRect.y, (int)(pcmd->ClipRect.z - pcmd->ClipRect.x), (int)(pcmd->ClipRect.w - pcmd->ClipRect.y));
-                //MyEngineDrawIndexedTriangles(pcmd->ElemCount, sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT, idx_buffer, vtx_buffer);
             }
             idx_buffer += pcmd->ElemCount;
         }
     }
+
+    // reset scissor and unbind the texture
+    g_d3d.ClearScissor();
+    ID3D11ShaderResourceView* srv = nullptr;
+    g_d3d.Context()->PSSetShaderResources(0, 1, &srv);
+    g_d3d.EnableAlphaBlend(false);
 }
 
 bool InitIMGUI()
@@ -460,25 +499,29 @@ bool InitIMGUI()
     ImGuiIO& io = ImGui::GetIO();
     io.DisplaySize.x = 1920.0f;
     io.DisplaySize.y = 1280.0f;
-    // TODO: AW - render function!
-    io.RenderDrawListsFn = MyRenderFunction;  // Setup a render function, or set to NULL and call GetDrawData() after Render() to access the render data.
+    io.RenderDrawListsFn = IMGUIRenderFunction;  // Setup a render function, or set to NULL and call GetDrawData() after Render() to access the render data.
     // TODO: Fill others settings of the io structure later.
 
     // Load texture atlas (there is a default font so you don't need to care about choosing a font yet)
     unsigned char* pixels;
     int width, height;
     io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
-    // TODO: At this points you've got the texture data and you need to upload that your your graphic system:
     CTexture* texture = new CTexture;
     if (!texture->LoadFromPixels(g_d3d.Device(), g_d3d.Context(), pixels, width, height))
         return false;
 
-    //MyTexture* texture = MyEngine::CreateTextureFromMemoryPixels(pixels, width, height, TEXTURE_TYPE_RGBA)
     // TODO: Store your texture pointer/identifier (whatever your engine uses) in 'io.Fonts->TexID'. This will be passed back to your via the renderer.
     io.Fonts->TexID = (void*)texture;
 
     // TODO: delete CTexture later, or make it a shadertypelist.h item or something.
     return true;
+}
+
+void ReportError (const char* message)
+{
+    OutputDebugStringA(message);
+    fprintf(stderr, message);
+    int ijkl = 0;
 }
 
 bool init ()
@@ -492,18 +535,18 @@ bool init ()
         return false;
 
     // create constant buffers
-    #define CONSTANT_BUFFER_BEGIN(NAME) if (!ShaderData::ConstantBuffers::NAME.Create(g_d3d.Device())) return false;
+    #define CONSTANT_BUFFER_BEGIN(NAME) if (!ShaderData::ConstantBuffers::NAME.Create(g_d3d.Device())) { ReportError("Could not create constant buffer: " #NAME "\n"); return false; }
     #include "ShaderTypesList.h"
 
     // create structured buffers
-    #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT, CPUWRITES) if (!ShaderData::StructuredBuffers::NAME.Create(g_d3d.Device(), CPUWRITES)) return false;
+    #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT, CPUWRITES) if (!ShaderData::StructuredBuffers::NAME.Create(g_d3d.Device(), CPUWRITES)) { ReportError("Could not create structured buffer: " #NAME "\n"); return false; }
     #include "ShaderTypesList.h"
 
     // create textures
     #define TEXTURE_IMAGE(NAME, FILENAME) \
-        if(!ShaderData::Textures::NAME.LoadTGA(g_d3d.Device(), g_d3d.Context(), FILENAME)) return false;
+        if(!ShaderData::Textures::NAME.LoadTGA(g_d3d.Device(), g_d3d.Context(), FILENAME)) { ReportError("Could not load texture: " #NAME "\n"); return false; }
     #define TEXTURE_BUFFER(NAME, SHADERTYPE, FORMAT) \
-        if(!ShaderData::Textures::NAME.Create(g_d3d.Device(), g_d3d.Context(), c_width, c_height, FORMAT)) return false;
+        if(!ShaderData::Textures::NAME.Create(g_d3d.Device(), g_d3d.Context(), c_width, c_height, FORMAT)) { ReportError("Could not create texture buffer: " #NAME "\n"); return false; }
     #include "ShaderTypesList.h"
 
     // create volume textures and texture arrays
@@ -517,17 +560,17 @@ bool init ()
 
     #define TEXTURE_VOLUME_BEGIN(NAME) \
         size_t numSlices##NAME = sizeof(slices##NAME) / sizeof(slices##NAME[0]);\
-        if (!ShaderData::Textures::NAME.CreateVolume(g_d3d.Device(), g_d3d.Context(), slices##NAME, numSlices##NAME)) return false;
+        if (!ShaderData::Textures::NAME.CreateVolume(g_d3d.Device(), g_d3d.Context(), slices##NAME, numSlices##NAME)) { ReportError("Could not create volume texture: " #NAME "\n"); return false; }
     #define TEXTURE_ARRAY_BEGIN(NAME) \
         size_t numSlices##NAME = sizeof(slices##NAME) / sizeof(slices##NAME[0]);\
-        if (!ShaderData::Textures::NAME.CreateArray(g_d3d.Device(), g_d3d.Context(), slices##NAME, numSlices##NAME)) return false;
+        if (!ShaderData::Textures::NAME.CreateArray(g_d3d.Device(), g_d3d.Context(), slices##NAME, numSlices##NAME)) { ReportError("Could not create texture array: " #NAME "\n"); return false; }
     #include "ShaderTypesList.h"
 
     // create shaders
     #define SHADER_CS(NAME, FILENAME, ENTRY) \
-        if (!ShaderData::Shaders::NAME.Load(g_d3d.Device(), WindowGetHWND(), FILENAME, ENTRY, c_shaderDebug)) return false;
+        if (!ShaderData::Shaders::NAME.Load(g_d3d.Device(), WindowGetHWND(), FILENAME, ENTRY, c_shaderDebug)) { ReportError("Could not create compute shader: " #NAME "\n"); return false; }
     #define SHADER_VSPS(NAME, FILENAME, VSENTRY, PSENTRY, VERTEXFORMAT) \
-        if (!ShaderData::Shaders::NAME.Load(g_d3d.Device(), WindowGetHWND(), FILENAME, VSENTRY, PSENTRY, ShaderData::VertexFormats::VERTEXFORMAT, ShaderData::VertexFormats::VERTEXFORMAT##Elements, c_shaderDebug)) return false;
+        if (!ShaderData::Shaders::NAME.Load(g_d3d.Device(), WindowGetHWND(), FILENAME, VSENTRY, PSENTRY, ShaderData::VertexFormats::VERTEXFORMAT, ShaderData::VertexFormats::VERTEXFORMAT##Elements, c_shaderDebug)) { ReportError("Could not create shader : " #NAME "\n"); return false; }
     #include "ShaderTypesList.h"
 
     // make a full screen triangle
@@ -548,10 +591,35 @@ bool init ()
         }
     );
 
+    if (!writeOK)
+    {
+        ReportError("Could not create full screen triangle\n");
+        return false;
+    }
+
+    writeOK = g_IMGUIMesh.Create(
+        g_d3d.Device(),
+        [] (std::vector<ShaderTypes::VertexFormats::IMGUI>& vertexData, std::vector<unsigned long>& indexData)
+        {
+            vertexData.resize(c_IMGUI_Verts);
+            indexData.resize(c_IMGUI_Verts);
+
+            for (size_t i = 0; i < c_IMGUI_Verts; ++i)
+                indexData[i] = (unsigned long) i;
+        }
+    );
+
+    if (!writeOK)
+    {
+        ReportError("Could not create fullimgui mesh\n");
+        return false;
+    }
+
     writeOK = ShaderData::ConstantBuffers::ConstantsOnce.Write(
         g_d3d.Context(),
         [] (ShaderTypes::ConstantBuffers::ConstantsOnce& data)
         {
+            data.width_height_zw = { float(c_width), float(c_height), 0.0f, 0.0f };
             data.cameraPos_FOVX = { 0.0f, 0.0f, 0.0f, c_fovX };
             data.cameraAt_FOVY = { 0.0f, 0.0f, 0.0f, c_fovY };
             data.nearPlaneDist_missColor = { 0.0f, 0.0f, 0.0f, 0.0f };
@@ -560,7 +628,10 @@ bool init ()
         }
     );
     if (!writeOK)
+    {
+        ReportError("Could not write constants once\n");
         return false;
+    }
 
     writeOK = ShaderData::ConstantBuffers::ConstantsPerFrame.Write(
         g_d3d.Context(),
@@ -571,10 +642,16 @@ bool init ()
         }
     );
     if (!writeOK)
+    {
+        ReportError("Could not write constants per frame\n");
         return false;
+    }
 
     if (!InitIMGUI())
+    {
+        ReportError("Could not init imgui\n");
         return false;
+    }
 
     return true;
 }

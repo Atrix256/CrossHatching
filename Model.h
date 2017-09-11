@@ -19,10 +19,10 @@ public:
         lambda(m_vertices, m_indices);
 
         // Set up the description of the static vertex buffer.
-        vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+        vertexBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
         vertexBufferDesc.ByteWidth = (UINT)(sizeof(VertexType) * m_vertices.size());
         vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-        vertexBufferDesc.CPUAccessFlags = 0;
+        vertexBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
         vertexBufferDesc.MiscFlags = 0;
         vertexBufferDesc.StructureByteStride = 0;
 
@@ -39,10 +39,10 @@ public:
         }
 
         // Set up the description of the static index buffer.
-        indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+        indexBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
         indexBufferDesc.ByteWidth = (UINT)(sizeof(unsigned long) * m_indices.size());
         indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-        indexBufferDesc.CPUAccessFlags = 0;
+        indexBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
         indexBufferDesc.MiscFlags = 0;
         indexBufferDesc.StructureByteStride = 0;
 
@@ -57,6 +57,40 @@ public:
         {
             return false;
         }
+        return true;
+    }
+
+    // TODO: make this work, and make it write both vertex and index data
+    template <typename LAMBDA>
+    bool Write (ID3D11DeviceContext* deviceContext, LAMBDA& lambda)
+    {
+        // let the caller write to the storage. They can accept the argument as a reference
+        lambda(m_vertices, m_indices);
+
+        // write the vertex data
+        HRESULT result;
+        D3D11_MAPPED_SUBRESOURCE mappedResource;
+        {
+            result = deviceContext->Map(m_vertexBuffer.m_ptr, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+            if (FAILED(result))
+            {
+                return false;
+            }
+            memcpy(mappedResource.pData, &m_vertices[0], sizeof(m_vertices[0]) * m_vertices.size());
+            deviceContext->Unmap(m_vertexBuffer.m_ptr, 0);
+        }
+
+        // write the index data
+        {
+            result = deviceContext->Map(m_indexBuffer.m_ptr, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+            if (FAILED(result))
+            {
+                return false;
+            }
+            memcpy(mappedResource.pData, &m_indices[0], sizeof(m_indices[0]) * m_indices.size());
+            deviceContext->Unmap(m_indexBuffer.m_ptr, 0);
+        }
+
         return true;
     }
 
