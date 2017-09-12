@@ -1,3 +1,5 @@
+* backspace isn't working in imgui? delete is giving a '.'.  I think maybe i need to TranslateMessage and DispatchMessage ?
+
 ? with greyscale crosshatch, why isn't the background in scene 1 black??
  * i think it has to do with mips. mips are grey!
 

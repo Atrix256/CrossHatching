@@ -358,10 +358,18 @@ void FillShaderParams (ID3D11DeviceContext* deviceContext, ID3D11ShaderReflectio
     }
 }
 
-void OnKeyPress (unsigned char key, bool pressed)
+void OnKey (char key, EKeyEvent event)
 {
+    // pass key events to imgui
+    if (event == EKeyEvent::input)
+    {
+        ImGuiIO& io = ImGui::GetIO();
+        io.AddInputCharacter(key);
+        return;
+    }
+
     // only do actions on key release right now
-    if (pressed)
+    if (event != EKeyEvent::release)
         return;
 
     switch (key)
@@ -455,32 +463,23 @@ void IMGUIRenderFunction(ImDrawData* draw_data)
                 ID3D11ShaderResourceView* srv = texture->GetSRV();
                 g_d3d.Context()->PSSetShaderResources(0, 1, &srv);
 
-                // TODO: the vertex shader needs to do some kind of ortho projection - to put position into clip space.
+                // TODO: the rendering is not right. look at the source. not real sure how to handle it yet.
 
-                // TODO: verify here in C++ that the output vertices and indices match the inputs!
-
-                // TODO: copy the source mesh data into the destination mesh data.
-                // TODO: alternately could pass this data in instead of copying it to the intermediate storage
-
+                // TODO: alternately could pass this data in instead of copying it to the intermediate storage. maybe try that, it's faster.
                 g_IMGUIMesh.Write(
                     g_d3d.Context(),
                     [&] (std::vector<ShaderTypes::VertexFormats::IMGUI>& vertexData, std::vector<unsigned long>& indexData)
                     {
                         memcpy(&vertexData[0], vtx_buffer, sizeof(vertexData[0]) * pcmd->ElemCount);
                         memcpy(&indexData[0], idx_buffer, sizeof(indexData[0]) * pcmd->ElemCount);
-
-                        // TODO: temp
-                        int ijkl = 0;
                     }
                 );
+                // TODO: the real rendering does this!
+                //idx_buffer += pcmd->ElemCount;
 
                 // run the shader
                 g_IMGUIMesh.Render(g_d3d.Context());
-                ShaderData::Shaders::IMGUI.Draw(g_d3d.Context(), pcmd->ElemCount / 3);
-
-                int ijkl = 0;
-                // TODO: clean up after this all works
-                // Render 'pcmd->ElemCount/3' texture triangles
+                ShaderData::Shaders::IMGUI.Draw(g_d3d.Context(), pcmd->ElemCount);
             }
             idx_buffer += pcmd->ElemCount;
         }
@@ -497,10 +496,10 @@ bool InitIMGUI()
 {
     // TODO: move imgui to it's own file!
     ImGuiIO& io = ImGui::GetIO();
-    io.DisplaySize.x = 1920.0f;
-    io.DisplaySize.y = 1280.0f;
+    io.DisplaySize.x = c_width;
+    io.DisplaySize.y = c_height;
     io.RenderDrawListsFn = IMGUIRenderFunction;  // Setup a render function, or set to NULL and call GetDrawData() after Render() to access the render data.
-    // TODO: Fill others settings of the io structure later.
+    // TODO: Fill others settings of the io structure later. (like what?)
 
     // Load texture atlas (there is a default font so you don't need to care about choosing a font yet)
     unsigned char* pixels;
@@ -514,6 +513,7 @@ bool InitIMGUI()
     io.Fonts->TexID = (void*)texture;
 
     // TODO: delete CTexture later, or make it a shadertypelist.h item or something.
+    // TODO: this is likely the only cause of the leaks on shutdown
     return true;
 }
 
@@ -521,12 +521,11 @@ void ReportError (const char* message)
 {
     OutputDebugStringA(message);
     fprintf(stderr, message);
-    int ijkl = 0;
 }
 
 bool init ()
 {
-    WindowInit(c_width, c_height, c_fullScreen, OnKeyPress);
+    WindowInit(c_width, c_height, c_fullScreen, OnKey);
 
     if (!g_d3d.Init(c_width, c_height, c_vsync, WindowGetHWND(), c_fullScreen, c_d3ddebug))
         return false;
@@ -727,11 +726,20 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
             // TODO: put in separate file
             // Setup low-level inputs (e.g. on Win32, GetKeyboardState(), or write to those fields from your Windows message loop handlers, etc.)
             ImGuiIO& io = ImGui::GetIO();
+            // TODO: fill out delta time?
             io.DeltaTime = 1.0f / 60.0f;
             // TODO: update input!
-            //io.MousePos = mouse_pos;
-            //io.MouseDown[0] = mouse_button_0;
-            //io.MouseDown[1] = mouse_button_1;
+            POINT mousePos;
+            GetCursorPos(&mousePos);
+            ScreenToClient(WindowGetHWND(), &mousePos);
+            io.MousePos.x = (float)mousePos.x;
+            io.MousePos.y = (float)mousePos.y;
+            io.MouseDown[0] = (bool)(GetAsyncKeyState(VK_LBUTTON));
+            io.MouseDown[1] = (bool)(GetAsyncKeyState(VK_RBUTTON));
+            for (size_t i = 0; i < 512; ++i)
+                io.KeysDown[i] = (bool)(GetAsyncKeyState(i));
+            io.KeyCtrl = GetAsyncKeyState(VK_CONTROL);
+            io.KeyShift = GetAsyncKeyState(VK_SHIFT);
 
             // Call NewFrame(), after this point you can use ImGui::* functions anytime
             ImGui::NewFrame();

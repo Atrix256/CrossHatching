@@ -24,6 +24,12 @@ LRESULT CALLBACK MessageHandler (HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lpa
 		    return 0;
 	    }
 
+        case WM_CHAR:
+        {
+            s_keyPressCallback((char)wparam, EKeyEvent::input);
+            return 0;
+        }
+
         // Check if a key has been pressed on the keyboard.
         case WM_KEYDOWN:
         {
@@ -31,14 +37,14 @@ LRESULT CALLBACK MessageHandler (HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lpa
             {
                 PostQuitMessage(0);
             }
-            s_keyPressCallback((unsigned char)wparam, true);
+            s_keyPressCallback((char)wparam, EKeyEvent::press);
             return 0;
         }
 
         // Check if a key has been released on the keyboard.
         case WM_KEYUP:
         {
-            s_keyPressCallback((unsigned char)wparam, false);
+            s_keyPressCallback((char)wparam, EKeyEvent::release);
             return 0;
         }
 

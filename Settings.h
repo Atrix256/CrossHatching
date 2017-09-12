@@ -11,4 +11,4 @@
 #define c_d3ddebug true // TODO: turn these off
 #define c_fovX DegreesToRadians(40.0f)
 #define c_fovY (c_fovX * float(c_height) / float(c_width)) 
-#define c_IMGUI_Verts 10000
+#define c_IMGUI_Verts 100000

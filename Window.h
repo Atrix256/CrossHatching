@@ -3,7 +3,14 @@
 #include <windows.h>
 #include <functional>
 
-typedef std::function<void(unsigned char key, bool pressed)> TKeyPressCallback;
+enum class EKeyEvent
+{
+    press,
+    release,
+    input
+};
+
+typedef std::function<void(char key, EKeyEvent event)> TKeyPressCallback;
 
 void WindowInit (size_t screenWidth, size_t screenHeight, bool fullScreen, TKeyPressCallback keyPressCallback);
 
