@@ -4,10 +4,13 @@
 
 static HWND s_hWnd = nullptr;
 
-static TKeyPressCallback s_keyPressCallback = nullptr;
+static TWndProcCallback s_wndProcCallback = nullptr;
 
 LRESULT CALLBACK MessageHandler (HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam)
 {
+    if (s_wndProcCallback(hwnd, umsg, wparam, lparam))
+        return 1;
+
     switch (umsg)
     {
 	    // Check if the window is being destroyed.
@@ -24,12 +27,6 @@ LRESULT CALLBACK MessageHandler (HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lpa
 		    return 0;
 	    }
 
-        case WM_CHAR:
-        {
-            s_keyPressCallback((char)wparam, EKeyEvent::input);
-            return 0;
-        }
-
         // Check if a key has been pressed on the keyboard.
         case WM_KEYDOWN:
         {
@@ -37,14 +34,6 @@ LRESULT CALLBACK MessageHandler (HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lpa
             {
                 PostQuitMessage(0);
             }
-            s_keyPressCallback((char)wparam, EKeyEvent::press);
-            return 0;
-        }
-
-        // Check if a key has been released on the keyboard.
-        case WM_KEYUP:
-        {
-            s_keyPressCallback((char)wparam, EKeyEvent::release);
             return 0;
         }
 
@@ -56,14 +45,14 @@ LRESULT CALLBACK MessageHandler (HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lpa
     }
 }
 
-void WindowInit (size_t screenWidth, size_t screenHeight, bool fullScreen, TKeyPressCallback keyPressCallback)
+void WindowInit (size_t screenWidth, size_t screenHeight, bool fullScreen, TWndProcCallback wndProcCallback)
 {
     WNDCLASSEX wc;
     DEVMODE dmScreenSettings;
     int posX, posY;
 
-    // store off the keypress callback
-    s_keyPressCallback = keyPressCallback;
+    // store off the callback
+    s_wndProcCallback = wndProcCallback;
 
     // Get the instance of this application.
     HMODULE hinstance = GetModuleHandle(NULL);

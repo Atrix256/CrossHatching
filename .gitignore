@@ -63,3 +63,4 @@ Temporary Items
 **/Release/*.*
 *.vc.db
 *.vc.opendb
+imgui.ini

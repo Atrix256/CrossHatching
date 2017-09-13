@@ -23,6 +23,10 @@ bool g_smoothStep = false;
 CModel<ShaderTypes::VertexFormats::Pos2D> g_fullScreenMesh;
 CModel<ShaderTypes::VertexFormats::IMGUI> g_IMGUIMesh;
 
+// for imgui (but could also be for FPS calculation and such)
+static INT64                    g_Time = 0;
+static INT64                    g_TicksPerSecond = 0;
+
 float RandomFloat (float min, float max)
 {
     static std::random_device rd;
@@ -358,6 +362,56 @@ void FillShaderParams (ID3D11DeviceContext* deviceContext, ID3D11ShaderReflectio
     }
 }
 
+bool IMGUI_EventHandler (HWND, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    ImGuiIO& io = ImGui::GetIO();
+    switch (msg)
+    {
+    case WM_LBUTTONDOWN:
+        io.MouseDown[0] = true;
+        return true;
+    case WM_LBUTTONUP:
+        io.MouseDown[0] = false;
+        return true;
+    case WM_RBUTTONDOWN:
+        io.MouseDown[1] = true;
+        return true;
+    case WM_RBUTTONUP:
+        io.MouseDown[1] = false;
+        return true;
+    case WM_MBUTTONDOWN:
+        io.MouseDown[2] = true;
+        return true;
+    case WM_MBUTTONUP:
+        io.MouseDown[2] = false;
+        return true;
+    case WM_MOUSEWHEEL:
+        io.MouseWheel += GET_WHEEL_DELTA_WPARAM(wParam) > 0 ? +1.0f : -1.0f;
+        return true;
+    case WM_MOUSEMOVE:
+        io.MousePos.x = (signed short)(lParam);
+        io.MousePos.y = (signed short)(lParam >> 16);
+        return true;
+    case WM_KEYDOWN:
+        if (wParam < 256)
+            io.KeysDown[wParam] = 1;
+        return true;
+    case WM_KEYUP:
+        if (wParam < 256)
+            io.KeysDown[wParam] = 0;
+        return true;
+    case WM_CHAR:
+        // You can also use ToAscii()+GetKeyboardState() to retrieve characters.
+        if (wParam > 0 && wParam < 0x10000)
+            io.AddInputCharacter((unsigned short)wParam);
+        return true;
+    }
+    return false;
+}
+
+
+// TODO: get rid of when imgui is working!
+/*
 void OnKey (char key, EKeyEvent event)
 {
     // pass key events to imgui
@@ -431,6 +485,7 @@ void OnKey (char key, EKeyEvent event)
         }
     }
 }
+*/
 
 void IMGUIRenderFunction(ImDrawData* draw_data)
 {
@@ -508,12 +563,37 @@ void IMGUIRenderFunction(ImDrawData* draw_data)
 
 bool InitIMGUI()
 {
-    // TODO: move imgui to it's own file!
+    if (!QueryPerformanceFrequency((LARGE_INTEGER *)&g_TicksPerSecond))
+        return false;
+    if (!QueryPerformanceCounter((LARGE_INTEGER *)&g_Time))
+        return false;
+
     ImGuiIO& io = ImGui::GetIO();
     io.DisplaySize.x = c_width;
     io.DisplaySize.y = c_height;
-    io.RenderDrawListsFn = IMGUIRenderFunction;  // Setup a render function, or set to NULL and call GetDrawData() after Render() to access the render data.
-    // TODO: Fill others settings of the io structure later. (like what?)
+    io.KeyMap[ImGuiKey_Tab] = VK_TAB;                       // Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array that we will update during the application lifetime.
+    io.KeyMap[ImGuiKey_LeftArrow] = VK_LEFT;
+    io.KeyMap[ImGuiKey_RightArrow] = VK_RIGHT;
+    io.KeyMap[ImGuiKey_UpArrow] = VK_UP;
+    io.KeyMap[ImGuiKey_DownArrow] = VK_DOWN;
+    io.KeyMap[ImGuiKey_PageUp] = VK_PRIOR;
+    io.KeyMap[ImGuiKey_PageDown] = VK_NEXT;
+    io.KeyMap[ImGuiKey_Home] = VK_HOME;
+    io.KeyMap[ImGuiKey_End] = VK_END;
+    io.KeyMap[ImGuiKey_Delete] = VK_DELETE;
+    io.KeyMap[ImGuiKey_Backspace] = VK_BACK;
+    io.KeyMap[ImGuiKey_Enter] = VK_RETURN;
+    io.KeyMap[ImGuiKey_Escape] = VK_ESCAPE;
+    io.KeyMap[ImGuiKey_Delete] = VK_DELETE;
+    io.KeyMap[ImGuiKey_A] = 'A';
+    io.KeyMap[ImGuiKey_C] = 'C';
+    io.KeyMap[ImGuiKey_V] = 'V';
+    io.KeyMap[ImGuiKey_X] = 'X';
+    io.KeyMap[ImGuiKey_Y] = 'Y';
+    io.KeyMap[ImGuiKey_Z] = 'Z';
+
+    io.RenderDrawListsFn = IMGUIRenderFunction;  // Alternatively you can set this to NULL and call ImGui::GetDrawData() after ImGui::Render() to get the same ImDrawData pointer.
+    io.ImeWindowHandle = WindowGetHWND();
 
     // Load texture atlas (there is a default font so you don't need to care about choosing a font yet)
     unsigned char* pixels;
@@ -539,7 +619,7 @@ void ReportError (const char* message)
 
 bool init ()
 {
-    WindowInit(c_width, c_height, c_fullScreen, OnKey);
+    WindowInit(c_width, c_height, c_fullScreen, IMGUI_EventHandler);
 
     if (!g_d3d.Init(c_width, c_height, c_vsync, WindowGetHWND(), c_fullScreen, c_d3ddebug))
         return false;
@@ -738,22 +818,11 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
         else
         {
             // TODO: put in separate file
-            // Setup low-level inputs (e.g. on Win32, GetKeyboardState(), or write to those fields from your Windows message loop handlers, etc.)
             ImGuiIO& io = ImGui::GetIO();
-            // TODO: fill out delta time?
-            io.DeltaTime = 1.0f / 60.0f;
-            // TODO: update input!
-            POINT mousePos;
-            GetCursorPos(&mousePos);
-            ScreenToClient(WindowGetHWND(), &mousePos);
-            io.MousePos.x = (float)mousePos.x;
-            io.MousePos.y = (float)mousePos.y;
-            io.MouseDown[0] = (bool)(GetAsyncKeyState(VK_LBUTTON));
-            io.MouseDown[1] = (bool)(GetAsyncKeyState(VK_RBUTTON));
-            for (size_t i = 0; i < 512; ++i)
-                io.KeysDown[i] = (bool)(GetAsyncKeyState(i));
-            io.KeyCtrl = GetAsyncKeyState(VK_CONTROL);
-            io.KeyShift = GetAsyncKeyState(VK_SHIFT);
+            INT64 current_time;
+            QueryPerformanceCounter((LARGE_INTEGER *)&current_time);
+            io.DeltaTime = (float)(current_time - g_Time) / g_TicksPerSecond;
+            g_Time = current_time;
 
             // Call NewFrame(), after this point you can use ImGui::* functions anytime
             ImGui::NewFrame();

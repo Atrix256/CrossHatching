@@ -3,15 +3,8 @@
 #include <windows.h>
 #include <functional>
 
-enum class EKeyEvent
-{
-    press,
-    release,
-    input
-};
+typedef std::function<bool(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam)> TWndProcCallback;
 
-typedef std::function<void(char key, EKeyEvent event)> TKeyPressCallback;
-
-void WindowInit (size_t screenWidth, size_t screenHeight, bool fullScreen, TKeyPressCallback keyPressCallback);
+void WindowInit (size_t screenWidth, size_t screenHeight, bool fullScreen, TWndProcCallback wndProcCallback);
 
 HWND WindowGetHWND ();
