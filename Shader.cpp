@@ -123,7 +123,7 @@ bool CShader::Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, const ch
     return true;
 }
 
-void CShader::Draw (ID3D11DeviceContext* deviceContext, size_t indexCount)
+void CShader::Draw (ID3D11DeviceContext* deviceContext, size_t indexCount, size_t startIndex, size_t startVertex)
 {
     // Set the vertex input layout.
     deviceContext->IASetInputLayout(m_layout.m_ptr);
@@ -133,7 +133,7 @@ void CShader::Draw (ID3D11DeviceContext* deviceContext, size_t indexCount)
     deviceContext->PSSetShader(m_pixelShader.m_ptr, NULL, 0);
 
     // Render the triangle.
-    deviceContext->DrawIndexed((UINT)indexCount, 0, 0);
+    deviceContext->DrawIndexed((UINT)indexCount, (UINT)startIndex, (UINT)startVertex);
 }
 
 bool CComputeShader::Load(ID3D11Device* device, HWND hWnd, wchar_t* fileName, const char* entry, bool debug)

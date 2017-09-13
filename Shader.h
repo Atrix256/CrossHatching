@@ -16,7 +16,7 @@ class CShader
 public:
     bool Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, const char* vsentry, const char* psentry, D3D11_INPUT_ELEMENT_DESC* vertexFormat, size_t vertexFormatElements, bool debug);
 
-    void Draw (ID3D11DeviceContext* deviceContext, size_t indexCount);
+    void Draw (ID3D11DeviceContext* deviceContext, size_t indexCount, size_t startIndex = 0, size_t startVertex = 0);
 
     ID3D11ShaderReflection* GetVSReflector() { return m_vsReflector.m_ptr; }
     ID3D11ShaderReflection* GetPSReflector() { return m_psReflector.m_ptr; }
