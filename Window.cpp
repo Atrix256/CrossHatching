@@ -54,6 +54,12 @@ bool IMGUI_EventHandler (HWND, UINT msg, WPARAM wParam, LPARAM lParam)
 
 LRESULT CALLBACK MessageHandler (HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam)
 {
+    ImGuiIO& io = ImGui::GetIO();
+
+    static void(*IMGUIRenderFunc)(ImDrawData* data) = nullptr;
+    if (IMGUIRenderFunc == nullptr)
+        IMGUIRenderFunc = io.RenderDrawListsFn;
+
     if (IMGUI_EventHandler(hwnd, umsg, wparam, lparam))
         return 1;
 
@@ -79,6 +85,19 @@ LRESULT CALLBACK MessageHandler (HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lpa
             if ((unsigned int)wparam == 27)
             {
                 PostQuitMessage(0);
+            }
+            return 0;
+        }
+
+        // Check if a key has been released on the keyboard.
+        case WM_KEYUP:
+        {
+            if ((char)wparam == 'H')
+            {
+                if (io.RenderDrawListsFn == nullptr)
+                    io.RenderDrawListsFn = IMGUIRenderFunc;
+                else
+                    io.RenderDrawListsFn = nullptr;
             }
             return 0;
         }

@@ -432,14 +432,6 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
         }
         case EScene::ObjTest:
         {
-            ret &= ShaderData::StructuredBuffers::Spheres.Write(
-                context,
-                [] (ShaderTypes::StructuredBuffers::TSpheres& spheres)
-                {
-                    MakeSphere(spheres[0], { -2.0f, 0.0f, -3.0f }, 0.5f, { 0.0f, 0.0f, 0.0f }, { 10.0f, 10.0f, 10.0f });
-                }
-            );
-
             size_t triangleIndex = 0;
             ret &= ShaderData::StructuredBuffers::Triangles.Write(
                 context,
@@ -465,7 +457,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
 
                     scene.nearPlaneDist_missColor = { 0.1f, 0.0f, 0.0f, 0.0f };
 
-                    scene.numSpheres_numTris_numOBBs_numQuads = { 1, (unsigned int)triangleIndex, 0, 0 };
+                    scene.numSpheres_numTris_numOBBs_numQuads = { 0, (unsigned int)triangleIndex, 0, 0 };
                     scene.uvmultiplier_blackPoint_whitePoint_w = { 0.25f, 0.0f, 1.0f, 0.0f };
                 }
             );

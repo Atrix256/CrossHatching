@@ -19,10 +19,13 @@ CD3D11 g_d3d;
 bool g_showGrey = false;
 bool g_showCrossHatch = false;
 bool g_smoothStep = false;
+bool g_aniso = false;
 bool g_whiteAlbedo = false;
 
 CModel<ShaderTypes::VertexFormats::Pos2D> g_fullScreenMesh;
 CModel<ShaderTypes::VertexFormats::IMGUI> g_IMGUIMesh;
+
+CTexture g_IMGUIFont;
 
 // for imgui (but could also be for FPS calculation and such)
 static INT64                    g_Time = 0;
@@ -533,15 +536,11 @@ bool InitIMGUI()
     unsigned char* pixels;
     int width, height;
     io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
-    CTexture* texture = new CTexture;
-    if (!texture->LoadFromPixels(g_d3d.Device(), g_d3d.Context(), pixels, width, height))
+    if (!g_IMGUIFont.LoadFromPixels(g_d3d.Device(), g_d3d.Context(), pixels, width, height))
         return false;
 
     // Store texture pointer/identifier (whatever your engine uses) in 'io.Fonts->TexID'. This will be passed back to your via the renderer.
-    io.Fonts->TexID = (void*)texture;
-
-    // TODO: delete CTexture later, or make it a shadertypelist.h item or something.
-    // TODO: this is likely the only cause of the leaks on shutdown
+    io.Fonts->TexID = (void*)&g_IMGUIFont;
     return true;
 }
 
@@ -701,21 +700,41 @@ bool init ()
 
 void IMGUIWindow ()
 {
-    ImGuiIO& io = ImGui::GetIO();
+    // calculate frame time
     INT64 current_time;
     QueryPerformanceCounter((LARGE_INTEGER *)&current_time);
-    io.DeltaTime = (float)(current_time - g_Time) / g_TicksPerSecond;
+    float deltaTime = (float)(current_time - g_Time) / g_TicksPerSecond;
+
+    // set delta time and current time
+    ImGuiIO& io = ImGui::GetIO();
+    io.DeltaTime = deltaTime;
     g_Time = current_time;
 
-    // Call NewFrame(), after this point you can use ImGui::* functions anytime
+    // start a new frame
     ImGui::NewFrame();
 
-    // TODO: temp!
-    //ImGui::ShowTestWindow();
-    //return;
+    // used to see the fully featured built in imgui demo window
+    if (0)
+    {
+        ImGui::ShowTestWindow();
+        return;
+    }
 
+    // handle FPS calculations
+    static int FPSFrameCount = 0;
+    static float FPSFrameTime = 0.0f;
+    static float FPSLast = 0.0f;
+    FPSFrameCount++;
+    FPSFrameTime += deltaTime;
+    if (FPSFrameTime > 0.5f)
+    {
+        FPSLast = float(FPSFrameCount) / FPSFrameTime;
+        FPSFrameCount = 0;
+        FPSFrameTime = 0.0f;
+    }
+
+    // handle UI
     static bool firstTime = true;
-    static bool showWindow = true;
 
     static float uvScale = 1.0f;
     static float blackPoint = 0.0f;
@@ -732,8 +751,7 @@ void IMGUIWindow ()
         whitePoint = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_w[2];
     }
 
-    // TODO: how do i collapse?
-    ImGui::Begin("", &showWindow, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize);
+    ImGui::Begin("", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize);
 
     const char* scenes[] = {
         "Sphere Plane Dark",
@@ -745,17 +763,48 @@ void IMGUIWindow ()
         "Obj Test"
     };
 
-    updateScene |= ImGui::Combo("Scene", &scene, scenes, (int)EScene::COUNT);
+    if (ImGui::CollapsingHeader("Scene Paramaters", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        updateScene |= ImGui::Combo("Scene", &scene, scenes, (int)EScene::COUNT);
+        updateScene |= ImGui::Checkbox("White ALbedo", &g_whiteAlbedo);
+        if (ImGui::Button("Reset Render"))
+        {
+            ShaderData::ConstantBuffers::ConstantsPerFrame.Write(
+                g_d3d.Context(),
+                [=](ShaderTypes::ConstantBuffers::ConstantsPerFrame& data)
+                {
+                    data.sampleCount_yzw[0] = 0;
+                }
+            );
+        }
+    }
 
-    ImGui::Checkbox("Grey Scale", &g_showGrey);
-    ImGui::Checkbox("Cross Hatch", &g_showCrossHatch);
-    updateScene |= ImGui::Checkbox("White ALbedo", &g_whiteAlbedo);
+    if (ImGui::CollapsingHeader("Cross Hatching", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        ImGui::Checkbox("Grey Scale", &g_showGrey);
+        ImGui::Checkbox("Cross Hatch", &g_showCrossHatch);
+        ImGui::Checkbox("16x Anisotropic Sampling", &g_aniso);
+        updateConstants |= ImGui::SliderFloat("UV Scale", &uvScale, 0.001f, 3.0f);
+    }
 
-    updateConstants |= ImGui::SliderFloat("UV Scale", &uvScale, 0.001f, 3.0f);
+    if (ImGui::CollapsingHeader("Brightness", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        updateConstants |= ImGui::SliderFloat("Black", &blackPoint, 0.0f, 1.0f);
+        updateConstants |= ImGui::SliderFloat("White", &whitePoint, 0.0f, 1.0f);
+        ImGui::Checkbox("Smooth Step Brightness", &g_smoothStep);
+    }
 
-    updateConstants |= ImGui::SliderFloat("Black", &blackPoint, 0.0f, 1.0f);
-    updateConstants |= ImGui::SliderFloat("White", &whitePoint, 0.0f, 1.0f);
-    ImGui::Checkbox("Smooth Step Brightness", &g_smoothStep);
+    if (ImGui::CollapsingHeader("Scene", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        uint4 counts = ShaderData::ConstantBuffers::ConstantsOnce.Read().numSpheres_numTris_numOBBs_numQuads;
+        ImGui::Text("Rendering at %u x %u\nSpheres: %u\nTriangles: %u\nOBBs: %u\nQuads: %u\n", c_width, c_height, counts[0], counts[1], counts[2], counts[3]);
+    }
+
+    // show FPS
+    ImGui::Separator();
+    ImGui::Text("FPS: %0.2f (%0.2f ms)", FPSLast, FPSLast > 0 ? 1000.0f / FPSLast : 0.0f);
+    ImGui::Text("%u samples\nFPS is samples per second\n", ShaderData::ConstantBuffers::ConstantsPerFrame.Read().sampleCount_yzw[0]);
+    ImGui::Text("Press 'H' to hide or unhide this window");
 
     ImGui::End();
 
@@ -765,11 +814,11 @@ void IMGUIWindow ()
         ShaderData::ConstantBuffers::ConstantsOnce.Write(
             g_d3d.Context(),
             [=](ShaderTypes::ConstantBuffers::ConstantsOnce& data)
-        {
-            data.uvmultiplier_blackPoint_whitePoint_w[0] = uvScale;
-            data.uvmultiplier_blackPoint_whitePoint_w[1] = blackPoint;
-            data.uvmultiplier_blackPoint_whitePoint_w[2] = whitePoint;
-        }
+            {
+                data.uvmultiplier_blackPoint_whitePoint_w[0] = uvScale;
+                data.uvmultiplier_blackPoint_whitePoint_w[1] = blackPoint;
+                data.uvmultiplier_blackPoint_whitePoint_w[2] = whitePoint;
+            }
         );
     }
 
@@ -853,7 +902,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
             // TODO: it really would be nice if passing static branches would let you see names. Maybe a function that returns the correct type? Also make sure that all parameters are required. No silent failures!
 
             // vs/ps to show the results of the path tracing
-            const CShader& shader = ShaderData::GetShader_showPathTrace({g_showGrey, g_showCrossHatch, g_smoothStep});
+            const CShader& shader = ShaderData::GetShader_showPathTrace({g_showGrey, g_showCrossHatch, g_smoothStep, g_aniso});
             FillShaderParams<EShaderType::vertex>(g_d3d.Context(), shader.GetVSReflector());
             FillShaderParams<EShaderType::pixel>(g_d3d.Context(), shader.GetPSReflector());
             g_fullScreenMesh.Render(g_d3d.Context());

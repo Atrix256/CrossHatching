@@ -3,3 +3,4 @@
 #define SBGrey 1
 #define SBCrossHatch 1
 #define SBSmoothStep 1
+#define SBAniso 1

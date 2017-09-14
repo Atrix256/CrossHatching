@@ -329,6 +329,7 @@ SHADER_VSPS_BEGIN(showPathTrace, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_mai
     SHADER_VSPS_STATICBRANCH(SBGrey)
     SHADER_VSPS_STATICBRANCH(SBCrossHatch)
     SHADER_VSPS_STATICBRANCH(SBSmoothStep)
+    SHADER_VSPS_STATICBRANCH(SBAniso)
 SHADER_VSPS_END
 
 //=================================================================

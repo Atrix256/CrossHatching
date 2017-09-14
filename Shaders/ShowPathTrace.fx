@@ -44,7 +44,7 @@ float3 YUVToRGB (float3 yuv)
 }
 
 //----------------------------------------------------------------------------
-float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch, bool smoothStep)
+float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch, bool smoothStep, bool aniso)
 {
     // get our first ray hit info from the FirstRayHits buffer
     uint dimsX, dimsY;
@@ -84,7 +84,6 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch, bool s
     yuv.x = uvmultiplier_blackPoint_whitePoint_w.y + yuv.x * (uvmultiplier_blackPoint_whitePoint_w.z - uvmultiplier_blackPoint_whitePoint_w.y);
 
     // smoothstep the result if we are supposed to
-    // TODO: should we do this before remapping or after? maybe see what that other article does....
     if (smoothStep)
         yuv.x = smoothstep(0.0f, 1.0f, yuv.x);
 
@@ -110,16 +109,33 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch, bool s
         
 		// triplanar projection sample the crosshatching texture
         // we need to manually lerp to get trilinear interpolation between slice samples
-        float crossHatchTexelFloor =
-            circlesarray.Sample(SamplerAnisoWrap, float3(uvx, floor(w))).r * rayHitInfo.m_surfaceNormal.x +
-            circlesarray.Sample(SamplerAnisoWrap, float3(uvy, floor(w))).r * rayHitInfo.m_surfaceNormal.y +
-            circlesarray.Sample(SamplerAnisoWrap, float3(uvz, floor(w))).r * rayHitInfo.m_surfaceNormal.z;
-        crossHatchTexelFloor /= (rayHitInfo.m_surfaceNormal.x + rayHitInfo.m_surfaceNormal.y + rayHitInfo.m_surfaceNormal.z);
+        float crossHatchTexelFloor;
+        float crossHatchTexelCeil;
+        if (aniso)
+        {
+            crossHatchTexelFloor =
+                circlesarray.Sample(SamplerAnisoWrap, float3(uvx, floor(w))).r * rayHitInfo.m_surfaceNormal.x +
+                circlesarray.Sample(SamplerAnisoWrap, float3(uvy, floor(w))).r * rayHitInfo.m_surfaceNormal.y +
+                circlesarray.Sample(SamplerAnisoWrap, float3(uvz, floor(w))).r * rayHitInfo.m_surfaceNormal.z;
+            
+            crossHatchTexelCeil =
+                circlesarray.Sample(SamplerAnisoWrap, float3(uvx, ceil(w))).r * rayHitInfo.m_surfaceNormal.x +
+                circlesarray.Sample(SamplerAnisoWrap, float3(uvy, ceil(w))).r * rayHitInfo.m_surfaceNormal.y +
+                circlesarray.Sample(SamplerAnisoWrap, float3(uvz, ceil(w))).r * rayHitInfo.m_surfaceNormal.z;
+        }
+        else
+        {
+            crossHatchTexelFloor =
+                circlesarray.Sample(SamplerLinearWrap, float3(uvx, floor(w))).r * rayHitInfo.m_surfaceNormal.x +
+                circlesarray.Sample(SamplerLinearWrap, float3(uvy, floor(w))).r * rayHitInfo.m_surfaceNormal.y +
+                circlesarray.Sample(SamplerLinearWrap, float3(uvz, floor(w))).r * rayHitInfo.m_surfaceNormal.z;
 
-        float crossHatchTexelCeil =
-            circlesarray.Sample(SamplerAnisoWrap, float3(uvx, ceil(w))).r * rayHitInfo.m_surfaceNormal.x +
-            circlesarray.Sample(SamplerAnisoWrap, float3(uvy, ceil(w))).r * rayHitInfo.m_surfaceNormal.y +
-            circlesarray.Sample(SamplerAnisoWrap, float3(uvz, ceil(w))).r * rayHitInfo.m_surfaceNormal.z;
+            crossHatchTexelCeil =
+                circlesarray.Sample(SamplerLinearWrap, float3(uvx, ceil(w))).r * rayHitInfo.m_surfaceNormal.x +
+                circlesarray.Sample(SamplerLinearWrap, float3(uvy, ceil(w))).r * rayHitInfo.m_surfaceNormal.y +
+                circlesarray.Sample(SamplerLinearWrap, float3(uvz, ceil(w))).r * rayHitInfo.m_surfaceNormal.z;
+        }
+        crossHatchTexelFloor /= (rayHitInfo.m_surfaceNormal.x + rayHitInfo.m_surfaceNormal.y + rayHitInfo.m_surfaceNormal.z);
         crossHatchTexelCeil /= (rayHitInfo.m_surfaceNormal.x + rayHitInfo.m_surfaceNormal.y + rayHitInfo.m_surfaceNormal.z);
 
         float crossHatchTexel = lerp(crossHatchTexelFloor, crossHatchTexelCeil, frac(w));
@@ -142,6 +158,6 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch, bool s
 //----------------------------------------------------------------------------
 float4 ps_main(SPixelInput input) : SV_TARGET
 {
-    float3 light = GetPixelColor(input, SBGrey, SBCrossHatch, SBSmoothStep);
+    float3 light = GetPixelColor(input, SBGrey, SBCrossHatch, SBSmoothStep, SBAniso);
     return float4(light, 1.0f);
 }
