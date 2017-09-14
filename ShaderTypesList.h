@@ -319,43 +319,16 @@ SHADER_VSPS_BEGIN(IMGUI, L"Shaders/IMGUI.fx", "vs_main", "ps_main", IMGUI)
 SHADER_VSPS_END
 
 SHADER_CS_BEGIN(pathTrace, L"Shaders/PathTrace.fx", "cs_main")
+    SHADER_CS_STATICBRANCH(SBWhiteAlbedo)
 SHADER_CS_END
 
-SHADER_CS_BEGIN(pathTraceFirstHit, L"Shaders/PathTrace.fx", "cs_main_FirstHit")
+SHADER_CS_BEGIN(pathTraceFirstHit, L"Shaders/PathTraceFirstHit.fx", "cs_main")
 SHADER_CS_END
 
-SHADER_VSPS_BEGIN(showPathTrace, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_color_shade_smoothstep", Pos2D)
+SHADER_VSPS_BEGIN(showPathTrace, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main", Pos2D)
     SHADER_VSPS_STATICBRANCH(SBGrey)
     SHADER_VSPS_STATICBRANCH(SBCrossHatch)
     SHADER_VSPS_STATICBRANCH(SBSmoothStep)
-SHADER_VSPS_END
-
-SHADER_VSPS_BEGIN(showPathTrace_Color_Shade_SmoothStep, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_color_shade_smoothstep", Pos2D)
-SHADER_VSPS_END
-
-// TODO: need to add permutations to compute shaders too. Not needed but cleaner to do it that way since shadertypes.h includes the static branches file!
-
-SHADER_VSPS_BEGIN(showPathTrace_Grey_Shade_SmoothStep, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_grey_shade_smoothstep", Pos2D)
-SHADER_VSPS_END
-
-SHADER_VSPS_BEGIN(showPathTrace_Color_CrossHatch_SmoothStep, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_color_crosshatch_smoothstep", Pos2D)
-SHADER_VSPS_END
-
-SHADER_VSPS_BEGIN(showPathTrace_Grey_CrossHatch_SmoothStep, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_grey_crosshatch_smoothstep", Pos2D)
-SHADER_VSPS_END
-
-
-
-SHADER_VSPS_BEGIN(showPathTrace_Color_Shade_No, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_color_shade_no", Pos2D)
-SHADER_VSPS_END
-
-SHADER_VSPS_BEGIN(showPathTrace_Grey_Shade_No, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_grey_shade_no", Pos2D)
-SHADER_VSPS_END
-
-SHADER_VSPS_BEGIN(showPathTrace_Color_CrossHatch_No, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_color_crosshatch_no", Pos2D)
-SHADER_VSPS_END
-
-SHADER_VSPS_BEGIN(showPathTrace_Grey_CrossHatch_No, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_grey_crosshatch_no", Pos2D)
 SHADER_VSPS_END
 
 //=================================================================

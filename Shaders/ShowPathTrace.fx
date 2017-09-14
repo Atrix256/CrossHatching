@@ -140,57 +140,8 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch, bool s
 }
 
 //----------------------------------------------------------------------------
-float4 ps_main_color_shade_smoothstep(SPixelInput input) : SV_TARGET
+float4 ps_main(SPixelInput input) : SV_TARGET
 {
-    float3 light = GetPixelColor(input, false, false, true);
-    return float4(light, 1.0f);
-}
-
-//----------------------------------------------------------------------------
-float4 ps_main_grey_shade_smoothstep(SPixelInput input) : SV_TARGET
-{
-    float3 light = GetPixelColor(input, true, false, true);
-    return float4(light, 1.0f);
-}
-
-//----------------------------------------------------------------------------
-float4 ps_main_color_crosshatch_smoothstep(SPixelInput input) : SV_TARGET
-{
-    float3 light = GetPixelColor(input, false, true, true);
-    return float4(light, 1.0f);
-}
-
-//----------------------------------------------------------------------------
-float4 ps_main_grey_crosshatch_smoothstep(SPixelInput input) : SV_TARGET
-{
-    float3 light = GetPixelColor(input, true, true, true);
-    return float4(light, 1.0f);
-}
-
-//----------------------------------------------------------------------------
-float4 ps_main_color_shade_no(SPixelInput input) : SV_TARGET
-{
-    float3 light = GetPixelColor(input, false, false, false);
-    return float4(light, 1.0f);
-}
-
-//----------------------------------------------------------------------------
-float4 ps_main_grey_shade_no(SPixelInput input) : SV_TARGET
-{
-    float3 light = GetPixelColor(input, true, false, false);
-    return float4(light, 1.0f);
-}
-
-//----------------------------------------------------------------------------
-float4 ps_main_color_crosshatch_no(SPixelInput input) : SV_TARGET
-{
-    float3 light = GetPixelColor(input, false, true, false);
-    return float4(light, 1.0f);
-}
-
-//----------------------------------------------------------------------------
-float4 ps_main_grey_crosshatch_no(SPixelInput input) : SV_TARGET
-{
-    float3 light = GetPixelColor(input, true, true, false);
+    float3 light = GetPixelColor(input, SBGrey, SBCrossHatch, SBSmoothStep);
     return float4(light, 1.0f);
 }

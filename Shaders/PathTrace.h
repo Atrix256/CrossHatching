@@ -429,7 +429,7 @@ float3 CosineSampleHemisphere (in float3 normal, inout float rngSeed)
     return d;
 }
 //----------------------------------------------------------------------------
-float3 Light_Outgoing (in SRayHitInfo rayHitInfo, in float3 rayHitPos, inout float rngSeed)
+float3 Light_Outgoing (in SRayHitInfo rayHitInfo, in float3 rayHitPos, inout float rngSeed, bool whiteAlbedo)
 {
     float3 lightSum = float3(0.0f, 0.0f, 0.0f);
     float3 lightMultiplier = float3(1.0f, 1.0f, 1.0f);
@@ -438,8 +438,8 @@ float3 Light_Outgoing (in SRayHitInfo rayHitInfo, in float3 rayHitPos, inout flo
     {
         // update our light sum and future light multiplier
         lightSum += rayHitInfo.m_emissive * lightMultiplier;
-        // TODO: no albedo? maybe an option for this?
-        lightMultiplier *= rayHitInfo.m_albedo;
+        if (!whiteAlbedo)
+            lightMultiplier *= rayHitInfo.m_albedo;
 
         // add a random recursive sample for global illumination
         float3 newRayDir = CosineSampleHemisphere(rayHitInfo.m_surfaceNormal, rngSeed);
@@ -463,7 +463,7 @@ float3 Light_Outgoing (in SRayHitInfo rayHitInfo, in float3 rayHitPos, inout flo
 }
 
 //----------------------------------------------------------------------------
-float3 Light_Incoming (in float3 rayPos, in float3 rayDir, inout float rngSeed)
+float3 Light_Incoming (in float3 rayPos, in float3 rayDir, inout float rngSeed, bool whiteAlbedo)
 {
     // find out what our ray hit first
     SRayHitInfo rayHitInfo = ClosestIntersection(rayPos, rayDir);
@@ -473,11 +473,11 @@ float3 Light_Incoming (in float3 rayPos, in float3 rayDir, inout float rngSeed)
         return nearPlaneDist_missColor.yzw;
 
     // else, return the amount of light coming towards us from that point on the object we hit
-    return Light_Outgoing(rayHitInfo, rayPos + rayDir * rayHitInfo.m_intersectTime, rngSeed);
+    return Light_Outgoing(rayHitInfo, rayPos + rayDir * rayHitInfo.m_intersectTime, rngSeed, whiteAlbedo);
 }
 
 //----------------------------------------------------------------------------
-float3 Light_Incoming (in float3 rayPos, in float3 rayDir, inout float rngSeed, in FirstRayHit firstRayHit)
+float3 Light_Incoming (in float3 rayPos, in float3 rayDir, inout float rngSeed, in FirstRayHit firstRayHit, bool whiteAlbedo)
 {
     // get our first ray hit from the info provided
     SRayHitInfo rayHitInfo;
@@ -491,5 +491,5 @@ float3 Light_Incoming (in float3 rayPos, in float3 rayDir, inout float rngSeed, 
         return nearPlaneDist_missColor.yzw;
 
     // else, return the amount of light coming towards us from that point on the object we hit
-    return Light_Outgoing(rayHitInfo, rayPos + rayDir * rayHitInfo.m_intersectTime, rngSeed);
+    return Light_Outgoing(rayHitInfo, rayPos + rayDir * rayHitInfo.m_intersectTime, rngSeed, whiteAlbedo);
 }

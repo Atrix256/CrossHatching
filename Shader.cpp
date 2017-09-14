@@ -123,7 +123,7 @@ bool CShader::Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, const ch
     return true;
 }
 
-void CShader::Draw (ID3D11DeviceContext* deviceContext, size_t indexCount, size_t startIndex, size_t startVertex)
+void CShader::Draw (ID3D11DeviceContext* deviceContext, size_t indexCount, size_t startIndex, size_t startVertex) const
 {
     // Set the vertex input layout.
     deviceContext->IASetInputLayout(m_layout.m_ptr);
@@ -136,7 +136,7 @@ void CShader::Draw (ID3D11DeviceContext* deviceContext, size_t indexCount, size_
     deviceContext->DrawIndexed((UINT)indexCount, (UINT)startIndex, (UINT)startVertex);
 }
 
-bool CComputeShader::Load(ID3D11Device* device, HWND hWnd, wchar_t* fileName, const char* entry, bool debug)
+bool CComputeShader::Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, const char* entry, bool debug)
 {
     HRESULT result;
     ID3D10Blob* errorMessage;
@@ -183,7 +183,7 @@ bool CComputeShader::Load(ID3D11Device* device, HWND hWnd, wchar_t* fileName, co
     return true;
 }
 
-void CComputeShader::Dispatch (ID3D11DeviceContext* deviceContext, size_t x, size_t y, size_t z)
+void CComputeShader::Dispatch (ID3D11DeviceContext* deviceContext, size_t x, size_t y, size_t z) const
 {
     deviceContext->CSSetShader(m_computeShader.m_ptr, NULL, 0);
 
