@@ -72,8 +72,20 @@ namespace ShaderData
 
     namespace Shaders
     {
-        #define SHADER_CS_BEGIN(NAME, FILENAME, ENTRY) extern CComputeShader NAME;
-        #define SHADER_VSPS_BEGIN(NAME, FILENAME, VSENTRY, PSENTRY, VERTEXFORMAT) extern CShader NAME;
+        #define SHADER_CS_BEGIN(NAME, FILENAME, ENTRY) \
+            extern CComputeShader NAME; \
+            enum class EStaticBranches_CS_##NAME { 
+        #define SHADER_CS_STATICBRANCH(NAME) NAME,
+        #define SHADER_CS_END \
+                COUNT \
+            };
+        #define SHADER_VSPS_BEGIN(NAME, FILENAME, VSENTRY, PSENTRY, VERTEXFORMAT) \
+            extern CShader NAME; \
+            enum class EStaticBranches_VSPS_##NAME { 
+        #define SHADER_VSPS_STATICBRANCH(NAME) NAME,
+        #define SHADER_VSPS_END \
+                COUNT \
+            };
         #include "ShaderTypesList.h"
     };
 };

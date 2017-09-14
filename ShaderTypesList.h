@@ -324,10 +324,13 @@ SHADER_CS_END
 SHADER_CS_BEGIN(pathTraceFirstHit, L"Shaders/PathTrace.fx", "cs_main_FirstHit")
 SHADER_CS_END
 
-SHADER_VSPS_BEGIN(showPathTrace_Color_Shade_SmoothStep, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_color_shade_smoothstep", Pos2D)
+SHADER_VSPS_BEGIN(showPathTrace, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_color_shade_smoothstep", Pos2D)
     SHADER_VSPS_STATICBRANCH(SBGrey)
     SHADER_VSPS_STATICBRANCH(SBCrossHatch)
     SHADER_VSPS_STATICBRANCH(SBSmoothStep)
+SHADER_VSPS_END
+
+SHADER_VSPS_BEGIN(showPathTrace_Color_Shade_SmoothStep, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_color_shade_smoothstep", Pos2D)
 SHADER_VSPS_END
 
 // TODO: need to add permutations to compute shaders too. Not needed but cleaner to do it that way since shadertypes.h includes the static branches file!
