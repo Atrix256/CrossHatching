@@ -367,7 +367,7 @@ void IMGUIRenderFunction(ImDrawData* draw_data)
     // make sure our vertex and index buffers are large enough
     if (g_IMGUIMesh.GetIndexCount() < draw_data->TotalIdxCount || g_IMGUIMesh.GetIndexCount() < draw_data->TotalVtxCount)
     {
-        // TODO: assert or something
+        // TODO: assert or something. or resize!
         ((int*)0)[0] = 0;
     }
 
@@ -478,7 +478,7 @@ bool InitIMGUI()
     if (!texture->LoadFromPixels(g_d3d.Device(), g_d3d.Context(), pixels, width, height))
         return false;
 
-    // TODO: Store your texture pointer/identifier (whatever your engine uses) in 'io.Fonts->TexID'. This will be passed back to your via the renderer.
+    // Store texture pointer/identifier (whatever your engine uses) in 'io.Fonts->TexID'. This will be passed back to your via the renderer.
     io.Fonts->TexID = (void*)texture;
 
     // TODO: delete CTexture later, or make it a shadertypelist.h item or something.
@@ -664,8 +664,6 @@ CShader& SelectShaderShowPathTrace ()
 
 void IMGUIWindow ()
 {
-
-    // TODO: put in separate file
     ImGuiIO& io = ImGui::GetIO();
     INT64 current_time;
     QueryPerformanceCounter((LARGE_INTEGER *)&current_time);
@@ -821,7 +819,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
             UnbindShaderTextures<EShaderType::vertex>(g_d3d.Context(), shader.GetVSReflector());
             UnbindShaderTextures<EShaderType::pixel>(g_d3d.Context(), shader.GetPSReflector());
 
-            // TODO: put imgui in it's own thing
+            // render imgui
             ImGui::Render();
 
             g_d3d.Present();

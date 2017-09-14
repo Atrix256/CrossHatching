@@ -244,7 +244,6 @@ STRUCTURED_BUFFER_END
 //                     Vertex Formats
 //=================================================================
 
-// TODO: color needs to be uint32 in c++, but float4 in the shader
 // TODO: can position and uv be split up into 2 float2's?
 
 VERTEX_FORMAT_BEGIN(IMGUI)

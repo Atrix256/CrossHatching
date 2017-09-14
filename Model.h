@@ -60,7 +60,6 @@ public:
         return true;
     }
 
-    // TODO: make this work, and make it write both vertex and index data
     template <typename LAMBDA>
     bool Write (ID3D11DeviceContext* deviceContext, LAMBDA& lambda)
     {
