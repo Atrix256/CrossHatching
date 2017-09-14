@@ -1,14 +1,60 @@
 #include "window.h"
+#include "imgui/imgui.h"
 
 #define APPLICATION_NAME L"Generalized Cross Hatching"
 
 static HWND s_hWnd = nullptr;
 
-static TWndProcCallback s_wndProcCallback = nullptr;
+bool IMGUI_EventHandler (HWND, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    ImGuiIO& io = ImGui::GetIO();
+    switch (msg)
+    {
+    case WM_LBUTTONDOWN:
+        io.MouseDown[0] = true;
+        return io.WantCaptureMouse;
+    case WM_LBUTTONUP:
+        io.MouseDown[0] = false;
+        return io.WantCaptureMouse;
+    case WM_RBUTTONDOWN:
+        io.MouseDown[1] = true;
+        return io.WantCaptureMouse;
+    case WM_RBUTTONUP:
+        io.MouseDown[1] = false;
+        return io.WantCaptureMouse;
+    case WM_MBUTTONDOWN:
+        io.MouseDown[2] = true;
+        return io.WantCaptureMouse;
+    case WM_MBUTTONUP:
+        io.MouseDown[2] = false;
+        return io.WantCaptureMouse;
+    case WM_MOUSEWHEEL:
+        io.MouseWheel += GET_WHEEL_DELTA_WPARAM(wParam) > 0 ? +1.0f : -1.0f;
+        return io.WantCaptureMouse;
+    case WM_MOUSEMOVE:
+        io.MousePos.x = (signed short)(lParam);
+        io.MousePos.y = (signed short)(lParam >> 16);
+        return io.WantCaptureMouse;
+    case WM_KEYDOWN:
+        if (wParam < 256)
+            io.KeysDown[wParam] = 1;
+        return io.WantCaptureKeyboard;
+    case WM_KEYUP:
+        if (wParam < 256)
+            io.KeysDown[wParam] = 0;
+        return io.WantCaptureKeyboard;
+    case WM_CHAR:
+        // You can also use ToAscii()+GetKeyboardState() to retrieve characters.
+        if (wParam > 0 && wParam < 0x10000)
+            io.AddInputCharacter((unsigned short)wParam);
+        return io.WantTextInput;
+    }
+    return false;
+}
 
 LRESULT CALLBACK MessageHandler (HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam)
 {
-    if (s_wndProcCallback(hwnd, umsg, wparam, lparam))
+    if (IMGUI_EventHandler(hwnd, umsg, wparam, lparam))
         return 1;
 
     switch (umsg)
@@ -45,14 +91,11 @@ LRESULT CALLBACK MessageHandler (HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lpa
     }
 }
 
-void WindowInit (size_t screenWidth, size_t screenHeight, bool fullScreen, TWndProcCallback wndProcCallback)
+void WindowInit (size_t screenWidth, size_t screenHeight, bool fullScreen)
 {
     WNDCLASSEX wc;
     DEVMODE dmScreenSettings;
     int posX, posY;
-
-    // store off the callback
-    s_wndProcCallback = wndProcCallback;
 
     // Get the instance of this application.
     HMODULE hinstance = GetModuleHandle(NULL);

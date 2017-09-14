@@ -362,131 +362,6 @@ void FillShaderParams (ID3D11DeviceContext* deviceContext, ID3D11ShaderReflectio
     }
 }
 
-bool IMGUI_EventHandler (HWND, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-    ImGuiIO& io = ImGui::GetIO();
-    switch (msg)
-    {
-    case WM_LBUTTONDOWN:
-        io.MouseDown[0] = true;
-        return true;
-    case WM_LBUTTONUP:
-        io.MouseDown[0] = false;
-        return true;
-    case WM_RBUTTONDOWN:
-        io.MouseDown[1] = true;
-        return true;
-    case WM_RBUTTONUP:
-        io.MouseDown[1] = false;
-        return true;
-    case WM_MBUTTONDOWN:
-        io.MouseDown[2] = true;
-        return true;
-    case WM_MBUTTONUP:
-        io.MouseDown[2] = false;
-        return true;
-    case WM_MOUSEWHEEL:
-        io.MouseWheel += GET_WHEEL_DELTA_WPARAM(wParam) > 0 ? +1.0f : -1.0f;
-        return true;
-    case WM_MOUSEMOVE:
-        io.MousePos.x = (signed short)(lParam);
-        io.MousePos.y = (signed short)(lParam >> 16);
-        return true;
-    case WM_KEYDOWN:
-        if (wParam < 256)
-            io.KeysDown[wParam] = 1;
-        return true;
-    case WM_KEYUP:
-        if (wParam < 256)
-            io.KeysDown[wParam] = 0;
-        return true;
-    case WM_CHAR:
-        // You can also use ToAscii()+GetKeyboardState() to retrieve characters.
-        if (wParam > 0 && wParam < 0x10000)
-            io.AddInputCharacter((unsigned short)wParam);
-        return true;
-    }
-    return false;
-}
-
-
-// TODO: get rid of when imgui is working!
-/*
-void OnKey (char key, EKeyEvent event)
-{
-    // pass key events to imgui
-    if (event == EKeyEvent::input)
-    {
-        ImGuiIO& io = ImGui::GetIO();
-        io.AddInputCharacter(key);
-        return;
-    }
-
-    // only do actions on key release right now
-    if (event != EKeyEvent::release)
-        return;
-
-    switch (key)
-    {
-        case '1': FillSceneData(EScene::SphereOnPlane_LowLight, g_d3d.Context()); break;
-        case '2': FillSceneData(EScene::SphereOnPlane_RegularLight, g_d3d.Context()); break;
-        case '3': FillSceneData(EScene::CornellBox_SmallLight, g_d3d.Context()); break;
-        case '4': FillSceneData(EScene::CornellBox_BigLight, g_d3d.Context()); break;
-        case '5': FillSceneData(EScene::FurnaceTest, g_d3d.Context()); break;
-        case '6': FillSceneData(EScene::CornellObj, g_d3d.Context()); break;
-        case '7': FillSceneData(EScene::ObjTest, g_d3d.Context()); break;
-
-        case 'Q': g_showGrey = !g_showGrey; break;
-        case 'W': g_showCrossHatch = !g_showCrossHatch; break;
-        case 'E': g_smoothStep = !g_smoothStep; break;
-        case 'A': 
-        {
-            ShaderData::ConstantBuffers::ConstantsOnce.Write(
-                g_d3d.Context(),
-                [] (ShaderTypes::ConstantBuffers::ConstantsOnce& data)
-                {
-                    data.uvmultiplier_blackPoint_whitePoint_w[1] += 0.1f;
-                }
-            );
-            break;
-        }
-        case 'S': 
-        {
-            ShaderData::ConstantBuffers::ConstantsOnce.Write(
-                g_d3d.Context(),
-                [] (ShaderTypes::ConstantBuffers::ConstantsOnce& data)
-                {
-                    data.uvmultiplier_blackPoint_whitePoint_w[1] -= 0.1f;
-                }
-            );
-            break;
-        }
-        case 'D': 
-        {
-            ShaderData::ConstantBuffers::ConstantsOnce.Write(
-                g_d3d.Context(),
-                [] (ShaderTypes::ConstantBuffers::ConstantsOnce& data)
-                {
-                    data.uvmultiplier_blackPoint_whitePoint_w[2] += 0.1f;
-                }
-            );
-            break;
-        }
-        case 'F': 
-        {
-            ShaderData::ConstantBuffers::ConstantsOnce.Write(
-                g_d3d.Context(),
-                [] (ShaderTypes::ConstantBuffers::ConstantsOnce& data)
-                {
-                    data.uvmultiplier_blackPoint_whitePoint_w[2] -= 0.1f;
-                }
-            );
-            break;
-        }
-    }
-}
-*/
-
 void IMGUIRenderFunction(ImDrawData* draw_data)
 {
     // make sure our vertex and index buffers are large enough
@@ -619,7 +494,7 @@ void ReportError (const char* message)
 
 bool init ()
 {
-    WindowInit(c_width, c_height, c_fullScreen, IMGUI_EventHandler);
+    WindowInit(c_width, c_height, c_fullScreen);
 
     if (!g_d3d.Init(c_width, c_height, c_vsync, WindowGetHWND(), c_fullScreen, c_d3ddebug))
         return false;
@@ -787,6 +662,91 @@ CShader& SelectShaderShowPathTrace ()
     }
 }
 
+void IMGUIWindow ()
+{
+
+    // TODO: put in separate file
+    ImGuiIO& io = ImGui::GetIO();
+    INT64 current_time;
+    QueryPerformanceCounter((LARGE_INTEGER *)&current_time);
+    io.DeltaTime = (float)(current_time - g_Time) / g_TicksPerSecond;
+    g_Time = current_time;
+
+    // Call NewFrame(), after this point you can use ImGui::* functions anytime
+    ImGui::NewFrame();
+
+    // TODO: temp!
+    //ImGui::ShowTestWindow();
+    //return;
+
+    static bool firstTime = true;
+    static bool showWindow = true;
+
+    static float uvScale = 1.0f;
+    static float blackPoint = 0.0f;
+    static float whitePoint = 1.0f;
+    static int scene = 0;
+
+    bool updateConstants = false;
+    bool updateScene = false;
+
+    if (firstTime)
+    {
+        uvScale = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_w[0];
+        blackPoint = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_w[1];
+        whitePoint = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_w[2];
+    }
+
+    // TODO: how do i collapse?
+    ImGui::Begin("", &showWindow, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize);
+
+    const char* scenes[] = {
+        "Sphere Plane Dark",
+        "Sphere Plane Light",
+        "Cornell Box Small Light",
+        "Cornell Box Big Light",
+        "Furnace Test",
+        "Cornell Obj",
+        "Obj Test"
+    };
+
+    updateScene |= ImGui::Combo("Scene", &scene, scenes, (int)EScene::COUNT);
+
+    ImGui::Checkbox("Grey Scale", &g_showGrey);
+    ImGui::Checkbox("Cross Hatch", &g_showCrossHatch);
+    
+    updateConstants |= ImGui::SliderFloat("UV Scale", &uvScale, 0.001f, 3.0f);
+
+    updateConstants |= ImGui::SliderFloat("Black", &blackPoint, 0.0f, 1.0f);
+    updateConstants |= ImGui::SliderFloat("White", &whitePoint, 0.0f, 1.0f);
+    ImGui::Checkbox("Smooth Step", &g_smoothStep);
+
+    ImGui::End();
+
+    // update constants
+    if (updateConstants)
+    {
+        ShaderData::ConstantBuffers::ConstantsOnce.Write(
+            g_d3d.Context(),
+            [=](ShaderTypes::ConstantBuffers::ConstantsOnce& data)
+        {
+            data.uvmultiplier_blackPoint_whitePoint_w[0] = uvScale;
+            data.uvmultiplier_blackPoint_whitePoint_w[1] = blackPoint;
+            data.uvmultiplier_blackPoint_whitePoint_w[2] = whitePoint;
+        }
+        );
+    }
+
+    if (updateScene)
+    {
+        FillSceneData((EScene)scene, g_d3d.Context());
+
+        uvScale = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_w[0];
+        blackPoint = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_w[1];
+        whitePoint = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_w[2];
+    }
+}
+
 int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow)
 {
     std::chrono::high_resolution_clock::time_point appStart = std::chrono::high_resolution_clock::now();
@@ -817,18 +777,9 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
         }
         else
         {
-            // TODO: put in separate file
-            ImGuiIO& io = ImGui::GetIO();
-            INT64 current_time;
-            QueryPerformanceCounter((LARGE_INTEGER *)&current_time);
-            io.DeltaTime = (float)(current_time - g_Time) / g_TicksPerSecond;
-            g_Time = current_time;
 
-            // Call NewFrame(), after this point you can use ImGui::* functions anytime
-            ImGui::NewFrame();
+            IMGUIWindow();
 
-            // TODO: temp!
-            ImGui::ShowTestWindow();
 
             // update frame specific values
 			bool firstSample = false;

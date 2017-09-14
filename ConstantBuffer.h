@@ -53,6 +53,11 @@ public:
         return true;
     }
 
+    const T& Read () const
+    {
+        return m_storage;
+    }
+
     ID3D11Buffer* Get () { return m_constantBuffer.m_ptr; }
 
 private:

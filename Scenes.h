@@ -11,6 +11,7 @@ enum class EScene
     FurnaceTest,
     CornellObj,
     ObjTest,
+    COUNT
 };
 
 bool FillSceneData (EScene scene, ID3D11DeviceContext* context);
