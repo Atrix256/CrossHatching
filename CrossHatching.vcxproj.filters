@@ -62,6 +62,9 @@
     <ClInclude Include="imgui\stb_truetype.h">
       <Filter>imgui</Filter>
     </ClInclude>
+    <ClInclude Include="Shaders\StaticBranches.h">
+      <Filter>Shaders</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\ShowPathTrace.fx">

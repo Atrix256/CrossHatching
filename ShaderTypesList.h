@@ -82,17 +82,27 @@ TEXTURE_ARRAY_END
                           Shaders
 ===================================================================
 
-SHADER_VSPS(Name, FileName, VSEntry, PSEntry, VertexFormat)
+SHADER_VSPS_BEGIN(Name, FileName, VSEntry, PSEntry, VertexFormat)
   Name         - the name of the shader
   FileName     - the file name of the shader
   VSEntry      - the name of the entry point for the vertex shader
   PSEntry      - the name of the entry point for the pixel shader
   VertexFormat - the name of the vertex format to use
 
-SHADER_CS(Name, FileName, Entry)
+SHADER_VSPS_STATICBRANCH(Name)
+  Name         - the name of the boolean static branch as it appears in C++ and in the shader code.
+
+SHADER_VSPS_END
+
+SHADER_CS_BEGIN(Name, FileName, Entry)
   Name     - the name of the shader
   FileName - the file name of the shader
   VSEntry  - the name of the entry point for the compute shader
+
+SHADER_CS_STATICBRANCH(Name)
+  Name         - the name of the boolean static branch as it appears in C++ and in the shader code.
+
+SHADER_CS_END
 
 */
 
@@ -169,12 +179,28 @@ SHADER_CS(Name, FileName, Entry)
 #define TEXTURE_ARRAY_END
 #endif
 
-#ifndef SHADER_VSPS
-#define SHADER_VSPS(NAME, FILENAME, VSENTRY, PSENTRY, VERTEXFORMAT)
+#ifndef SHADER_VSPS_BEGIN
+#define SHADER_VSPS_BEGIN(NAME, FILENAME, VSENTRY, PSENTRY, VERTEXFORMAT)
 #endif
 
-#ifndef SHADER_CS
-#define SHADER_CS(NAME, FILENAME, ENTRY)
+#ifndef SHADER_VSPS_STATICBRANCH
+#define SHADER_VSPS_STATICBRANCH(NAME)
+#endif
+
+#ifndef SHADER_VSPS_END
+#define SHADER_VSPS_END
+#endif
+
+#ifndef SHADER_CS_BEGIN
+#define SHADER_CS_BEGIN(NAME, FILENAME, ENTRY)
+#endif
+
+#ifndef SHADER_CS_STATICBRANCH
+#define SHADER_CS_STATICBRANCH(NAME)
+#endif
+
+#ifndef SHADER_CS_END
+#define SHADER_CS_END
 #endif
 
 //=================================================================
@@ -289,20 +315,45 @@ TEXTURE_ARRAY_END
 //                       Shaders
 //=================================================================
 
-SHADER_VSPS(IMGUI, L"Shaders/IMGUI.fx", "vs_main", "ps_main", IMGUI)
+SHADER_VSPS_BEGIN(IMGUI, L"Shaders/IMGUI.fx", "vs_main", "ps_main", IMGUI)
+SHADER_VSPS_END
 
-SHADER_CS(pathTrace, L"Shaders/PathTrace.fx", "cs_main")
-SHADER_CS(pathTraceFirstHit, L"Shaders/PathTrace.fx", "cs_main_FirstHit")
+SHADER_CS_BEGIN(pathTrace, L"Shaders/PathTrace.fx", "cs_main")
+SHADER_CS_END
 
-SHADER_VSPS(showPathTrace_Color_Shade_SmoothStep, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_color_shade_smoothstep", Pos2D)
-SHADER_VSPS(showPathTrace_Grey_Shade_SmoothStep, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_grey_shade_smoothstep", Pos2D)
-SHADER_VSPS(showPathTrace_Color_CrossHatch_SmoothStep, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_color_crosshatch_smoothstep", Pos2D)
-SHADER_VSPS(showPathTrace_Grey_CrossHatch_SmoothStep, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_grey_crosshatch_smoothstep", Pos2D)
+SHADER_CS_BEGIN(pathTraceFirstHit, L"Shaders/PathTrace.fx", "cs_main_FirstHit")
+SHADER_CS_END
 
-SHADER_VSPS(showPathTrace_Color_Shade_No, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_color_shade_no", Pos2D)
-SHADER_VSPS(showPathTrace_Grey_Shade_No, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_grey_shade_no", Pos2D)
-SHADER_VSPS(showPathTrace_Color_CrossHatch_No, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_color_crosshatch_no", Pos2D)
-SHADER_VSPS(showPathTrace_Grey_CrossHatch_No, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_grey_crosshatch_no", Pos2D)
+SHADER_VSPS_BEGIN(showPathTrace_Color_Shade_SmoothStep, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_color_shade_smoothstep", Pos2D)
+    SHADER_VSPS_STATICBRANCH(SBGrey)
+    SHADER_VSPS_STATICBRANCH(SBCrossHatch)
+    SHADER_VSPS_STATICBRANCH(SBSmoothStep)
+SHADER_VSPS_END
+
+// TODO: need to add permutations to compute shaders too. Not needed but cleaner to do it that way since shadertypes.h includes the static branches file!
+
+SHADER_VSPS_BEGIN(showPathTrace_Grey_Shade_SmoothStep, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_grey_shade_smoothstep", Pos2D)
+SHADER_VSPS_END
+
+SHADER_VSPS_BEGIN(showPathTrace_Color_CrossHatch_SmoothStep, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_color_crosshatch_smoothstep", Pos2D)
+SHADER_VSPS_END
+
+SHADER_VSPS_BEGIN(showPathTrace_Grey_CrossHatch_SmoothStep, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_grey_crosshatch_smoothstep", Pos2D)
+SHADER_VSPS_END
+
+
+
+SHADER_VSPS_BEGIN(showPathTrace_Color_Shade_No, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_color_shade_no", Pos2D)
+SHADER_VSPS_END
+
+SHADER_VSPS_BEGIN(showPathTrace_Grey_Shade_No, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_grey_shade_no", Pos2D)
+SHADER_VSPS_END
+
+SHADER_VSPS_BEGIN(showPathTrace_Color_CrossHatch_No, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_color_crosshatch_no", Pos2D)
+SHADER_VSPS_END
+
+SHADER_VSPS_BEGIN(showPathTrace_Grey_CrossHatch_No, L"Shaders/ShowPathTrace.fx", "vs_main", "ps_main_grey_crosshatch_no", Pos2D)
+SHADER_VSPS_END
 
 //=================================================================
 // undefine everything for the caller's convenience
@@ -323,5 +374,9 @@ SHADER_VSPS(showPathTrace_Grey_CrossHatch_No, L"Shaders/ShowPathTrace.fx", "vs_m
 #undef TEXTURE_ARRAY_BEGIN
 #undef TEXTURE_ARRAY_SLICE
 #undef TEXTURE_ARRAY_END
-#undef SHADER_VSPS
-#undef SHADER_CS
+#undef SHADER_VSPS_BEGIN
+#undef SHADER_VSPS_STATICBRANCH
+#undef SHADER_VSPS_END
+#undef SHADER_CS_BEGIN
+#undef SHADER_CS_STATICBRANCH
+#undef SHADER_CS_END

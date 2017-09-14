@@ -72,8 +72,8 @@ namespace ShaderData
 
     namespace Shaders
     {
-        #define SHADER_CS(NAME, FILENAME, ENTRY) extern CComputeShader NAME;
-        #define SHADER_VSPS(NAME, FILENAME, VSENTRY, PSENTRY, VERTEXFORMAT) extern CShader NAME;
+        #define SHADER_CS_BEGIN(NAME, FILENAME, ENTRY) extern CComputeShader NAME;
+        #define SHADER_VSPS_BEGIN(NAME, FILENAME, VSENTRY, PSENTRY, VERTEXFORMAT) extern CShader NAME;
         #include "ShaderTypesList.h"
     };
 };
