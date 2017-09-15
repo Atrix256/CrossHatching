@@ -49,7 +49,7 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch, bool s
     // get our first ray hit info from the FirstRayHits buffer
     uint dimsX, dimsY;
     pathTraceOutput.GetDimensions(dimsX, dimsY);
-    uint2 pixelPos = uint2((float2(1.0f, 1.0f) - input.uv) * float2(dimsX, dimsY));
+    uint2 pixelPos = uint2(input.uv * float2(dimsX, dimsY));
     uint pixelIndex = pixelPos.y * dimsX + pixelPos.x;
     SRayHitInfo rayHitInfo;
     rayHitInfo.m_surfaceNormal = FirstRayHits[pixelIndex].surfaceNormal_intersectTime.xyz;
@@ -59,10 +59,10 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch, bool s
 
     // calculate the ray for this pixel and get the time of the first ray hit
     float3 rayPos, rayDir;
-    CalculateRay(float2(1.0f, 1.0f) - input.uv, rayPos, rayDir);
+    CalculateRay(input.uv, rayPos, rayDir);
 
     // get the lit value
-    float3 light = pathTraceOutput.Sample(SamplerLinearWrap, float2(1.0f, 1.0f) - input.uv).xyz;
+    float3 light = pathTraceOutput.Sample(SamplerLinearWrap, input.uv).xyz;
 
     // if the ray didn't hit anything, fake a planar hit for shading purposes
     if (rayHitInfo.m_intersectTime < 0.0f)

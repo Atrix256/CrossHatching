@@ -150,11 +150,29 @@ inline float3 XYZ (const float4& v)
 }
 
 template <size_t N>
+std::array<float, N> operator+ (const std::array<float, N>& A, const std::array<float, N>& B)
+{
+    std::array<float, N> result;
+    for (size_t i = 0; i < N; ++i)
+        result[i] = A[i] + B[i];
+    return result;
+}
+
+template <size_t N>
 std::array<float, N> operator- (const std::array<float, N>& A, const std::array<float, N>& B)
 {
     std::array<float, N> result;
     for (size_t i = 0; i < N; ++i)
         result[i] = A[i] - B[i];
+    return result;
+}
+
+template <size_t N>
+std::array<float, N> operator* (const std::array<float, N>& A, float B)
+{
+    std::array<float, N> result;
+    for (size_t i = 0; i < N; ++i)
+        result[i] = A[i] * B;
     return result;
 }
 

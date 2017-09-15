@@ -130,122 +130,208 @@ void IMGUIWindow ()
     // start a new frame
     ImGui::NewFrame();
 
-    // used to see the fully featured built in imgui demo window
-    if (0)
+    if (GetIMGUIEnabled())
     {
-        ImGui::ShowTestWindow();
-        return;
-    }
-
-    // handle FPS calculations
-    static int FPSFrameCount = 0;
-    static float FPSFrameTime = 0.0f;
-    static float FPSLast = 0.0f;
-    FPSFrameCount++;
-    FPSFrameTime += deltaTime;
-    if (FPSFrameTime > 0.5f)
-    {
-        FPSLast = float(FPSFrameCount) / FPSFrameTime;
-        FPSFrameCount = 0;
-        FPSFrameTime = 0.0f;
-    }
-
-    // handle UI
-    static bool firstTime = true;
-
-    static float uvScale = 1.0f;
-    static float blackPoint = 0.0f;
-    static float whitePoint = 1.0f;
-    static int scene = 0;
-
-    bool updateConstants = false;
-    bool updateScene = false;
-
-    if (firstTime)
-    {
-        uvScale = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_w[0];
-        blackPoint = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_w[1];
-        whitePoint = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_w[2];
-    }
-
-    ImGui::Begin("", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
-
-    const char* scenes[] = {
-        "Sphere Plane Dark",
-        "Sphere Plane Light",
-        "Cornell Box Small Light",
-        "Cornell Box Big Light",
-        "Furnace Test",
-        "Cornell Obj",
-        "Obj Test"
-    };
-
-    if (ImGui::CollapsingHeader("Scene", ImGuiTreeNodeFlags_DefaultOpen))
-    {
-        updateScene |= ImGui::Combo("Scene", &scene, scenes, (int)EScene::COUNT);
-        updateScene |= ImGui::Checkbox("White Albedo", &g_whiteAlbedo);
-        if (ImGui::Button("Reset Render"))
+        // used to see the fully featured built in imgui demo window
+        if (0)
         {
-            ShaderData::ConstantBuffers::ConstantsPerFrame.Write(
-                g_d3d.Context(),
-                [=](ShaderTypes::ConstantBuffers::ConstantsPerFrame& data)
+            ImGui::ShowTestWindow();
+            return;
+        }
+
+        // handle FPS calculations
+        static int FPSFrameCount = 0;
+        static float FPSFrameTime = 0.0f;
+        static float FPSLast = 0.0f;
+        FPSFrameCount++;
+        FPSFrameTime += deltaTime;
+        if (FPSFrameTime > 0.5f)
+        {
+            FPSLast = float(FPSFrameCount) / FPSFrameTime;
+            FPSFrameCount = 0;
+            FPSFrameTime = 0.0f;
+        }
+
+        // handle UI
+        static bool firstTime = true;
+
+        static float uvScale = 1.0f;
+        static float blackPoint = 0.0f;
+        static float whitePoint = 1.0f;
+        static int scene = 0;
+
+        bool updateConstants = false;
+        bool updateScene = false;
+
+        if (firstTime)
+        {
+            uvScale = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_w[0];
+            blackPoint = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_w[1];
+            whitePoint = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_w[2];
+        }
+
+        ImGui::Begin("", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
+
+        const char* scenes[] = {
+            "Sphere Plane Dark",
+            "Sphere Plane Light",
+            "Cornell Box Small Light",
+            "Cornell Box Big Light",
+            "Furnace Test",
+            "Cornell Obj",
+            "Obj Test"
+        };
+
+        if (ImGui::CollapsingHeader("Scene", ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            updateScene |= ImGui::Combo("Scene", &scene, scenes, (int)EScene::COUNT);
+            updateScene |= ImGui::Checkbox("White Albedo", &g_whiteAlbedo);
+            if (ImGui::Button("Reset Render"))
+            {
+                ShaderData::ConstantBuffers::ConstantsPerFrame.Write(
+                    g_d3d.Context(),
+                    [=](ShaderTypes::ConstantBuffers::ConstantsPerFrame& data)
                 {
                     data.sampleCount_yzw[0] = 0;
                 }
+                );
+            }
+        }
+
+        if (ImGui::CollapsingHeader("Cross Hatching", ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            ImGui::Checkbox("Grey Scale", &g_showGrey);
+            ImGui::Checkbox("Cross Hatch", &g_showCrossHatch);
+            ImGui::Checkbox("16x Anisotropic Sampling", &g_aniso);
+            updateConstants |= ImGui::SliderFloat("UV Scale", &uvScale, 0.001f, 3.0f);
+        }
+
+        if (ImGui::CollapsingHeader("Brightness", ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            updateConstants |= ImGui::SliderFloat("Black", &blackPoint, 0.0f, 1.0f);
+            updateConstants |= ImGui::SliderFloat("White", &whitePoint, 0.0f, 1.0f);
+            ImGui::Checkbox("Smooth Step Brightness", &g_smoothStep);
+        }
+
+        if (ImGui::CollapsingHeader("Stats", ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            uint4 counts = ShaderData::ConstantBuffers::ConstantsOnce.Read().numSpheres_numTris_numOBBs_numQuads;
+            ImGui::Text("Rendering at %u x %u\nSpheres: %u\nTriangles: %u\nOBBs: %u\nQuads: %u\n", c_width, c_height, counts[0], counts[1], counts[2], counts[3]);
+            ImGui::Text("FPS: %0.2f (%0.2f ms)", FPSLast, FPSLast > 0 ? 1000.0f / FPSLast : 0.0f);
+            ImGui::Text("%u samples\nFPS is samples per second\n", ShaderData::ConstantBuffers::ConstantsPerFrame.Read().sampleCount_yzw[0]);
+            ImGui::Separator();
+        }
+
+        // show FPS
+        ImGui::Text("Press 'H' to hide or unhide this window. Escape to exit.\nWASD to move camera and drag mouse for mouselook.");
+
+        ImGui::End();
+
+        // update constants
+        if (updateConstants)
+        {
+            ShaderData::ConstantBuffers::ConstantsOnce.Write(
+                g_d3d.Context(),
+                [=] (ShaderTypes::ConstantBuffers::ConstantsOnce& data)
+                {
+                    data.uvmultiplier_blackPoint_whitePoint_w[0] = uvScale;
+                    data.uvmultiplier_blackPoint_whitePoint_w[1] = blackPoint;
+                    data.uvmultiplier_blackPoint_whitePoint_w[2] = whitePoint;
+                }
             );
+        }
+
+        // update scene if we should
+        if (updateScene)
+        {
+            FillSceneData((EScene)scene, g_d3d.Context());
+
+            uvScale = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_w[0];
+            blackPoint = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_w[1];
+            whitePoint = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_w[2];
         }
     }
 
-    if (ImGui::CollapsingHeader("Cross Hatching", ImGuiTreeNodeFlags_DefaultOpen))
+    // handle possible camera movement
+    float movementSide = 0.0f;
+    float movementForward = 0.0f;
+    if (io.KeysDown['W'])
+        movementForward += 1.0f;
+    if (io.KeysDown['A'])
+        movementSide -= 1.0f;
+    if (io.KeysDown['S'])
+        movementForward -= 1.0f;
+    if (io.KeysDown['D'])
+        movementSide += 1.0f;
+
+    float mouseMoveX = 0.0f;
+    float mouseMoveY = 0.0f;
+    if (!io.WantCaptureMouse && io.MouseDown[0])
     {
-        ImGui::Checkbox("Grey Scale", &g_showGrey);
-        ImGui::Checkbox("Cross Hatch", &g_showCrossHatch);
-        ImGui::Checkbox("16x Anisotropic Sampling", &g_aniso);
-        updateConstants |= ImGui::SliderFloat("UV Scale", &uvScale, 0.001f, 3.0f);
+        mouseMoveX = io.MouseDelta.x;
+        mouseMoveY = io.MouseDelta.y;
     }
 
-    if (ImGui::CollapsingHeader("Brightness", ImGuiTreeNodeFlags_DefaultOpen))
+    if (movementSide != 0.0f || movementForward != 0.0f || mouseMoveX != 0.0f || mouseMoveY != 0.0f)
     {
-        updateConstants |= ImGui::SliderFloat("Black", &blackPoint, 0.0f, 1.0f);
-        updateConstants |= ImGui::SliderFloat("White", &whitePoint, 0.0f, 1.0f);
-        ImGui::Checkbox("Smooth Step Brightness", &g_smoothStep);
-    }
-
-    if (ImGui::CollapsingHeader("Stats", ImGuiTreeNodeFlags_DefaultOpen))
-    {
-        uint4 counts = ShaderData::ConstantBuffers::ConstantsOnce.Read().numSpheres_numTris_numOBBs_numQuads;
-        ImGui::Text("Rendering at %u x %u\nSpheres: %u\nTriangles: %u\nOBBs: %u\nQuads: %u\n", c_width, c_height, counts[0], counts[1], counts[2], counts[3]);
-        ImGui::Text("FPS: %0.2f (%0.2f ms)", FPSLast, FPSLast > 0 ? 1000.0f / FPSLast : 0.0f);
-        ImGui::Text("%u samples\nFPS is samples per second\n", ShaderData::ConstantBuffers::ConstantsPerFrame.Read().sampleCount_yzw[0]);
-        ImGui::Separator();
-    }
-
-    // show FPS
-    ImGui::Text("Press 'H' to hide or unhide this window. Escape to exit.");
-
-    ImGui::End();
-
-    // update constants
-    if (updateConstants)
-    {
+        // update the camera
         ShaderData::ConstantBuffers::ConstantsOnce.Write(
             g_d3d.Context(),
-            [=](ShaderTypes::ConstantBuffers::ConstantsOnce& data)
-            {
-                data.uvmultiplier_blackPoint_whitePoint_w[0] = uvScale;
-                data.uvmultiplier_blackPoint_whitePoint_w[1] = blackPoint;
-                data.uvmultiplier_blackPoint_whitePoint_w[2] = whitePoint;
+            [=] (ShaderTypes::ConstantBuffers::ConstantsOnce& data) {
+
+                // calculate camera basis vectors
+                float3 cameraFwdRaw = XYZ(data.cameraAt_FOVY) - XYZ(data.cameraPos_FOVX);
+                float3 cameraFwd = cameraFwdRaw;
+                Normalize(cameraFwd);
+                float3 cameraRight = Cross({ 0.0f, 1.0f, 0.0f }, cameraFwd);
+                Normalize(cameraRight);
+                float3 cameraUp = Cross(cameraFwd, cameraRight);
+                Normalize(cameraUp);
+
+                // handle mouse look by changing where the cameraAt position is, relative to the cameraPos
+                {
+                    // convert "cameraFwdRaw" from cartesian to spherical coordinates
+                    float radius = Length(cameraFwdRaw);
+                    float theta = atan2(cameraFwdRaw[2], cameraFwdRaw[0]);
+                    float phi = atan2(std::sqrtf(cameraFwdRaw[0] * cameraFwdRaw[0] + cameraFwdRaw[2] * cameraFwdRaw[2]), cameraFwdRaw[1]);
+
+                    // adjust spherical coordinates based on mouse drag amounts
+                    theta -= mouseMoveX * c_mouseLookSpeed * deltaTime;
+                    phi += mouseMoveY * c_mouseLookSpeed * deltaTime;
+
+                    // convert from spherical coordinates back into cartesian
+                    cameraFwdRaw[0] = radius * sin(phi) * cos(theta);
+                    cameraFwdRaw[2] = radius * sin(theta) * sin(phi);
+                    cameraFwdRaw[1] = radius * cos(phi);
+
+                    // set new cameraAt vector
+                    data.cameraAt_FOVY[0] = data.cameraPos_FOVX[0] + cameraFwdRaw[0];
+                    data.cameraAt_FOVY[1] = data.cameraPos_FOVX[1] + cameraFwdRaw[1];
+                    data.cameraAt_FOVY[2] = data.cameraPos_FOVX[2] + cameraFwdRaw[2];
+                }
+
+                // translate the camera position and target
+                {
+                    float3 cameraDelta = (cameraFwd * movementForward + cameraRight * movementSide) * deltaTime * c_walkSpeed;
+
+                    data.cameraPos_FOVX[0] += cameraDelta[0];
+                    data.cameraPos_FOVX[1] += cameraDelta[1];
+                    data.cameraPos_FOVX[2] += cameraDelta[2];
+
+                    data.cameraAt_FOVY[0] += cameraDelta[0];
+                    data.cameraAt_FOVY[1] += cameraDelta[1];
+                    data.cameraAt_FOVY[2] += cameraDelta[2];
+                }
             }
         );
-    }
 
-    if (updateScene)
-    {
-        FillSceneData((EScene)scene, g_d3d.Context());
-
-        uvScale = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_w[0];
-        blackPoint = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_w[1];
-        whitePoint = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_w[2];
+        // reset the render
+        ShaderData::ConstantBuffers::ConstantsPerFrame.Write(
+            g_d3d.Context(),
+            [=] (ShaderTypes::ConstantBuffers::ConstantsPerFrame& data) {
+                data.sampleCount_yzw[0] = 0;
+            }
+        );
     }
 }
 

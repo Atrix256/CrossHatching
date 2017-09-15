@@ -51,7 +51,7 @@ void CalculateRay (in float2 uv, out float3 rayPos, out float3 rayDir)
 
     // calculate camera vectors
     float3 cameraFwd = normalize(cameraAt_FOVY.xyz - cameraPos_FOVX.xyz);
-    float3 cameraRight = normalize(cross(cameraFwd, float3(0.0f, 1.0f, 0.0f)));
+    float3 cameraRight = normalize(cross(float3(0.0f, 1.0f, 0.0f), cameraFwd));
     float3 cameraUp = normalize(cross(cameraFwd, cameraRight));
 
     // calculate view window dimensions in world space

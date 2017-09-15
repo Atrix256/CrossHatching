@@ -9,6 +9,7 @@
 
 CModel<ShaderTypes::VertexFormats::IMGUI> g_IMGUIMesh;
 CTexture g_IMGUIFont;
+bool g_IMGUIEnabled = true;
 
 void IMGUIRenderFunction(ImDrawData* draw_data)
 {
@@ -143,4 +144,14 @@ bool InitIMGUI()
     // Store texture pointer/identifier (whatever your engine uses) in 'io.Fonts->TexID'. This will be passed back to your via the renderer.
     io.Fonts->TexID = (void*)&g_IMGUIFont;
     return true;
+}
+
+void EnableIMGUI (bool enable)
+{
+    g_IMGUIEnabled = enable;
+}
+
+bool GetIMGUIEnabled ()
+{
+    return g_IMGUIEnabled;
 }

@@ -1,5 +1,5 @@
 #include "window.h"
-#include "imgui/imgui.h"
+#include "IMGUIWrap.h"
 
 #define APPLICATION_NAME L"Generalized Cross Hatching From Path Tracing"
 
@@ -59,10 +59,6 @@ LRESULT CALLBACK MessageHandler (HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lpa
 {
     ImGuiIO& io = ImGui::GetIO();
 
-    static void(*IMGUIRenderFunc)(ImDrawData* data) = nullptr;
-    if (IMGUIRenderFunc == nullptr)
-        IMGUIRenderFunc = io.RenderDrawListsFn;
-
     if (IMGUI_EventHandler(hwnd, umsg, wparam, lparam))
         return 1;
 
@@ -96,12 +92,7 @@ LRESULT CALLBACK MessageHandler (HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lpa
         case WM_KEYUP:
         {
             if ((char)wparam == 'H')
-            {
-                if (io.RenderDrawListsFn == nullptr)
-                    io.RenderDrawListsFn = IMGUIRenderFunc;
-                else
-                    io.RenderDrawListsFn = nullptr;
-            }
+                EnableIMGUI(!GetIMGUIEnabled());
             return 0;
         }
 

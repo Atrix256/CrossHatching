@@ -1,6 +1,6 @@
-* mouse position is wrong in fullscreen mode
+* quads aren't seen from behind for some reason.
 
-* the numbering of the naming of the circle images is backwards i think. neg1 should swap with 1 etc
+* mouse position is wrong in fullscreen mode. seems like a generic directx question.
 
 * try erode / dilute in gimp.  Not sure how to do the "even brightness" thing the paper talks about though.
  * need a new crosshatch texture
@@ -8,10 +8,6 @@
 * fix seams in whatever of the cross hatching textures have them. (is it due to triplanar? could try changing the axes!)
  * and/or get/make better textures!
  * i think that is just where the texture edge is and that the texture isn't a very good tileable texture.
-
-* try some minor optimizations to see if they help much. (write details in notes for blog post i guess)
- * N samples per call, instead of just the 1.  may decrease time spent on (texture) memory read / write?
- * bounding volume (box? sphere?) as pre-test for rays for meshes.
 
 ! for color cross hatching, try YCoCg-R instead of YUV? https://en.wikipedia.org/wiki/YCoCg
  * maybe make "full brightness" be based on albedo somehow? even though it's not... shrug
@@ -46,18 +42,16 @@
 * bayesian integration would probably be better here since there's no specular. but there is occlusion so...
  * dunno how bayesian integration works. would be good to learn but maybe out of scope
 
-! the path on cornell box has red wall on left, but the "showpathtrace" flips it correctly to red wall on right. should fix that minor wrinkle
-
 ! need to keep the rng seed from becoming so huge that small floats don't matter and it stops updating.
 
-be able to move camera? reset sample count on camera move. WASD + mouse look.
-
+* try some minor optimizations to see if they help much. (write details in notes for blog post i guess)
+ * N samples per call, instead of just the 1.  may decrease time spent on (texture) memory read / write?
+ * bounding volume (box? sphere?) as pre-test for rays for meshes.
 
 TODO's in code
 
 Sean said he'd be willing to give me textures.
  * how bout models?
-
 
 * make it spit out shader-error.txt even if there are just warnings?
 
@@ -71,23 +65,20 @@ Sean said he'd be willing to give me textures.
 
 * get rid of unused models and textures when done
 
-* add russian roulette to the path tracing? https://computergraphics.stackexchange.com/questions/2316/is-russian-roulette-really-the-answer
- * lets you get the benefits of more bounces without paying the full cost and doesn't add bias
-
-? could try jittering the first hit. anti alias may be fine shrug.
-
-* could try hard coding the scenes by writing functions to test intersection with them into shader files that are included
- * may increase perf, not sure.
-
- * somehow there are leaks (d3d11 warning of live objects) on shutdown
+* somehow there are leaks (d3d11 warning of live objects) on shutdown
 
 ================================= LATER IDEAS =================================
 
 * could do a lens and get depth of field effect. (actually, won't work with this technique).. or will it? why wouldn't it work? (oh... trilinear mapping. would need to do lens flare as a post process!)
 * reflections. Probably needs to be done as a post step, but could do N samples and jitter them even.
 * anti aliasing? could render at 4x resolution and downsample final image (longer to render though)
+ * or maybe we can jitter first bounce? not sure...
 * caustics and refraction could be interesting
 * Work with sean for the franklin booth technioque?
+
+* in general, could "hrad code" scenes as hard coded hlsl code. not sure how much faster that would be if any
+* add russian roulette to the path tracing? https://computergraphics.stackexchange.com/questions/2316/is-russian-roulette-really-the-answer
+ * lets you get the benefits of more bounces without paying the full cost and doesn't add bias
 
 ================================= HIGH LEVEL GOALS =================================
 
