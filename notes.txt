@@ -1,35 +1,19 @@
-? I'm thinking we probably want window borders / close button on this window.
- * imgui may be enough, but escape to exit may not be most obvious...
- ! create window and make it so escape doesn't exit anymore (or leave it?)
-
-
 * mouse position is wrong in fullscreen mode
-
-* could make a popup window that asks for resolution and full screen or not
-
-* can dx11 easily toggle fullscreen?
- ? can we change resolutione asily?
 
 * the numbering of the naming of the circle images is backwards i think. neg1 should swap with 1 etc
 
 * try erode / dilute in gimp.  Not sure how to do the "even brightness" thing the paper talks about though.
  * need a new crosshatch texture
 
-* "render" function of mesh should be named something else. like bind model or something
-
-* may want to seperate rendering a mesh into 3 steps: set mesh, set shader, draw using both. imgui could benefit
-
-* fix seems in whatever of the cross hatching textures have them.
+* fix seams in whatever of the cross hatching textures have them. (is it due to triplanar? could try changing the axes!)
  * and/or get/make better textures!
 
 * try some minor optimizations to see if they help much. (write details in notes for blog post i guess)
  * N samples per call, instead of just the 1.  may decrease time spent on (texture) memory read / write?
  * bounding volume (box? sphere?) as pre-test for rays for meshes.
 
-* on spheres there is a weird line on the textures, check it out (may be due to triplanar?)
- * may disappear with other textures.
-
 ! for color cross hatching, try YCoCg-R instead of YUV? https://en.wikipedia.org/wiki/YCoCg
+ * maybe make "full brightness" be based on albedo somehow? even though it's not... shrug
 
 * need to figure out how to process the cross hatching textures. dilation filter, even color texture etc.
  * eventually write code that does this, or figure out steps in gimp.

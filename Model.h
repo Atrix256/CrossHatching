@@ -93,7 +93,7 @@ public:
         return true;
     }
 
-    void Render (ID3D11DeviceContext* deviceContext)
+    void Set (ID3D11DeviceContext* deviceContext)
     {
         unsigned int stride;
         unsigned int offset;

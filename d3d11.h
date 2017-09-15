@@ -21,6 +21,8 @@ public:
 
     void EnableAlphaBlend (bool enable);
 
+    void DrawIndexed (size_t indexCount, size_t startIndex = 0, size_t startVertex = 0) const;
+
     ID3D11Device* Device() { return m_device.m_ptr; }
     ID3D11DeviceContext* Context () { return m_deviceContext.m_ptr; }
 

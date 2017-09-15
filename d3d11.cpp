@@ -335,3 +335,8 @@ void CD3D11::EnableAlphaBlend (bool enable)
 
     Context()->OMSetBlendState(d3dBlendState, 0, 0xffffffff);
 }
+
+void CD3D11::DrawIndexed (size_t indexCount, size_t startIndex, size_t startVertex) const
+{
+    m_deviceContext.m_ptr->DrawIndexed((UINT)indexCount, (UINT)startIndex, (UINT)startVertex);
+}

@@ -451,8 +451,9 @@ void IMGUIRenderFunction(ImDrawData* draw_data)
         }
     );
 
-    // setup shaders
+    // setup shader
     const CShader& IMGUI = ShaderData::GetShader_IMGUI({});
+    IMGUI.Set(g_d3d.Context());
     FillShaderParams<EShaderType::vertex>(g_d3d.Context(), IMGUI.GetVSReflector());
     FillShaderParams<EShaderType::pixel>(g_d3d.Context(), IMGUI.GetPSReflector());
 
@@ -482,9 +483,9 @@ void IMGUIRenderFunction(ImDrawData* draw_data)
                 ID3D11ShaderResourceView* srv = texture->GetSRV();
                 g_d3d.Context()->PSSetShaderResources(0, 1, &srv);
 
-                // run the shader
-                g_IMGUIMesh.Render(g_d3d.Context());
-                ShaderData::GetShader_IMGUI({}).Draw(g_d3d.Context(), pcmd->ElemCount, idx_offset, vtx_offset);
+                // draw the mesh
+                g_IMGUIMesh.Set(g_d3d.Context());
+                g_d3d.DrawIndexed(pcmd->ElemCount, idx_offset, vtx_offset);
             }
             idx_offset += pcmd->ElemCount;
         }
@@ -905,8 +906,9 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
             const CShader& shader = ShaderData::GetShader_showPathTrace({g_showGrey, g_showCrossHatch, g_smoothStep, g_aniso});
             FillShaderParams<EShaderType::vertex>(g_d3d.Context(), shader.GetVSReflector());
             FillShaderParams<EShaderType::pixel>(g_d3d.Context(), shader.GetPSReflector());
-            g_fullScreenMesh.Render(g_d3d.Context());
-            shader.Draw(g_d3d.Context(), g_fullScreenMesh.GetIndexCount());
+            g_fullScreenMesh.Set(g_d3d.Context());
+            shader.Set(g_d3d.Context());
+            g_d3d.DrawIndexed(g_fullScreenMesh.GetIndexCount());
             UnbindShaderTextures<EShaderType::vertex>(g_d3d.Context(), shader.GetVSReflector());
             UnbindShaderTextures<EShaderType::pixel>(g_d3d.Context(), shader.GetPSReflector());
 
