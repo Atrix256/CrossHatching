@@ -1,48 +1,39 @@
-* quads aren't seen from behind for some reason.
+* somehow there are leaks (d3d11 warning of live objects) on shutdown
 
 * mouse position is wrong in fullscreen mode. seems like a generic directx question.
 
-* try erode / dilute in gimp.  Not sure how to do the "even brightness" thing the paper talks about though.
- * need a new crosshatch texture
+* fix random number generation per pixel
+ * blue noise / low discrepancy likely not good options here since we want to use more samples instead of less
+ ? have c++ side send an iterative sum of golden ratio to shader?
+  * or try just adding the random number per frame to it!
+   * i tried that and it looked aweful, maybe my prng sucks with seeds that are in 0-1?
+  * try and see if you can keep the seed in 0-1?
+  * if this works out get rid of app rand and frame number and app time i think.
+  ! i tried this 8/29 at lunch and it didn't work out, not sure what the problem is.
+  * white noise is probably better over area and time since you are doing more samples not fewer
+ ! need to keep the rng seed from becoming so huge that small floats don't matter and it stops updating.
 
-* fix seams in whatever of the cross hatching textures have them. (is it due to triplanar? could try changing the axes!)
- * and/or get/make better textures!
- * i think that is just where the texture edge is and that the texture isn't a very good tileable texture.
+* make your own texture(s)!
+ * try erode / dilute in gimp.  Not sure how to do the "even brightness" thing the paper talks about though.
+  * need a new crosshatch texture
+ * fix seams in whatever of the cross hatching textures have them. (is it due to triplanar? could try changing the axes!)
+  * and/or get/make better textures!
+  * i think that is just where the texture edge is and that the texture isn't a very good tileable texture.
+ * need to figure out how to process the cross hatching textures. dilation filter, even color texture etc.
+  * eventually write code that does this, or figure out steps in gimp.
 
 ! for color cross hatching, try YCoCg-R instead of YUV? https://en.wikipedia.org/wiki/YCoCg
  * maybe make "full brightness" be based on albedo somehow? even though it's not... shrug
-
-* need to figure out how to process the cross hatching textures. dilation filter, even color texture etc.
- * eventually write code that does this, or figure out steps in gimp.
-
-? should source crosshatching textures be single channel? maybe doesn't matter that much. Only really care for perf / efficiency.
-
-* color crosshatching:
- * convert to hue / brightness. hue is tint for texture, brightness selects texture
- * could also try using texture as a lerp value between a light and dark color
-
-* Models at turbosquid! https://www.turbosquid.com/
- * and unity store
- * and here: https://github.com/movAX13h/HiOctaneTools/tree/master/Unpacked%20Assets/models
- * if using those high octane assets, need to texture them with atlas.png i think.
+ * color crosshatching:
+  * convert to hue / brightness. hue is tint for texture, brightness selects texture
+  * could also try using texture as a lerp value between a light and dark color
+ * make it use textures for shading - using the color to tint the non black parts of the textures.
 
 * get some fun models to use for testing, make some fun scenes.
-* make it use textures for shading - using the color to tint the non black parts of the textures.
-
-? why triplanar uv's? if you already have UV coordinates you could use those and do fewer texture reads!
-
-? have c++ side send an iterative sum of golden ratio to shader?
- * or try just adding the random number per frame to it!
-  * i tried that and it looked aweful, maybe my prng sucks with seeds that are in 0-1?
- * try and see if you can keep the seed in 0-1?
- * if this works out get rid of app rand and frame number and app time i think.
- ! i tried this 8/29 at lunch and it didn't work out, not sure what the problem is.
- * white noise is probably better over area and time since you are doing more samples not fewer
-
-* bayesian integration would probably be better here since there's no specular. but there is occlusion so...
- * dunno how bayesian integration works. would be good to learn but maybe out of scope
-
-! need to keep the rng seed from becoming so huge that small floats don't matter and it stops updating.
+ * Models at turbosquid! https://www.turbosquid.com/
+  * and unity store
+  * and here: https://github.com/movAX13h/HiOctaneTools/tree/master/Unpacked%20Assets/models
+  * if using those high octane assets, need to texture them with atlas.png i think.
 
 * try some minor optimizations to see if they help much. (write details in notes for blog post i guess)
  * N samples per call, instead of just the 1.  may decrease time spent on (texture) memory read / write?
@@ -53,19 +44,11 @@ TODO's in code
 Sean said he'd be willing to give me textures.
  * how bout models?
 
-* make it spit out shader-error.txt even if there are just warnings?
-
-* could also directly sample the light to make it converge faster (i think you should, if it's unbiased!)
-
-* will eventually want to make videos probably. A thing to render a frame at a time and then use ffmpeg to combine? Would need logic for updating camera and objects over time. Fixed frame rate update obviously!
-
 * could have a bounding shape on "instanced meshes" which if the ray hits, gives a start/stop triangle index range to test ray against.
  * could also possibly have a scale, translation, rotation for instance.
  * try only if actually needed.
 
 * get rid of unused models and textures when done
-
-* somehow there are leaks (d3d11 warning of live objects) on shutdown
 
 ================================= LATER IDEAS =================================
 
@@ -79,6 +62,13 @@ Sean said he'd be willing to give me textures.
 * in general, could "hrad code" scenes as hard coded hlsl code. not sure how much faster that would be if any
 * add russian roulette to the path tracing? https://computergraphics.stackexchange.com/questions/2316/is-russian-roulette-really-the-answer
  * lets you get the benefits of more bounces without paying the full cost and doesn't add bias
+
+* bayesian integration would probably be better here since there's no specular. but there is occlusion so...
+ * dunno how bayesian integration works. would be good to learn but maybe out of scope
+
+* could also directly sample the light to make it converge faster (i think you should, if it's unbiased!)
+
+* record movie support
 
 ================================= HIGH LEVEL GOALS =================================
 
@@ -105,3 +95,7 @@ DX11 guide: http://www.rastertek.com/dx11tut02.html
 
 @Jontology - saw some screenshots of my "stuck" results and had some ideas of what was going wrong.
 * unreal: https://github.com/JonGreenberg/Crosshatching
+
+* cross hatch textures could be a single color channel. Just didnt do that out of lazyness. Could fit 4 shades into one texture then. That's what the "floored" post does.
+
+* this uses triplanar projection to make uv's.  If your object already has uv's, you probably would want to use those instead, to do 1 texture lookup per pixel instead of 3!

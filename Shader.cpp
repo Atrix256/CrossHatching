@@ -7,7 +7,7 @@ static void OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR*
 {
     char* compileErrors;
     unsigned long long bufferSize, i;
-    std::ofstream fout;
+    std::wofstream fout;
 
     // Get a pointer to the error message text buffer.
     compileErrors = (char*)(errorMessage->GetBufferPointer());
@@ -18,6 +18,8 @@ static void OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR*
     // Open a file to write the error message to.
     fout.open("shader-error.txt");
 
+    fout << "Compiling " << shaderFilename << ":\n\n";
+
     // Write out the error message.
     for (i = 0; i<bufferSize; i++)
     {
@@ -27,38 +29,37 @@ static void OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR*
     // Close the file.
     fout.close();
 
-    // Release the error message.
-    errorMessage->Release();
-    errorMessage = 0;
-
-    // Pop a message up on the screen to notify the user to check the text file for compile errors.
-    MessageBox(hwnd, L"Error compiling shader.  Check shader-error.txt for message.", shaderFilename, MB_OK);
-
     return;
 }
 
 bool CShader::Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, const char* vsentry, const char* psentry, D3D11_INPUT_ELEMENT_DESC* vertexFormat, size_t vertexFormatElements, bool debug)
 {
     HRESULT result;
-    ID3D10Blob* errorMessage;
+    CAutoReleasePointer<ID3D10Blob> errorMessage;
 
     // Initialize the pointers this function will use to null.
-    errorMessage = 0;
     UINT compileFlags = D3D10_SHADER_ENABLE_STRICTNESS;
     if (debug)
         compileFlags |= D3D10_SHADER_DEBUG;
 
     // Compile the vertex shader code.
     result = D3DCompileFromFile(fileName, NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE, vsentry, "vs_5_0", compileFlags, 0,
-        &m_vertexShaderBuffer.m_ptr, &errorMessage);
+        &m_vertexShaderBuffer.m_ptr, &errorMessage.m_ptr);
+
+    // write shader errors / warnings if there were any (it won't fail if there are just warnings!)
+    if (errorMessage.m_ptr)
+    {
+        OutputShaderErrorMessage(errorMessage.m_ptr, hWnd, fileName);
+    }
+
     if (FAILED(result))
     {
         // If the shader failed to compile it should have writen something to the error message.
-        if (errorMessage)
+        if (errorMessage.m_ptr)
         {
-            OutputShaderErrorMessage(errorMessage, hWnd, fileName);
+            // Pop a message up on the screen to notify the user to check the text file for compile errors.
+            MessageBox(hWnd, L"Error compiling shader.  Check shader-error.txt for message.", fileName, MB_OK);
         }
-        // If there was  nothing in the error message then it simply could not find the shader file itself.
         else
         {
             MessageBox(hWnd, fileName, L"Missing Shader File", MB_OK);
@@ -68,14 +69,23 @@ bool CShader::Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, const ch
     }
 
     // Compile the pixel shader code.
+    errorMessage.Clear();
     result = D3DCompileFromFile(fileName, NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE, psentry, "ps_5_0", compileFlags, 0,
-        &m_pixelShaderBuffer.m_ptr, &errorMessage);
+        &m_pixelShaderBuffer.m_ptr, &errorMessage.m_ptr);
+
+    // write shader errors / warnings if there were any (it won't fail if there are just warnings!)
+    if (errorMessage.m_ptr)
+    {
+        OutputShaderErrorMessage(errorMessage.m_ptr, hWnd, fileName);
+    }
+
     if (FAILED(result))
     {
         // If the shader failed to compile it should have writen something to the error message.
-        if (errorMessage)
+        if (errorMessage.m_ptr)
         {
-            OutputShaderErrorMessage(errorMessage, hWnd, fileName);
+            // Pop a message up on the screen to notify the user to check the text file for compile errors.
+            MessageBox(hWnd, L"Error compiling shader.  Check shader-error.txt for message.", fileName, MB_OK);
         }
         // If there was nothing in the error message then it simply could not find the file itself.
         else
@@ -136,10 +146,7 @@ void CShader::Set (ID3D11DeviceContext* deviceContext) const
 bool CComputeShader::Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, const char* entry, bool debug)
 {
     HRESULT result;
-    ID3D10Blob* errorMessage;
-
-    // Initialize the pointers this function will use to null.
-    errorMessage = 0;
+    CAutoReleasePointer<ID3D10Blob> errorMessage;
 
     UINT compileFlags = D3D10_SHADER_ENABLE_STRICTNESS;
     if (debug)
@@ -147,13 +154,21 @@ bool CComputeShader::Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, c
 
     // Compile the compute shader code.
     result = D3DCompileFromFile(fileName, NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE, entry, "cs_5_0", compileFlags, 0,
-        &m_computeShaderBuffer.m_ptr, &errorMessage);
+        &m_computeShaderBuffer.m_ptr, &errorMessage.m_ptr);
+
+    // write shader errors / warnings if there were any (it won't fail if there are just warnings!)
+    if (errorMessage.m_ptr)
+    {
+        OutputShaderErrorMessage(errorMessage.m_ptr, hWnd, fileName);
+    }
+
     if (FAILED(result))
     {
         // If the shader failed to compile it should have writen something to the error message.
-        if (errorMessage)
+        if (errorMessage.m_ptr)
         {
-            OutputShaderErrorMessage(errorMessage, hWnd, fileName);
+            // Pop a message up on the screen to notify the user to check the text file for compile errors.
+            MessageBox(hWnd, L"Error compiling shader.  Check shader-error.txt for message.", fileName, MB_OK);
         }
         // If there was  nothing in the error message then it simply could not find the shader file itself.
         else
