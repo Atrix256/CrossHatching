@@ -1,35 +1,23 @@
+? I'm thinking we probably want window borders / close button on this window.
+ * imgui may be enough, but escape to exit may not be most obvious...
+ ! create window and make it so escape doesn't exit anymore (or leave it?)
 
-* pressing escape doesn't exit anymore. need to make imgui setup, and need to make windowed borders!
 
-? with greyscale crosshatch, why isn't the background in scene 1 black??
- * i think it has to do with mips. mips are grey!
+* mouse position is wrong in fullscreen mode
 
-* the numbering of the circle images is backwards i think. neg1 should swap with 1 etc
+* could make a popup window that asks for resolution and full screen or not
 
-! get imgui working. Needed to be able to fine tune parameters
- * make it collapsable.
+* can dx11 easily toggle fullscreen?
+ ? can we change resolutione asily?
 
-* could try adding a black and white slice.
+* the numbering of the naming of the circle images is backwards i think. neg1 should swap with 1 etc
+
 * try erode / dilute in gimp.  Not sure how to do the "even brightness" thing the paper talks about though.
-
-* try making all albedo white.
- * an option for this? pathtrace.h just doesn't take ray hit albedo!
-
-* convert all keyboard commands into imgui things
-
-* formalize shader permutations.
- * do this by generating an include file for #defines that each shader includes during compile.
- * make a shader permutation for aniso vs regular 
-
-? why does smoothstep have such little effect on scene 2?
+ * need a new crosshatch texture
 
 * "render" function of mesh should be named something else. like bind model or something
 
 * may want to seperate rendering a mesh into 3 steps: set mesh, set shader, draw using both. imgui could benefit
-
-? maybe better way to handle shader permutations?
- * could do the #define route
- * could generate the cs_main functions that are called
 
 * fix seems in whatever of the cross hatching textures have them.
  * and/or get/make better textures!
@@ -43,10 +31,8 @@
 
 ! for color cross hatching, try YCoCg-R instead of YUV? https://en.wikipedia.org/wiki/YCoCg
 
-* use D3DX11CreateTextureFromFile() to load textures so you can use PNG's etc
-
 * need to figure out how to process the cross hatching textures. dilation filter, even color texture etc.
- * eventually write code that does this
+ * eventually write code that does this, or figure out steps in gimp.
 
 ? should source crosshatching textures be single channel? maybe doesn't matter that much. Only really care for perf / efficiency.
 
@@ -61,6 +47,8 @@
 
 * get some fun models to use for testing, make some fun scenes.
 * make it use textures for shading - using the color to tint the non black parts of the textures.
+
+? why triplanar uv's? if you already have UV coordinates you could use those and do fewer texture reads!
 
 ? have c++ side send an iterative sum of golden ratio to shader?
  * or try just adding the random number per frame to it!
@@ -77,17 +65,14 @@
 
 ! need to keep the rng seed from becoming so huge that small floats don't matter and it stops updating.
 
-show fps / mspf. maybe in title bar? also number of samples?
- * part of imgui display.
-
 be able to move camera? reset sample count on camera move. WASD + mouse look.
+
 
 TODO's in code
 
 Sean said he'd be willing to give me textures.
+ * how bout models?
 
-? I'm thinking we probably want window borders / close button on this window.
- * imgui may be enough, but escape to exit may not be most obvious...
 
 * make it spit out shader-error.txt even if there are just warnings?
 

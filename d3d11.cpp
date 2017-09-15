@@ -27,8 +27,7 @@ bool CD3D11::Init (
     D3D11_RASTERIZER_DESC rasterDesc;
     D3D11_VIEWPORT viewport;
 
-    // Store the vsync setting (only available in full screen mode)
-    vsync = vsync && fullscreen;
+    // Store some settings
     m_vsync_enabled = vsync;
     m_screenWidth = screenWidth;
     m_screenHeight = screenHeight;

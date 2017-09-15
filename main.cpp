@@ -751,7 +751,7 @@ void IMGUIWindow ()
         whitePoint = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_w[2];
     }
 
-    ImGui::Begin("", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize);
+    ImGui::Begin("", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
 
     const char* scenes[] = {
         "Sphere Plane Dark",
@@ -763,10 +763,10 @@ void IMGUIWindow ()
         "Obj Test"
     };
 
-    if (ImGui::CollapsingHeader("Scene Paramaters", ImGuiTreeNodeFlags_DefaultOpen))
+    if (ImGui::CollapsingHeader("Scene", ImGuiTreeNodeFlags_DefaultOpen))
     {
         updateScene |= ImGui::Combo("Scene", &scene, scenes, (int)EScene::COUNT);
-        updateScene |= ImGui::Checkbox("White ALbedo", &g_whiteAlbedo);
+        updateScene |= ImGui::Checkbox("White Albedo", &g_whiteAlbedo);
         if (ImGui::Button("Reset Render"))
         {
             ShaderData::ConstantBuffers::ConstantsPerFrame.Write(
@@ -794,17 +794,17 @@ void IMGUIWindow ()
         ImGui::Checkbox("Smooth Step Brightness", &g_smoothStep);
     }
 
-    if (ImGui::CollapsingHeader("Scene", ImGuiTreeNodeFlags_DefaultOpen))
+    if (ImGui::CollapsingHeader("Stats", ImGuiTreeNodeFlags_DefaultOpen))
     {
         uint4 counts = ShaderData::ConstantBuffers::ConstantsOnce.Read().numSpheres_numTris_numOBBs_numQuads;
         ImGui::Text("Rendering at %u x %u\nSpheres: %u\nTriangles: %u\nOBBs: %u\nQuads: %u\n", c_width, c_height, counts[0], counts[1], counts[2], counts[3]);
+        ImGui::Text("FPS: %0.2f (%0.2f ms)", FPSLast, FPSLast > 0 ? 1000.0f / FPSLast : 0.0f);
+        ImGui::Text("%u samples\nFPS is samples per second\n", ShaderData::ConstantBuffers::ConstantsPerFrame.Read().sampleCount_yzw[0]);
+        ImGui::Separator();
     }
 
     // show FPS
-    ImGui::Separator();
-    ImGui::Text("FPS: %0.2f (%0.2f ms)", FPSLast, FPSLast > 0 ? 1000.0f / FPSLast : 0.0f);
-    ImGui::Text("%u samples\nFPS is samples per second\n", ShaderData::ConstantBuffers::ConstantsPerFrame.Read().sampleCount_yzw[0]);
-    ImGui::Text("Press 'H' to hide or unhide this window");
+    ImGui::Text("Press 'H' to hide or unhide this window. Escape to exit.");
 
     ImGui::End();
 

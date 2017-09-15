@@ -1,7 +1,7 @@
 #include "window.h"
 #include "imgui/imgui.h"
 
-#define APPLICATION_NAME L"Generalized Cross Hatching"
+#define APPLICATION_NAME L"Generalized Cross Hatching From Path Tracing"
 
 static HWND s_hWnd = nullptr;
 
@@ -156,22 +156,35 @@ void WindowInit (size_t screenWidth, size_t screenHeight, bool fullScreen)
 
         // Set the position of the window to the top left corner.
         posX = posY = 0;
+
+        // Create the window with the screen settings and get the handle to it.
+        s_hWnd = CreateWindowEx(WS_EX_APPWINDOW, APPLICATION_NAME, APPLICATION_NAME,
+            WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_POPUP,
+            posX, posY, (int)screenWidth, (int)screenHeight, NULL, NULL, hinstance, NULL);
     }
     else
     {
-        // If windowed then set it to 800x600 resolution.
-        //screenWidth = 800;
-        //screenHeight = 600;
+        RECT windowSize;
+        windowSize.left = 0;
+        windowSize.top = 0;
+        windowSize.right = (int)screenWidth;
+        windowSize.bottom = (int)screenHeight;
+        AdjustWindowRect(&windowSize, WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_POPUPWINDOW | WS_CAPTION, false);
+
+        windowSize.right -= windowSize.left;
+        windowSize.left = 0;
+        windowSize.bottom -= windowSize.top;
+        windowSize.top = 0;
 
         // Place the window in the middle of the screen.
-        posX = (GetSystemMetrics(SM_CXSCREEN) - (int)screenWidth) / 2;
-        posY = (GetSystemMetrics(SM_CYSCREEN) - (int)screenHeight) / 2;
-    }
+        posX = (GetSystemMetrics(SM_CXSCREEN) - windowSize.right) / 2;
+        posY = (GetSystemMetrics(SM_CYSCREEN) - windowSize.bottom) / 2;
 
-    // Create the window with the screen settings and get the handle to it.
-    s_hWnd = CreateWindowEx(WS_EX_APPWINDOW, APPLICATION_NAME, APPLICATION_NAME,
-        WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_POPUP,
-        posX, posY, (int)screenWidth, (int)screenHeight, NULL, NULL, hinstance, NULL);
+        // Create the window with the screen settings and get the handle to it.
+        s_hWnd = CreateWindowEx(WS_EX_APPWINDOW, APPLICATION_NAME, APPLICATION_NAME,
+            WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_POPUPWINDOW | WS_CAPTION,
+            posX, posY, windowSize.right, windowSize.bottom, NULL, NULL, hinstance, NULL);
+    }
 
     // Bring the window up on the screen and set it as main focus.
     ShowWindow(s_hWnd, SW_SHOW);
