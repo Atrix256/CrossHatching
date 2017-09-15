@@ -425,18 +425,18 @@ void FillShaderParams (ID3D11DeviceContext* deviceContext, ID3D11ShaderReflectio
 
 void IMGUIRenderFunction(ImDrawData* draw_data)
 {
-    // make sure our vertex and index buffers are large enough
-    if (g_IMGUIMesh.GetIndexCount() < draw_data->TotalIdxCount || g_IMGUIMesh.GetIndexCount() < draw_data->TotalVtxCount)
-    {
-        // TODO: assert or something. or resize!
-        ((int*)0)[0] = 0;
-    }
-
     // copy all the vertex and index data into one buffer
     g_IMGUIMesh.Write(
+        g_d3d.Device(),
         g_d3d.Context(),
         [&] (std::vector<ShaderTypes::VertexFormats::IMGUI>& vertexData, std::vector<unsigned long>& indexData)
         {
+            if (indexData.size() < draw_data->TotalIdxCount)
+                indexData.resize(draw_data->TotalIdxCount);
+
+            if (vertexData.size() < draw_data->TotalVtxCount)
+                vertexData.resize(draw_data->TotalVtxCount);
+
             ImDrawVert* vtx_dst = (ImDrawVert*)&vertexData[0];
             ImDrawIdx* idx_dst = (ImDrawIdx*)&indexData[0];
 
@@ -644,10 +644,10 @@ bool init ()
         g_d3d.Device(),
         [] (std::vector<ShaderTypes::VertexFormats::IMGUI>& vertexData, std::vector<unsigned long>& indexData)
         {
-            vertexData.resize(c_IMGUI_Verts);
-            indexData.resize(c_IMGUI_Verts);
+            vertexData.resize(1);
+            indexData.resize(1);
 
-            for (size_t i = 0; i < c_IMGUI_Verts; ++i)
+            for (size_t i = 0; i < 1; ++i)
                 indexData[i] = (unsigned long) i;
         }
     );

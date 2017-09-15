@@ -32,8 +32,11 @@ bool IMGUI_EventHandler (HWND, UINT msg, WPARAM wParam, LPARAM lParam)
         io.MouseWheel += GET_WHEEL_DELTA_WPARAM(wParam) > 0 ? +1.0f : -1.0f;
         return io.WantCaptureMouse;
     case WM_MOUSEMOVE:
-        io.MousePos.x = (signed short)(lParam);
-        io.MousePos.y = (signed short)(lParam >> 16);
+        POINT P;
+        GetCursorPos(&P);
+        ScreenToClient(WindowGetHWND(), &P);
+        io.MousePos.x = (float)P.x;
+        io.MousePos.y = (float)P.y;
         return io.WantCaptureMouse;
     case WM_KEYDOWN:
         if (wParam < 256)

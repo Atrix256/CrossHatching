@@ -61,10 +61,21 @@ public:
     }
 
     template <typename LAMBDA>
-    bool Write (ID3D11DeviceContext* deviceContext, LAMBDA& lambda)
+    bool Write (ID3D11Device* device, ID3D11DeviceContext* deviceContext, LAMBDA& lambda)
     {
+        size_t numVertices = m_vertices.size();
+        size_t numIndices = m_indices.size();
+
         // let the caller write to the storage. They can accept the argument as a reference
         lambda(m_vertices, m_indices);
+
+        // if the number of vertices or indices changed, we need to re-create things.
+        if (numVertices != m_vertices.size() || numIndices != m_indices.size())
+        {
+            m_vertexBuffer.Clear();
+            m_indexBuffer.Clear();
+            Create(device, [] (std::vector<ShaderTypes::VertexFormats::IMGUI>& vertexData, std::vector<unsigned long>& indexData) {});
+        }
 
         // write the vertex data
         HRESULT result;

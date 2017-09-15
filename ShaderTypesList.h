@@ -270,8 +270,6 @@ STRUCTURED_BUFFER_END
 //                     Vertex Formats
 //=================================================================
 
-// TODO: can position and uv be split up into 2 float2's?
-
 VERTEX_FORMAT_BEGIN(IMGUI)
     VERTEX_FORMAT_FIELD(position_uv, POSITION, 0, float4, float4, DXGI_FORMAT_R32G32B32A32_FLOAT)
     VERTEX_FORMAT_FIELD(color, COLOR, 0, uint32_t, float4, DXGI_FORMAT_R8G8B8A8_UNORM)
