@@ -6,6 +6,8 @@
 #pragma comment(lib, "dxguid.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 
+CD3D11 g_d3d;
+
 bool CD3D11::Init (
     size_t screenWidth,
     size_t screenHeight,

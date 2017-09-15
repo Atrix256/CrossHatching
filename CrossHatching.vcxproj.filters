@@ -17,6 +17,8 @@
     <ClCompile Include="imgui\imgui_draw.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
+    <ClCompile Include="ShaderTypes.cpp" />
+    <ClCompile Include="IMGUIWrap.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="notes.txt" />
@@ -65,6 +67,7 @@
     <ClInclude Include="Shaders\StaticBranches.h">
       <Filter>Shaders</Filter>
     </ClInclude>
+    <ClInclude Include="IMGUIWrap.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\ShowPathTrace.fx">

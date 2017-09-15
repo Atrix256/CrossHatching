@@ -7,6 +7,7 @@
 
 * fix seams in whatever of the cross hatching textures have them. (is it due to triplanar? could try changing the axes!)
  * and/or get/make better textures!
+ * i think that is just where the texture edge is and that the texture isn't a very good tileable texture.
 
 * try some minor optimizations to see if they help much. (write details in notes for blog post i guess)
  * N samples per call, instead of just the 1.  may decrease time spent on (texture) memory read / write?

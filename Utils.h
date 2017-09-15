@@ -1,5 +1,8 @@
 #pragma once
 
+#include <stdio.h>
+#include <windows.h>
+
 static const float c_pi = 3.14159265359f;
 
 template <typename T>
@@ -30,4 +33,10 @@ struct CAutoReleasePointer
 inline float DegreesToRadians (float degrees)
 {
     return degrees * c_pi / 180.0f;
+}
+
+inline void ReportError(const char* message)
+{
+    OutputDebugStringA(message);
+    fprintf(stderr, message);
 }

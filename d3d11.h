@@ -47,3 +47,5 @@ private:
     size_t m_screenWidth;
     size_t m_screenHeight;
 };
+
+extern CD3D11 g_d3d;

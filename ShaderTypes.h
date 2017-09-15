@@ -12,6 +12,8 @@ typedef std::array<float, 4> float4;
 
 typedef std::array<unsigned int, 4> uint4;
 
+bool ShaderTypesInit (void);
+
 namespace ShaderTypes
 {
 #pragma pack(1)
@@ -93,6 +95,35 @@ namespace ShaderData
             extern std::array<CShader, (uint64_t)1 << (uint64_t)EStaticBranches_VSPS_##NAME::COUNT> NAME;
         #include "ShaderTypesList.h"
     };
+
+    namespace VertexFormats
+    {
+        #define VERTEX_FORMAT_BEGIN(NAME)  \
+            enum class VertexFormatFields_##NAME { 
+        #define VERTEX_FORMAT_FIELD(NAME, SEMANTIC, INDEX, CPPTYPE, SHADERTYPE, FORMAT) NAME,
+        #define VERTEX_FORMAT_END \
+                COUNT \
+            };
+        #include "ShaderTypesList.h"
+
+        #define VERTEX_FORMAT_BEGIN(NAME)  \
+            extern D3D11_INPUT_ELEMENT_DESC NAME[ShaderData::VertexFormats::VertexFormatFields_##NAME::COUNT];
+        #include "ShaderTypesList.h"
+    }
+
+    // define shader permutation selection functions
+    #define SHADER_CS_BEGIN(NAME, FILENAME, ENTRY) \
+        const CComputeShader& GetShader_##NAME (const std::array<bool, (size_t)ShaderData::Shaders::EStaticBranches_CS_##NAME::COUNT>& params);
+    #define SHADER_VSPS_BEGIN(NAME, FILENAME, VSENTRY, PSENTRY, VERTEXFORMAT) \
+        const CShader& GetShader_##NAME (const std::array<bool, (size_t)ShaderData::Shaders::EStaticBranches_VSPS_##NAME::COUNT>& params);
+    #include "ShaderTypesList.h"
+
+    // define shader static branch creation functions
+    #define SHADER_CS_BEGIN(NAME, FILENAME, ENTRY) \
+        bool WriteStaticBranches_CS_##NAME (uint64_t permutation);
+    #define SHADER_VSPS_BEGIN(NAME, FILENAME, VSENTRY, PSENTRY, VERTEXFORMAT) \
+        bool WriteStaticBranches_VSPS_##NAME (uint64_t permutation);
+    #include "ShaderTypesList.h"
 };
 
 inline float Dot (const float3& a, const float3& b)
@@ -338,4 +369,236 @@ inline void MakeOBB (
         cosTheta + rotAxis[2] * rotAxis[2] * (1.0f - cosTheta),
         0.0f
     };
+}
+
+template <EShaderType SHADER_TYPE>
+void UnbindShaderTextures (ID3D11DeviceContext* deviceContext, ID3D11ShaderReflection* reflector)
+{
+    D3D11_SHADER_INPUT_BIND_DESC desc;
+    HRESULT result;
+
+    // reflect textures
+    #define TEXTURE_IMAGE(NAME, FILENAME) \
+        result = reflector->GetResourceBindingDescByName(#NAME, &desc); \
+        if (!FAILED(result)) { \
+            ID3D11ShaderResourceView* srv = nullptr; \
+            if (SHADER_TYPE == EShaderType::vertex) \
+                deviceContext->VSSetShaderResources(desc.BindPoint, 1, &srv); \
+            else if (SHADER_TYPE == EShaderType::pixel) \
+                deviceContext->PSSetShaderResources(desc.BindPoint, 1, &srv); \
+            else \
+                deviceContext->CSSetShaderResources(desc.BindPoint, 1, &srv); \
+        } \
+        result = reflector->GetResourceBindingDescByName(#NAME "_rw", &desc); \
+        if (!FAILED(result)) { \
+            UINT count = -1; \
+            ID3D11UnorderedAccessView* uav = nullptr; \
+            if (SHADER_TYPE == EShaderType::compute) \
+                deviceContext->CSSetUnorderedAccessViews(desc.BindPoint, 1, &uav, &count); \
+        }
+
+    #define TEXTURE_BUFFER(NAME, SHADERTYPE, FORMAT) \
+        result = reflector->GetResourceBindingDescByName(#NAME, &desc); \
+        if (!FAILED(result)) { \
+            ID3D11ShaderResourceView* srv = nullptr; \
+            if (SHADER_TYPE == EShaderType::vertex) \
+                deviceContext->VSSetShaderResources(desc.BindPoint, 1, &srv); \
+            else if (SHADER_TYPE == EShaderType::pixel) \
+                deviceContext->PSSetShaderResources(desc.BindPoint, 1, &srv); \
+            else \
+                deviceContext->CSSetShaderResources(desc.BindPoint, 1, &srv); \
+        } \
+        result = reflector->GetResourceBindingDescByName(#NAME "_rw", &desc); \
+        if (!FAILED(result)) { \
+            UINT count = -1; \
+            ID3D11UnorderedAccessView* uav = nullptr; \
+            if (SHADER_TYPE == EShaderType::compute) \
+                deviceContext->CSSetUnorderedAccessViews(desc.BindPoint, 1, &uav, &count); \
+        }
+
+    #define TEXTURE_VOLUME_BEGIN(NAME) \
+        result = reflector->GetResourceBindingDescByName(#NAME, &desc); \
+        if (!FAILED(result)) { \
+            ID3D11ShaderResourceView* srv = nullptr; \
+            if (SHADER_TYPE == EShaderType::vertex) \
+                deviceContext->VSSetShaderResources(desc.BindPoint, 1, &srv); \
+            else if (SHADER_TYPE == EShaderType::pixel) \
+                deviceContext->PSSetShaderResources(desc.BindPoint, 1, &srv); \
+            else \
+                deviceContext->CSSetShaderResources(desc.BindPoint, 1, &srv); \
+        } 
+
+    #define TEXTURE_ARRAY_BEGIN(NAME) \
+        result = reflector->GetResourceBindingDescByName(#NAME, &desc); \
+        if (!FAILED(result)) { \
+            ID3D11ShaderResourceView* srv = nullptr; \
+            if (SHADER_TYPE == EShaderType::vertex) \
+                deviceContext->VSSetShaderResources(desc.BindPoint, 1, &srv); \
+            else if (SHADER_TYPE == EShaderType::pixel) \
+                deviceContext->PSSetShaderResources(desc.BindPoint, 1, &srv); \
+            else \
+                deviceContext->CSSetShaderResources(desc.BindPoint, 1, &srv); \
+        } 
+
+    // reflect structured buffers
+    #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT, CPUWRITES) \
+        result = reflector->GetResourceBindingDescByName(#NAME, &desc); \
+        if (!FAILED(result)) { \
+            ID3D11ShaderResourceView* srv = nullptr; \
+            if (SHADER_TYPE == EShaderType::vertex) \
+                deviceContext->VSSetShaderResources(desc.BindPoint, 1, &srv); \
+            else if (SHADER_TYPE == EShaderType::pixel) \
+                deviceContext->PSSetShaderResources(desc.BindPoint, 1, &srv); \
+            else \
+                deviceContext->CSSetShaderResources(desc.BindPoint, 1, &srv); \
+        } \
+        result = reflector->GetResourceBindingDescByName(#NAME "_rw", &desc); \
+        if (!FAILED(result)) { \
+            UINT count = -1; \
+            ID3D11UnorderedAccessView* uav = nullptr; \
+            if (SHADER_TYPE == EShaderType::compute) \
+                deviceContext->CSSetUnorderedAccessViews(desc.BindPoint, 1, &uav, &count); \
+        }
+
+    #include "ShaderTypesList.h"
+}
+
+template <EShaderType SHADER_TYPE>
+void FillShaderParams (ID3D11DeviceContext* deviceContext, ID3D11ShaderReflection* reflector)
+{
+    D3D11_SHADER_INPUT_BIND_DESC desc;
+    HRESULT result;
+
+    // reflect constant buffers
+    #define CONSTANT_BUFFER_BEGIN(NAME) \
+        result = reflector->GetResourceBindingDescByName(#NAME, &desc); \
+        if (!FAILED(result)) { \
+            ID3D11Buffer* buffer = ShaderData::ConstantBuffers::##NAME.Get(); \
+            if (SHADER_TYPE == EShaderType::vertex) \
+                deviceContext->VSSetConstantBuffers(desc.BindPoint, 1, &buffer); \
+            else if (SHADER_TYPE == EShaderType::pixel) \
+                deviceContext->PSSetConstantBuffers(desc.BindPoint, 1, &buffer); \
+            else \
+                deviceContext->CSSetConstantBuffers(desc.BindPoint, 1, &buffer); \
+        }
+    
+    // reflect structured buffers
+    #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT, CPUWRITES) \
+        result = reflector->GetResourceBindingDescByName(#NAME, &desc); \
+        if (!FAILED(result)) { \
+            ID3D11ShaderResourceView* srv = ShaderData::StructuredBuffers::##NAME.GetSRV(); \
+            if (SHADER_TYPE == EShaderType::vertex) \
+                deviceContext->VSSetShaderResources(desc.BindPoint, 1, &srv); \
+            else if (SHADER_TYPE == EShaderType::pixel) \
+                deviceContext->PSSetShaderResources(desc.BindPoint, 1, &srv); \
+            else \
+                deviceContext->CSSetShaderResources(desc.BindPoint, 1, &srv); \
+        } \
+        result = reflector->GetResourceBindingDescByName(#NAME "_rw", &desc); \
+        if (!FAILED(result)) { \
+            UINT count = -1; \
+            ID3D11UnorderedAccessView* uav = ShaderData::StructuredBuffers::##NAME.GetUAV(); \
+            if (SHADER_TYPE == EShaderType::compute) \
+                deviceContext->CSSetUnorderedAccessViews(desc.BindPoint, 1, &uav, &count); \
+        }
+
+    // reflect textures
+    #define TEXTURE_IMAGE(NAME, FILENAME) \
+        result = reflector->GetResourceBindingDescByName(#NAME, &desc); \
+        if (!FAILED(result)) { \
+            ID3D11ShaderResourceView* srv = ShaderData::Textures::##NAME.GetSRV(); \
+            if (SHADER_TYPE == EShaderType::vertex) \
+                deviceContext->VSSetShaderResources(desc.BindPoint, 1, &srv); \
+            else if (SHADER_TYPE == EShaderType::pixel) \
+                deviceContext->PSSetShaderResources(desc.BindPoint, 1, &srv); \
+            else \
+                deviceContext->CSSetShaderResources(desc.BindPoint, 1, &srv); \
+        } \
+        result = reflector->GetResourceBindingDescByName(#NAME "_rw", &desc); \
+        if (!FAILED(result)) { \
+            UINT count = -1; \
+            ID3D11UnorderedAccessView* uav = ShaderData::Textures::##NAME.GetUAV(); \
+            if (SHADER_TYPE == EShaderType::compute) \
+                deviceContext->CSSetUnorderedAccessViews(desc.BindPoint, 1, &uav, &count); \
+        }
+
+    #define TEXTURE_BUFFER(NAME, SHADERTYPE, FORMAT) \
+        result = reflector->GetResourceBindingDescByName(#NAME, &desc); \
+        if (!FAILED(result)) { \
+            ID3D11ShaderResourceView* srv = ShaderData::Textures::##NAME.GetSRV(); \
+            if (SHADER_TYPE == EShaderType::vertex) \
+                deviceContext->VSSetShaderResources(desc.BindPoint, 1, &srv); \
+            else if (SHADER_TYPE == EShaderType::pixel) \
+                deviceContext->PSSetShaderResources(desc.BindPoint, 1, &srv); \
+            else \
+                deviceContext->CSSetShaderResources(desc.BindPoint, 1, &srv); \
+        } \
+        result = reflector->GetResourceBindingDescByName(#NAME "_rw", &desc); \
+        if (!FAILED(result)) { \
+            UINT count = -1; \
+            ID3D11UnorderedAccessView* uav = ShaderData::Textures::##NAME.GetUAV(); \
+            if (SHADER_TYPE == EShaderType::compute) \
+                deviceContext->CSSetUnorderedAccessViews(desc.BindPoint, 1, &uav, &count); \
+        }
+
+    #define TEXTURE_VOLUME_BEGIN(NAME) \
+        result = reflector->GetResourceBindingDescByName(#NAME, &desc); \
+        if (!FAILED(result)) { \
+            ID3D11ShaderResourceView* srv = ShaderData::Textures::##NAME.GetSRV(); \
+            if (SHADER_TYPE == EShaderType::vertex) \
+                deviceContext->VSSetShaderResources(desc.BindPoint, 1, &srv); \
+            else if (SHADER_TYPE == EShaderType::pixel) \
+                deviceContext->PSSetShaderResources(desc.BindPoint, 1, &srv); \
+            else \
+                deviceContext->CSSetShaderResources(desc.BindPoint, 1, &srv); \
+        }
+
+    #define TEXTURE_ARRAY_BEGIN(NAME) \
+        result = reflector->GetResourceBindingDescByName(#NAME, &desc); \
+        if (!FAILED(result)) { \
+            ID3D11ShaderResourceView* srv = ShaderData::Textures::##NAME.GetSRV(); \
+            if (SHADER_TYPE == EShaderType::vertex) \
+                deviceContext->VSSetShaderResources(desc.BindPoint, 1, &srv); \
+            else if (SHADER_TYPE == EShaderType::pixel) \
+                deviceContext->PSSetShaderResources(desc.BindPoint, 1, &srv); \
+            else \
+                deviceContext->CSSetShaderResources(desc.BindPoint, 1, &srv); \
+        }
+
+    #include "ShaderTypesList.h"
+
+    // hard coded samplers
+    result = reflector->GetResourceBindingDescByName("SamplerLinearWrap", &desc);
+    if (!FAILED(result))
+    {
+        ID3D11SamplerState* sampler = g_d3d.SamplerLinearWrap();
+        if (SHADER_TYPE == EShaderType::vertex)
+            deviceContext->VSSetSamplers(desc.BindPoint, 1, &sampler);
+        else if (SHADER_TYPE == EShaderType::pixel)
+            deviceContext->PSSetSamplers(desc.BindPoint, 1, &sampler);
+        else
+            deviceContext->CSSetSamplers(desc.BindPoint, 1, &sampler);
+    }
+    result = reflector->GetResourceBindingDescByName("SamplerNearestWrap", &desc);
+    if (!FAILED(result))
+    {
+        ID3D11SamplerState* sampler = g_d3d.SamplerNearestWrap();
+        if (SHADER_TYPE == EShaderType::vertex)
+            deviceContext->VSSetSamplers(desc.BindPoint, 1, &sampler);
+        else if (SHADER_TYPE == EShaderType::pixel)
+            deviceContext->PSSetSamplers(desc.BindPoint, 1, &sampler);
+        else
+            deviceContext->CSSetSamplers(desc.BindPoint, 1, &sampler);
+    }
+    result = reflector->GetResourceBindingDescByName("SamplerAnisoWrap", &desc);
+    if (!FAILED(result))
+    {
+        ID3D11SamplerState* sampler = g_d3d.SamplerAnisoWrap();
+        if (SHADER_TYPE == EShaderType::vertex)
+            deviceContext->VSSetSamplers(desc.BindPoint, 1, &sampler);
+        else if (SHADER_TYPE == EShaderType::pixel)
+            deviceContext->PSSetSamplers(desc.BindPoint, 1, &sampler);
+        else
+            deviceContext->CSSetSamplers(desc.BindPoint, 1, &sampler);
+    }
 }
