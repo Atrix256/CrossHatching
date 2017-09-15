@@ -7,7 +7,7 @@ template <typename T>
 class CConstantBuffer
 {
 public:
-    bool Create (ID3D11Device* device)
+    bool Create (ID3D11Device* device, const char* debugName)
     {
         // set up the description
         D3D11_BUFFER_DESC constantBufferDesc;
@@ -24,6 +24,7 @@ public:
         {
             return false;
         }
+        m_constantBuffer.SetDebugName(debugName);
 
         return true;
     }

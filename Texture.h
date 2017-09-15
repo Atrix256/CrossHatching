@@ -8,13 +8,13 @@ class CTexture
 public:
     bool LoadTGA (ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* filename);
 
-    bool LoadFromPixels(ID3D11Device* device, ID3D11DeviceContext* deviceContext, unsigned char* pixels, int width, int height);
+    bool LoadFromPixels(ID3D11Device* device, ID3D11DeviceContext* deviceContext, unsigned char* pixels, int width, int height, const char* debugName);
 
-    bool Create (ID3D11Device* device, ID3D11DeviceContext* deviceContext, size_t width, size_t height, DXGI_FORMAT format);
+    bool Create (ID3D11Device* device, ID3D11DeviceContext* deviceContext, size_t width, size_t height, DXGI_FORMAT format, const char* debugName);
 
-    bool CreateVolume (ID3D11Device* device, ID3D11DeviceContext* deviceContext, CTexture** slices, size_t numSlices);
+    bool CreateVolume (ID3D11Device* device, ID3D11DeviceContext* deviceContext, CTexture** slices, size_t numSlices, const char* debugName);
 
-    bool CreateArray (ID3D11Device* device, ID3D11DeviceContext* deviceContext, CTexture** slices, size_t numSlices);
+    bool CreateArray (ID3D11Device* device, ID3D11DeviceContext* deviceContext, CTexture** slices, size_t numSlices, const char* debugName);
     
     ID3D11ShaderResourceView* GetSRV () { return m_textureSRV.m_ptr; }
 

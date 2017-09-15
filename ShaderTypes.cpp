@@ -154,18 +154,18 @@ bool WriteShaderTypesHLSL (void)
 bool ShaderTypesInit (void)
 {
     // create constant buffers
-    #define CONSTANT_BUFFER_BEGIN(NAME) if (!ShaderData::ConstantBuffers::NAME.Create(g_d3d.Device())) { ReportError("Could not create constant buffer: " #NAME "\n"); return false; }
+    #define CONSTANT_BUFFER_BEGIN(NAME) if (!ShaderData::ConstantBuffers::NAME.Create(g_d3d.Device(), #NAME)) { ReportError("Could not create constant buffer: " #NAME "\n"); return false; }
     #include "ShaderTypesList.h"
 
     // create structured buffers
-    #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT, CPUWRITES) if (!ShaderData::StructuredBuffers::NAME.Create(g_d3d.Device(), CPUWRITES)) { ReportError("Could not create structured buffer: " #NAME "\n"); return false; }
+    #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT, CPUWRITES) if (!ShaderData::StructuredBuffers::NAME.Create(g_d3d.Device(), CPUWRITES, #NAME)) { ReportError("Could not create structured buffer: " #NAME "\n"); return false; }
     #include "ShaderTypesList.h"
 
     // create textures
     #define TEXTURE_IMAGE(NAME, FILENAME) \
         if(!ShaderData::Textures::NAME.LoadTGA(g_d3d.Device(), g_d3d.Context(), FILENAME)) { ReportError("Could not load texture: " #NAME "\n"); return false; }
     #define TEXTURE_BUFFER(NAME, SHADERTYPE, FORMAT) \
-        if(!ShaderData::Textures::NAME.Create(g_d3d.Device(), g_d3d.Context(), c_width, c_height, FORMAT)) { ReportError("Could not create texture buffer: " #NAME "\n"); return false; }
+        if(!ShaderData::Textures::NAME.Create(g_d3d.Device(), g_d3d.Context(), c_width, c_height, FORMAT, #NAME)) { ReportError("Could not create texture buffer: " #NAME "\n"); return false; }
     #include "ShaderTypesList.h"
 
     // create volume textures and texture arrays
@@ -182,7 +182,7 @@ bool ShaderTypesInit (void)
         if (!ShaderData::Textures::NAME.CreateVolume(g_d3d.Device(), g_d3d.Context(), slices##NAME, numSlices##NAME)) { ReportError("Could not create volume texture: " #NAME "\n"); return false; }
     #define TEXTURE_ARRAY_BEGIN(NAME) \
         size_t numSlices##NAME = sizeof(slices##NAME) / sizeof(slices##NAME[0]);\
-        if (!ShaderData::Textures::NAME.CreateArray(g_d3d.Device(), g_d3d.Context(), slices##NAME, numSlices##NAME)) { ReportError("Could not create texture array: " #NAME "\n"); return false; }
+        if (!ShaderData::Textures::NAME.CreateArray(g_d3d.Device(), g_d3d.Context(), slices##NAME, numSlices##NAME, #NAME)) { ReportError("Could not create texture array: " #NAME "\n"); return false; }
     #include "ShaderTypesList.h"
 
     // create shaders
@@ -193,7 +193,7 @@ bool ShaderTypesInit (void)
         for (uint64_t i = 0; i < maxValue; ++i) \
         { \
             ShaderData::WriteStaticBranches_CS_##NAME(i); \
-            if (!ShaderData::Shaders::NAME[i].Load(g_d3d.Device(), WindowGetHWND(), FILENAME, ENTRY, c_shaderDebug)) { ReportError("Could not create compute shader: " #NAME "\n"); return false; } \
+            if (!ShaderData::Shaders::NAME[i].Load(g_d3d.Device(), WindowGetHWND(), FILENAME, ENTRY, c_shaderDebug, #NAME)) { ReportError("Could not create compute shader: " #NAME "\n"); return false; } \
         } \
     }
     #define SHADER_VSPS_BEGIN(NAME, FILENAME, VSENTRY, PSENTRY, VERTEXFORMAT) \
@@ -203,7 +203,7 @@ bool ShaderTypesInit (void)
         for (uint64_t i = 0; i < maxValue; ++i) \
         { \
             ShaderData::WriteStaticBranches_VSPS_##NAME(i); \
-            if (!ShaderData::Shaders::NAME[i].Load(g_d3d.Device(), WindowGetHWND(), FILENAME, VSENTRY, PSENTRY, ShaderData::VertexFormats::VERTEXFORMAT, (size_t)ShaderData::VertexFormats::VertexFormatFields_##VERTEXFORMAT::COUNT, c_shaderDebug)) { ReportError("Could not create shader : " #NAME "\n"); return false; } \
+            if (!ShaderData::Shaders::NAME[i].Load(g_d3d.Device(), WindowGetHWND(), FILENAME, VSENTRY, PSENTRY, ShaderData::VertexFormats::VERTEXFORMAT, (size_t)ShaderData::VertexFormats::VertexFormatFields_##VERTEXFORMAT::COUNT, c_shaderDebug, #NAME)) { ReportError("Could not create shader : " #NAME "\n"); return false; } \
         } \
     }
     #include "ShaderTypesList.h"

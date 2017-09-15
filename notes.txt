@@ -1,4 +1,4 @@
-* somehow there are leaks (d3d11 warning of live objects) on shutdown
+
 
 * mouse position is wrong in fullscreen mode. seems like a generic directx question.
 
@@ -47,8 +47,13 @@ Sean said he'd be willing to give me textures.
 * could have a bounding shape on "instanced meshes" which if the ray hits, gives a start/stop triangle index range to test ray against.
  * could also possibly have a scale, translation, rotation for instance.
  * try only if actually needed.
+ * should know when actual models used
 
 * get rid of unused models and textures when done
+
+* somehow there are leaks (d3d11 warning of live objects) on shutdown
+ ? maybe due to static variables and no explicit destruction time of global auto release pointers
+
 
 ================================= LATER IDEAS =================================
 

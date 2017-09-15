@@ -32,7 +32,7 @@ static void OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR*
     return;
 }
 
-bool CShader::Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, const char* vsentry, const char* psentry, D3D11_INPUT_ELEMENT_DESC* vertexFormat, size_t vertexFormatElements, bool debug)
+bool CShader::Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, const char* vsentry, const char* psentry, D3D11_INPUT_ELEMENT_DESC* vertexFormat, size_t vertexFormatElements, bool debug, const char* debugName)
 {
     HRESULT result;
     CAutoReleasePointer<ID3D10Blob> errorMessage;
@@ -67,6 +67,7 @@ bool CShader::Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, const ch
 
         return false;
     }
+    //m_vertexShaderBuffer.SetDebugName(debugName);
 
     // Compile the pixel shader code.
     errorMessage.Clear();
@@ -95,6 +96,7 @@ bool CShader::Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, const ch
 
         return false;
     }
+    //m_pixelShaderBuffer.SetDebugName(debugName);
 
     // Create the vertex shader from the buffer.
     result = device->CreateVertexShader(m_vertexShaderBuffer.m_ptr->GetBufferPointer(), m_vertexShaderBuffer.m_ptr->GetBufferSize(), NULL, &m_vertexShader.m_ptr);
@@ -102,6 +104,7 @@ bool CShader::Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, const ch
     {
         return false;
     }
+    m_vertexShader.SetDebugName(debugName);
 
     // Create the pixel shader from the buffer.
     result = device->CreatePixelShader(m_pixelShaderBuffer.m_ptr->GetBufferPointer(), m_pixelShaderBuffer.m_ptr->GetBufferSize(), NULL, &m_pixelShader.m_ptr);
@@ -109,6 +112,7 @@ bool CShader::Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, const ch
     {
         return false;
     }
+    m_pixelShader.SetDebugName(debugName);
 
     // Create the vertex input layout.  This matches the shader and the model format.
     result = device->CreateInputLayout(vertexFormat, (UINT)vertexFormatElements, m_vertexShaderBuffer.m_ptr->GetBufferPointer(),
@@ -117,18 +121,21 @@ bool CShader::Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, const ch
     {
         return false;
     }
+    m_layout.SetDebugName(debugName);
 
     result = D3DReflect(m_pixelShaderBuffer.m_ptr->GetBufferPointer(), m_pixelShaderBuffer.m_ptr->GetBufferSize(), IID_ID3D11ShaderReflection, (void**)&m_psReflector.m_ptr);
     if (FAILED(result))
     {
         return false;
     }
+    //m_psReflector.SetDebugName(debugName);
 
     result = D3DReflect(m_vertexShaderBuffer.m_ptr->GetBufferPointer(), m_vertexShaderBuffer.m_ptr->GetBufferSize(), IID_ID3D11ShaderReflection, (void**)&m_vsReflector.m_ptr);
     if (FAILED(result))
     {
         return false;
     }
+    //m_vsReflector.SetDebugName(debugName);
 
     return true;
 }
@@ -143,7 +150,7 @@ void CShader::Set (ID3D11DeviceContext* deviceContext) const
     deviceContext->PSSetShader(m_pixelShader.m_ptr, NULL, 0);
 }
 
-bool CComputeShader::Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, const char* entry, bool debug)
+bool CComputeShader::Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, const char* entry, bool debug, const char* debugName)
 {
     HRESULT result;
     CAutoReleasePointer<ID3D10Blob> errorMessage;
@@ -178,6 +185,7 @@ bool CComputeShader::Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, c
 
         return false;
     }
+    //m_computeShaderBuffer.SetDebugName(debugName);
     
     // Create the compute shader from the buffer.
     result = device->CreateComputeShader(m_computeShaderBuffer.m_ptr->GetBufferPointer(), m_computeShaderBuffer.m_ptr->GetBufferSize(), NULL, &m_computeShader.m_ptr);
@@ -185,12 +193,14 @@ bool CComputeShader::Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, c
     {
         return false;
     }
+    m_computeShader.SetDebugName(debugName);
 
     result = D3DReflect(m_computeShaderBuffer.m_ptr->GetBufferPointer(), m_computeShaderBuffer.m_ptr->GetBufferSize(), IID_ID3D11ShaderReflection, (void**)&m_reflector.m_ptr);
     if (FAILED(result))
     {
         return false;
     }
+    //m_reflector.SetDebugName(debugName);
 
     return true;
 }

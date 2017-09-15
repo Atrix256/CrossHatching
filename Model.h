@@ -9,8 +9,10 @@ class CModel
 {
 public:
     template <typename LAMBDA>
-    bool Create (ID3D11Device* device, LAMBDA& lambda)
+    bool Create (ID3D11Device* device, LAMBDA& lambda, const char* debugName)
     {
+        m_debugName = debugName;
+
         D3D11_BUFFER_DESC vertexBufferDesc, indexBufferDesc;
         D3D11_SUBRESOURCE_DATA vertexData, indexData;
         HRESULT result;
@@ -37,6 +39,7 @@ public:
         {
             return false;
         }
+        m_vertexBuffer.SetDebugName(debugName);
 
         // Set up the description of the static index buffer.
         indexBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
@@ -57,6 +60,7 @@ public:
         {
             return false;
         }
+        m_indexBuffer.SetDebugName(debugName);
         return true;
     }
 
@@ -74,7 +78,7 @@ public:
         {
             m_vertexBuffer.Clear();
             m_indexBuffer.Clear();
-            Create(device, [] (std::vector<ShaderTypes::VertexFormats::IMGUI>& vertexData, std::vector<unsigned long>& indexData) {});
+            Create(device, [] (std::vector<ShaderTypes::VertexFormats::IMGUI>& vertexData, std::vector<unsigned long>& indexData) {}, m_debugName);
         }
 
         // write the vertex data
@@ -126,6 +130,8 @@ public:
     size_t GetIndexCount() const { return m_indices.size(); }
 
 private:
+    const char* m_debugName;
+
     std::vector<VertexType> m_vertices;
     std::vector<unsigned long> m_indices;
     CAutoReleasePointer<ID3D11Buffer> m_vertexBuffer;

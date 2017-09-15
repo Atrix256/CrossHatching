@@ -59,7 +59,8 @@ bool init ()
             indexData[0] = 0;
             indexData[1] = 1;
             indexData[2] = 2;
-        }
+        },
+        "g_fullScreenMesh"
     );
 
     if (!writeOK)

@@ -7,7 +7,7 @@ class CStructuredBuffer
 {
 public:
 
-    bool Create (ID3D11Device* device, bool CPUWrites)
+    bool Create (ID3D11Device* device, bool CPUWrites, const char* debugName)
     {
         // CPU write, GPU read
         D3D11_BUFFER_DESC bufferDesc;
@@ -37,6 +37,7 @@ public:
         {
             return false;
         }
+        m_structuredBuffer.SetDebugName(debugName);
 
         D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
         ZeroMemory(&srvDesc, sizeof(srvDesc));
@@ -48,6 +49,7 @@ public:
         {
             return false;
         }
+        m_structuredBufferSRV.SetDebugName(debugName);
 
         if (CPUWrites)
             return true;
@@ -66,6 +68,7 @@ public:
         {
             return false;
         }
+        m_structuredBufferUAV.SetDebugName(debugName);
 
         return true;
     }

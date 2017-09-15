@@ -44,6 +44,8 @@ private:
     CAutoReleasePointer<ID3D11SamplerState> m_samplerNearestWrap;
     CAutoReleasePointer<ID3D11SamplerState> m_samplerAnisoWrap;
 
+    CAutoReleasePointer<ID3D11Debug> m_debugInterface;
+
     size_t m_screenWidth;
     size_t m_screenHeight;
 };

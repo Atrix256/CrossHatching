@@ -14,7 +14,7 @@ enum class EShaderType
 class CShader
 {
 public:
-    bool Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, const char* vsentry, const char* psentry, D3D11_INPUT_ELEMENT_DESC* vertexFormat, size_t vertexFormatElements, bool debug);
+    bool Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, const char* vsentry, const char* psentry, D3D11_INPUT_ELEMENT_DESC* vertexFormat, size_t vertexFormatElements, bool debug, const char* debugName);
 
     void Set (ID3D11DeviceContext* deviceContext) const;
 
@@ -36,7 +36,7 @@ private:
 class CComputeShader
 {
 public:
-    bool Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, const char* entry, bool debug);
+    bool Load (ID3D11Device* device, HWND hWnd, wchar_t* fileName, const char* entry, bool debug, const char* debugName);
 
     void Dispatch (ID3D11DeviceContext* deviceContext, size_t x, size_t y, size_t z) const;
 

@@ -27,6 +27,12 @@ struct CAutoReleasePointer
         }
     }
 
+    void SetDebugName (const char* name)
+    {
+        if (name)
+            m_ptr->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen(name), name);
+    }
+
     T* m_ptr;
 };
 

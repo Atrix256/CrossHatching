@@ -98,7 +98,8 @@ bool InitIMGUI()
 
             for (size_t i = 0; i < 1; ++i)
                 indexData[i] = (unsigned long) i;
-        }
+        },
+        "g_IMGUIMesh"
     );
 
     if (!writeOK)
@@ -138,7 +139,7 @@ bool InitIMGUI()
     unsigned char* pixels;
     int width, height;
     io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
-    if (!g_IMGUIFont.LoadFromPixels(g_d3d.Device(), g_d3d.Context(), pixels, width, height))
+    if (!g_IMGUIFont.LoadFromPixels(g_d3d.Device(), g_d3d.Context(), pixels, width, height, "IMGUI Font"))
         return false;
 
     // Store texture pointer/identifier (whatever your engine uses) in 'io.Fonts->TexID'. This will be passed back to your via the renderer.

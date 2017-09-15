@@ -108,10 +108,10 @@ bool CTexture::LoadTGA (ID3D11Device* device, ID3D11DeviceContext* deviceContext
     }
 
     // load the pixel data into a texture
-    return LoadFromPixels(device, deviceContext, &targaData[0], width, height);
+    return LoadFromPixels(device, deviceContext, &targaData[0], width, height, filename);
 }
 
-bool CTexture::LoadFromPixels (ID3D11Device* device, ID3D11DeviceContext* deviceContext, unsigned char* pixels, int width, int height)
+bool CTexture::LoadFromPixels (ID3D11Device* device, ID3D11DeviceContext* deviceContext, unsigned char* pixels, int width, int height, const char* debugName)
 {
     D3D11_TEXTURE2D_DESC textureDesc;
     HRESULT hResult;
@@ -138,6 +138,7 @@ bool CTexture::LoadFromPixels (ID3D11Device* device, ID3D11DeviceContext* device
     {
         return false;
     }
+    m_texture.SetDebugName(debugName);
 
     // Set the row pitch of the targa image data.
     rowPitch = (width * 4) * sizeof(unsigned char);
@@ -157,6 +158,7 @@ bool CTexture::LoadFromPixels (ID3D11Device* device, ID3D11DeviceContext* device
     {
         return false;
     }
+    m_textureSRV.SetDebugName(debugName);
 
     // setup the unordered access view description
     uavDesc.Format = textureDesc.Format;
@@ -169,6 +171,7 @@ bool CTexture::LoadFromPixels (ID3D11Device* device, ID3D11DeviceContext* device
     {
         return false;
     }
+    m_textureUAV.SetDebugName(debugName);
 
     // Generate mipmaps for this texture.
     deviceContext->GenerateMips(m_textureSRV.m_ptr);
@@ -176,7 +179,7 @@ bool CTexture::LoadFromPixels (ID3D11Device* device, ID3D11DeviceContext* device
     return true;
 }
 
-bool CTexture::Create (ID3D11Device* device, ID3D11DeviceContext* deviceContext, size_t width, size_t height, DXGI_FORMAT format)
+bool CTexture::Create (ID3D11Device* device, ID3D11DeviceContext* deviceContext, size_t width, size_t height, DXGI_FORMAT format, const char* debugName)
 {
     D3D11_TEXTURE2D_DESC textureDesc;
     HRESULT hResult;
@@ -202,6 +205,7 @@ bool CTexture::Create (ID3D11Device* device, ID3D11DeviceContext* deviceContext,
     {
         return false;
     }
+    m_texture.SetDebugName(debugName);
 
     // Setup the shader resource view description.
     srvDesc.Format = textureDesc.Format;
@@ -215,6 +219,7 @@ bool CTexture::Create (ID3D11Device* device, ID3D11DeviceContext* deviceContext,
     {
         return false;
     }
+    m_textureSRV.SetDebugName(debugName);
 
     // setup the unordered access view description
     uavDesc.Format = textureDesc.Format;
@@ -227,11 +232,12 @@ bool CTexture::Create (ID3D11Device* device, ID3D11DeviceContext* deviceContext,
     {
         return false;
     }
+    m_textureUAV.SetDebugName(debugName);
 
     return true;
 }
 
-bool CTexture::CreateVolume (ID3D11Device* device, ID3D11DeviceContext* deviceContext, CTexture** slices, size_t numSlices)
+bool CTexture::CreateVolume (ID3D11Device* device, ID3D11DeviceContext* deviceContext, CTexture** slices, size_t numSlices, const char* debugName)
 {
     D3D11_TEXTURE3D_DESC textureDesc;
     HRESULT hResult;
@@ -257,6 +263,7 @@ bool CTexture::CreateVolume (ID3D11Device* device, ID3D11DeviceContext* deviceCo
     {
         return false;
     }
+    m_texture3D.SetDebugName(debugName);
 
     for (size_t i = 0; i < numSlices; ++i)
         deviceContext->CopySubresourceRegion(m_texture3D.m_ptr, 0, 0, 0, (UINT)i, slices[i]->GetTexture2D(), 0, NULL);
@@ -273,6 +280,7 @@ bool CTexture::CreateVolume (ID3D11Device* device, ID3D11DeviceContext* deviceCo
     {
         return false;
     }
+    m_textureSRV.SetDebugName(debugName);
 
     // Generate mipmaps for this texture.
     deviceContext->GenerateMips(m_textureSRV.m_ptr);
@@ -280,7 +288,7 @@ bool CTexture::CreateVolume (ID3D11Device* device, ID3D11DeviceContext* deviceCo
     return true;
 }
 
-bool CTexture::CreateArray (ID3D11Device* device, ID3D11DeviceContext* deviceContext, CTexture** slices, size_t numSlices)
+bool CTexture::CreateArray (ID3D11Device* device, ID3D11DeviceContext* deviceContext, CTexture** slices, size_t numSlices, const char* debugName)
 {
     D3D11_TEXTURE2D_DESC textureDesc;
     HRESULT hResult;
@@ -308,6 +316,7 @@ bool CTexture::CreateArray (ID3D11Device* device, ID3D11DeviceContext* deviceCon
     {
         return false;
     }
+    m_texture.SetDebugName(debugName);
 
     D3D11_TEXTURE2D_DESC createdDesc;
     m_texture.m_ptr->GetDesc(&createdDesc);
@@ -329,6 +338,7 @@ bool CTexture::CreateArray (ID3D11Device* device, ID3D11DeviceContext* deviceCon
     {
         return false;
     }
+    m_textureSRV.SetDebugName(debugName);
 
     // Generate mipmaps for this texture.
     deviceContext->GenerateMips(m_textureSRV.m_ptr);

@@ -40,6 +40,7 @@ bool CD3D11::Init (
     {
         return false;
     }
+    factory.SetDebugName("factory");
 
     // Use the factory to create an adapter for the primary graphics interface (video card).
     result = factory.m_ptr->EnumAdapters(0, &adapter.m_ptr);
@@ -47,6 +48,7 @@ bool CD3D11::Init (
     {
         return false;
     }
+    adapter.SetDebugName("adapter");
 
     // Enumerate the primary adapter output (monitor).
     result = adapter.m_ptr->EnumOutputs(0, &adapterOutput.m_ptr);
@@ -54,6 +56,7 @@ bool CD3D11::Init (
     {
         return false;
     }
+    adapterOutput.SetDebugName("adapterOutput");
 
     // Get the number of modes that fit the DXGI_FORMAT_R8G8B8A8_UNORM display format for the adapter output (monitor).
     result = adapterOutput.m_ptr->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_ENUM_MODES_INTERLACED, &numModes, NULL);
@@ -158,6 +161,9 @@ bool CD3D11::Init (
     {
         return false;
     }
+    m_device.SetDebugName("m_device");
+    m_swapChain.SetDebugName("m_swapChain");
+    m_deviceContext.SetDebugName("m_deviceContext");
 
     // Get the pointer to the back buffer.
     result = m_swapChain.m_ptr->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&backBufferPtr.m_ptr);
@@ -165,6 +171,7 @@ bool CD3D11::Init (
     {
         return false;
     }
+    backBufferPtr.SetDebugName("backBufferPtr");
 
     // Create the render target view with the back buffer pointer.
     result = m_device.m_ptr->CreateRenderTargetView(backBufferPtr.m_ptr, NULL, &m_renderTargetView.m_ptr);
@@ -172,6 +179,7 @@ bool CD3D11::Init (
     {
         return false;
     }
+    m_renderTargetView.SetDebugName("m_renderTargetView");
 
     // Bind the render target view
     m_deviceContext.m_ptr->OMSetRenderTargets(1, &m_renderTargetView.m_ptr, NULL);
@@ -194,6 +202,7 @@ bool CD3D11::Init (
     {
         return false;
     }
+    m_rasterState.SetDebugName("m_rasterState");
 
     // Now set the rasterizer state.
     m_deviceContext.m_ptr->RSSetState(m_rasterState.m_ptr);
@@ -231,6 +240,7 @@ bool CD3D11::Init (
     {
         return false;
     }
+    m_samplerLinearWrap.SetDebugName("samplerLinearWrap");
 
     // Create a texture sampler state description.
     samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
@@ -253,6 +263,7 @@ bool CD3D11::Init (
     {
         return false;
     }
+    m_samplerNearestWrap.SetDebugName("samplerNearestWrap");
 
     // Create a texture sampler state description.
     samplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;
@@ -275,6 +286,10 @@ bool CD3D11::Init (
     {
         return false;
     }
+    m_samplerAnisoWrap.SetDebugName("samplerAnisoWrap");
+
+    if (debug)
+        m_device.m_ptr->QueryInterface(IID_PPV_ARGS(&m_debugInterface.m_ptr));
 
     return true;
 }
@@ -285,6 +300,11 @@ CD3D11::~CD3D11()
     if (m_swapChain.m_ptr)
     {
         m_swapChain.m_ptr->SetFullscreenState(false, NULL);
+    }
+
+    if (m_debugInterface.m_ptr)
+    {
+        m_debugInterface.m_ptr->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
     }
 }
 
