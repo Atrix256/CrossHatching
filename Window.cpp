@@ -184,6 +184,9 @@ void WindowInit (size_t screenWidth, size_t screenHeight, bool fullScreen)
     ShowWindow(s_hWnd, SW_SHOW);
     SetForegroundWindow(s_hWnd);
     SetFocus(s_hWnd);
+
+    if (fullScreen)
+        ShowCursor(false);
 }
 
 HWND WindowGetHWND()

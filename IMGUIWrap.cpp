@@ -132,6 +132,9 @@ bool InitIMGUI()
     io.KeyMap[ImGuiKey_Y] = 'Y';
     io.KeyMap[ImGuiKey_Z] = 'Z';
 
+    if (c_fullScreen)
+        io.MouseDrawCursor = true;
+
     io.RenderDrawListsFn = IMGUIRenderFunction;  // Alternatively you can set this to NULL and call ImGui::GetDrawData() after ImGui::Render() to get the same ImDrawData pointer.
     io.ImeWindowHandle = WindowGetHWND();
 

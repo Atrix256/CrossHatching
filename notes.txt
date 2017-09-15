@@ -1,7 +1,4 @@
 
-
-* mouse position is wrong in fullscreen mode. seems like a generic directx question.
-
 * fix random number generation per pixel
  * blue noise / low discrepancy likely not good options here since we want to use more samples instead of less
  ? have c++ side send an iterative sum of golden ratio to shader?
