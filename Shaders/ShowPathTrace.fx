@@ -109,34 +109,35 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch, bool s
         
 		// triplanar projection sample the crosshatching texture
         // we need to manually lerp to get trilinear interpolation between slice samples
+        float3 absNormal = abs(rayHitInfo.m_surfaceNormal);
         float crossHatchTexelFloor;
         float crossHatchTexelCeil;
         if (aniso)
         {
             crossHatchTexelFloor =
-                circlesarray.Sample(SamplerAnisoWrap, float3(uvx, floor(w))).r * rayHitInfo.m_surfaceNormal.x +
-                circlesarray.Sample(SamplerAnisoWrap, float3(uvy, floor(w))).r * rayHitInfo.m_surfaceNormal.y +
-                circlesarray.Sample(SamplerAnisoWrap, float3(uvz, floor(w))).r * rayHitInfo.m_surfaceNormal.z;
+                circlesarray.Sample(SamplerAnisoWrap, float3(uvx, floor(w))).r * absNormal.x +
+                circlesarray.Sample(SamplerAnisoWrap, float3(uvy, floor(w))).r * absNormal.y +
+                circlesarray.Sample(SamplerAnisoWrap, float3(uvz, floor(w))).r * absNormal.z;
             
             crossHatchTexelCeil =
-                circlesarray.Sample(SamplerAnisoWrap, float3(uvx, ceil(w))).r * rayHitInfo.m_surfaceNormal.x +
-                circlesarray.Sample(SamplerAnisoWrap, float3(uvy, ceil(w))).r * rayHitInfo.m_surfaceNormal.y +
-                circlesarray.Sample(SamplerAnisoWrap, float3(uvz, ceil(w))).r * rayHitInfo.m_surfaceNormal.z;
+                circlesarray.Sample(SamplerAnisoWrap, float3(uvx, ceil(w))).r * absNormal.x +
+                circlesarray.Sample(SamplerAnisoWrap, float3(uvy, ceil(w))).r * absNormal.y +
+                circlesarray.Sample(SamplerAnisoWrap, float3(uvz, ceil(w))).r * absNormal.z;
         }
         else
         {
             crossHatchTexelFloor =
-                circlesarray.Sample(SamplerLinearWrap, float3(uvx, floor(w))).r * rayHitInfo.m_surfaceNormal.x +
-                circlesarray.Sample(SamplerLinearWrap, float3(uvy, floor(w))).r * rayHitInfo.m_surfaceNormal.y +
-                circlesarray.Sample(SamplerLinearWrap, float3(uvz, floor(w))).r * rayHitInfo.m_surfaceNormal.z;
+                circlesarray.Sample(SamplerLinearWrap, float3(uvx, floor(w))).r * absNormal.x +
+                circlesarray.Sample(SamplerLinearWrap, float3(uvy, floor(w))).r * absNormal.y +
+                circlesarray.Sample(SamplerLinearWrap, float3(uvz, floor(w))).r * absNormal.z;
 
             crossHatchTexelCeil =
-                circlesarray.Sample(SamplerLinearWrap, float3(uvx, ceil(w))).r * rayHitInfo.m_surfaceNormal.x +
-                circlesarray.Sample(SamplerLinearWrap, float3(uvy, ceil(w))).r * rayHitInfo.m_surfaceNormal.y +
-                circlesarray.Sample(SamplerLinearWrap, float3(uvz, ceil(w))).r * rayHitInfo.m_surfaceNormal.z;
+                circlesarray.Sample(SamplerLinearWrap, float3(uvx, ceil(w))).r * absNormal.x +
+                circlesarray.Sample(SamplerLinearWrap, float3(uvy, ceil(w))).r * absNormal.y +
+                circlesarray.Sample(SamplerLinearWrap, float3(uvz, ceil(w))).r * absNormal.z;
         }
-        crossHatchTexelFloor /= (rayHitInfo.m_surfaceNormal.x + rayHitInfo.m_surfaceNormal.y + rayHitInfo.m_surfaceNormal.z);
-        crossHatchTexelCeil /= (rayHitInfo.m_surfaceNormal.x + rayHitInfo.m_surfaceNormal.y + rayHitInfo.m_surfaceNormal.z);
+        crossHatchTexelFloor /= (absNormal.x + absNormal.y + absNormal.z);
+        crossHatchTexelCeil /= (absNormal.x + absNormal.y + absNormal.z);
 
         float crossHatchTexel = lerp(crossHatchTexelFloor, crossHatchTexelCeil, frac(w));
 

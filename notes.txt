@@ -14,9 +14,6 @@
 * make your own texture(s)!
  * try erode / dilute in gimp.  Not sure how to do the "even brightness" thing the paper talks about though.
   * need a new crosshatch texture
- * fix seams in whatever of the cross hatching textures have them. (is it due to triplanar? could try changing the axes!)
-  * and/or get/make better textures!
-  * i think that is just where the texture edge is and that the texture isn't a very good tileable texture.
  * need to figure out how to process the cross hatching textures. dilation filter, even color texture etc.
   * eventually write code that does this, or figure out steps in gimp.
 
@@ -72,6 +69,11 @@ Sean said he'd be willing to give me textures.
 * could also directly sample the light to make it converge faster (i think you should, if it's unbiased!)
 
 * record movie support
+
+* use pow to sharpen triplanar blend area
+ * could also offset each axis a little bit seperately
+ * these and more talked about here:
+ * https://medium.com/@bgolus/normal-mapping-for-a-triplanar-shader-10bf39dca05a
 
 ================================= HIGH LEVEL GOALS =================================
 
