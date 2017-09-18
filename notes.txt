@@ -84,6 +84,8 @@ Sean said he'd be willing to give me textures.
 
 ================================= NOTES =================================
 
+* implementing this: http://dl.acm.org/citation.cfm?id=3085054
+
 DX11 guide: http://www.rastertek.com/dx11tut02.html
 
 * when writing a CPU path tracer, each time i needed a random number, i just called rand() basically. very easy.
