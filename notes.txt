@@ -51,6 +51,9 @@ Sean said he'd be willing to give me textures.
  ? maybe due to static variables and no explicit destruction time of global auto release pointers
 
 ? does doing N samples per call instead of 1 make it run faster? decrease time spent on (texture) memory read / write?
+ * make it output samples per second and see if doing this increases it. shader constant is fine.
+
+? why can't we see quads from the backside? totally should be able to.
 
 ================================= LATER IDEAS =================================
 
