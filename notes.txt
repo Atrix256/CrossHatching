@@ -11,8 +11,6 @@
  ! need to keep the rng seed from becoming so huge that small floats don't matter and it stops updating.
  ! lauren's seed handling could be decent! https://github.com/gheshu/gputracer/blob/master/src/depth.glsl#L43
 
-* there's a bug where if you look too far upwards, it flips in a weird way. viewable in cornel box for instance, check it out.
-
 * make your own texture(s)!
  * try erode / dilute in gimp.  Not sure how to do the "even brightness" thing the paper talks about though.
   * need a new crosshatch texture

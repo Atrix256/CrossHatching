@@ -305,6 +305,11 @@ void IMGUIWindow ()
                     theta -= mouseMoveX * c_mouseLookSpeed * deltaTime;
                     phi += mouseMoveY * c_mouseLookSpeed * deltaTime;
 
+                    if (phi < 0.1f)
+                        phi = 0.1f;
+                    else if (phi > 3.0f)
+                        phi = 3.0f;
+
                     // convert from spherical coordinates back into cartesian
                     cameraFwdRaw[0] = radius * sin(phi) * cos(theta);
                     cameraFwdRaw[2] = radius * sin(theta) * sin(phi);
