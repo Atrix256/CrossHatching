@@ -186,11 +186,27 @@ void RayIntersectsOBB (in float3 rayPos, in float3 rayDir, in OBBPrim obb, inout
 //----------------------------------------------------------------------------
 void RayIntersectsQuad (in float3 rayPos, in float3 rayDir, in QuadPrim quad, inout SRayHitInfo rayHitInfo)
 {
+    float3 posA = quad.positionA_w.xyz;
+    float3 posB = quad.positionB_w.xyz;
+    float3 posC = quad.positionC_w.xyz;
+    float3 posD = quad.positionD_w.xyz;
+
+    // If we are viewing the quad from the back, flip the normal and vertex order so we have a two sided surface
+    float3 normal = quad.normal_w.xyz;
+    if (dot(quad.normal_w.xyz, rayDir) > 0.0f)
+    {
+        normal *= -1.0f;
+        posA = quad.positionD_w.xyz;
+        posB = quad.positionC_w.xyz;
+        posC = quad.positionB_w.xyz;
+        posD = quad.positionA_w.xyz;
+    }
+
     // This function adapted from "Real Time Collision Detection" 5.3.5 Intersecting Line Against Quadrilateral
     // IntersectLineQuad()
-    float3 pa = quad.positionA_w.xyz - rayPos;
-    float3 pb = quad.positionB_w.xyz - rayPos;
-    float3 pc = quad.positionC_w.xyz - rayPos;
+    float3 pa = posA - rayPos;
+    float3 pb = posB - rayPos;
+    float3 pc = posC - rayPos;
     // Determine which triangle to test against by testing against diagonal first
     float3 m = cross(pc, rayDir);
     float3 r;
@@ -206,11 +222,11 @@ void RayIntersectsQuad (in float3 rayPos, in float3 rayDir, in QuadPrim quad, in
         u *= denom;
         v *= denom;
         w *= denom; // w = 1.0f - u - v;
-        r = u*quad.positionA_w.xyz + v*quad.positionB_w.xyz + w*quad.positionC_w.xyz;
+        r = u*posA + v*posB + w*posC;
     }
     else {
         // Test intersection against triangle dac
-        float3 pd = quad.positionD_w.xyz - rayPos;
+        float3 pd = posD - rayPos;
         float u = dot(pd, m); // ScalarTriple(pq, pd, pc);
         if (u < 0.0f) return;
         float w = ScalarTriple(rayDir, pa, pd);
@@ -221,14 +237,8 @@ void RayIntersectsQuad (in float3 rayPos, in float3 rayDir, in QuadPrim quad, in
         u *= denom;
         v *= denom;
         w *= denom; // w = 1.0f - u - v;
-        r = u*quad.positionA_w.xyz + v*quad.positionD_w.xyz + w*quad.positionC_w.xyz;
+        r = u*posA + v*posD + w*posC;
     }
-
-    // make sure normal is facing opposite of ray direction.
-    // this is for if we are hitting the object from the inside / back side.
-    float3 normal = quad.normal_w.xyz;
-    if (dot(quad.normal_w.xyz, rayDir) > 0.0f)
-        normal *= -1.0f;
 
     // figure out the time t that we hit the plane (quad)
     float t;

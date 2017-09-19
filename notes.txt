@@ -1,5 +1,3 @@
-? why can't we see quads from the backside? totally should be able to.
-
 * make your own texture(s)!
  * try erode / dilute in gimp.  Not sure how to do the "even brightness" thing the paper talks about though.
   * need a new crosshatch texture
