@@ -19,6 +19,9 @@ bool g_showCrossHatch = false;
 bool g_smoothStep = false;
 bool g_aniso = false;
 bool g_whiteAlbedo = false;
+bool g_blueNoise = true;
+int g_samplesPerFrame = 1;
+int g_samplesTotal = 0;
 
 CModel<ShaderTypes::VertexFormats::Pos2D> g_fullScreenMesh;
 
@@ -91,8 +94,8 @@ bool init ()
         g_d3d.Context(),
         [] (ShaderTypes::ConstantBuffers::ConstantsPerFrame& data)
         {
-            data.frameRnd_appTime_zw = { 0.0f, 0.0f, 0.0f, 0.0f };
-            data.sampleCount_yzw = {0, 0, 0, 0};
+            data.frameRnd_w = { 0.0f, 0.0f, 0.0f, 0.0f };
+            data.sampleCount_samplesPerFrame_zw = {0, 1, 0, 0};
         }
     );
     if (!writeOK)
@@ -189,14 +192,30 @@ void IMGUIWindow ()
         {
             updateScene |= ImGui::Combo("Scene", &scene, scenes, (int)EScene::COUNT);
             updateScene |= ImGui::Checkbox("White Albedo", &g_whiteAlbedo);
-            if (ImGui::Button("Reset Render"))
+            bool resetRender = ImGui::Checkbox("Use Blue Noise & Golden Ratio", &g_blueNoise);
+            bool updateSamplesPerFrame = ImGui::SliderInt("Samples Per Frame", &g_samplesPerFrame, 1, 50);
+            resetRender |= ImGui::Button("Reset Render");
+
+            if (resetRender)
+            {
+                g_samplesTotal = 0;
+                ShaderData::ConstantBuffers::ConstantsPerFrame.Write(
+                    g_d3d.Context(),
+                    [=](ShaderTypes::ConstantBuffers::ConstantsPerFrame& data)
+                    {
+                        data.sampleCount_samplesPerFrame_zw[0] = 0;
+                    }
+                );
+            }
+
+            if (updateSamplesPerFrame)
             {
                 ShaderData::ConstantBuffers::ConstantsPerFrame.Write(
                     g_d3d.Context(),
                     [=](ShaderTypes::ConstantBuffers::ConstantsPerFrame& data)
-                {
-                    data.sampleCount_yzw[0] = 0;
-                }
+                    {
+                        data.sampleCount_samplesPerFrame_zw[1] = g_samplesPerFrame;
+                    }
                 );
             }
         }
@@ -219,10 +238,14 @@ void IMGUIWindow ()
 
         if (ImGui::CollapsingHeader("Stats", ImGuiTreeNodeFlags_DefaultOpen))
         {
+            float framesPerSecond = FPSLast;
+            float msPerFrame = FPSLast > 0 ? 1000.0f / FPSLast : 0.0f;
+            float samplesPerSecond = FPSLast * float(ShaderData::ConstantBuffers::ConstantsPerFrame.Read().sampleCount_samplesPerFrame_zw[1]);
+
             uint4 counts = ShaderData::ConstantBuffers::ConstantsOnce.Read().numSpheres_numTris_numOBBs_numQuads;
             ImGui::Text("Rendering at %u x %u\nSpheres: %u\nTriangles: %u\nOBBs: %u\nQuads: %u\n", c_width, c_height, counts[0], counts[1], counts[2], counts[3]);
-            ImGui::Text("FPS: %0.2f (%0.2f ms)", FPSLast, FPSLast > 0 ? 1000.0f / FPSLast : 0.0f);
-            ImGui::Text("%u samples\nFPS is samples per second\n", ShaderData::ConstantBuffers::ConstantsPerFrame.Read().sampleCount_yzw[0]);
+            ImGui::Text("FPS: %0.2f (%0.2f ms)", framesPerSecond, msPerFrame);
+            ImGui::Text("%u samples (%0.2f samples per second)\n", g_samplesTotal, samplesPerSecond);
             ImGui::Separator();
         }
 
@@ -249,6 +272,7 @@ void IMGUIWindow ()
         // update scene if we should
         if (updateScene)
         {
+            g_samplesTotal = 0;
             FillSceneData((EScene)scene, g_d3d.Context());
 
             uvScale = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_triplanarPow[0];
@@ -337,10 +361,11 @@ void IMGUIWindow ()
         );
 
         // reset the render
+        g_samplesTotal = 0;
         ShaderData::ConstantBuffers::ConstantsPerFrame.Write(
             g_d3d.Context(),
             [=] (ShaderTypes::ConstantBuffers::ConstantsPerFrame& data) {
-                data.sampleCount_yzw[0] = 0;
+                data.sampleCount_samplesPerFrame_zw[0] = 0;
             }
         );
     }
@@ -385,16 +410,18 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
                 g_d3d.Context(),
                 [&firstSample, &appTimeSeconds] (ShaderTypes::ConstantBuffers::ConstantsPerFrame& data)
                 {
-                    data.frameRnd_appTime_zw[0] = RandomFloat(0.0f, 1.0f);
-                    data.frameRnd_appTime_zw[1] = appTimeSeconds.count();
+                    data.frameRnd_w[0] = RandomFloat(0.0f, 1.0f);
+                    data.frameRnd_w[1] = RandomFloat(0.0f, 1.0f);
+                    data.frameRnd_w[2] = RandomFloat(0.0f, 1.0f);
 
-                    data.sampleCount_yzw[0]++;
+                    data.sampleCount_samplesPerFrame_zw[0]++;
 
-					firstSample = (data.sampleCount_yzw[0] == 1);
+					firstSample = (data.sampleCount_samplesPerFrame_zw[0] == 1);
                 }
             );
             if (!writeOK)
                 done = true;
+            g_samplesTotal += g_samplesPerFrame;
 
 			// if this is sample 0, we need to run the code that generates the first intersection that is re-used by the path tracing and the shader that shows the path tracing results
 			if (firstSample)
@@ -406,7 +433,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
 			}
 
             // path tracing compute shader
-            const CComputeShader& computeShader = ShaderData::GetShader_pathTrace({g_whiteAlbedo});
+            const CComputeShader& computeShader = ShaderData::GetShader_pathTrace({g_whiteAlbedo, g_blueNoise});
             FillShaderParams<EShaderType::compute>(g_d3d.Context(), computeShader.GetReflector());
             computeShader.Dispatch(g_d3d.Context(), dispatchX, dispatchY, 1);
             UnbindShaderTextures<EShaderType::compute>(g_d3d.Context(), computeShader.GetReflector());

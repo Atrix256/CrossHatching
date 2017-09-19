@@ -1,15 +1,4 @@
-
-* fix random number generation per pixel
- * blue noise / low discrepancy likely not good options here since we want to use more samples instead of less
- ? have c++ side send an iterative sum of golden ratio to shader?
-  * or try just adding the random number per frame to it!
-   * i tried that and it looked aweful, maybe my prng sucks with seeds that are in 0-1?
-  * try and see if you can keep the seed in 0-1?
-  * if this works out get rid of app rand and frame number and app time i think.
-  ! i tried this 8/29 at lunch and it didn't work out, not sure what the problem is.
-  * white noise is probably better over area and time since you are doing more samples not fewer
- ! need to keep the rng seed from becoming so huge that small floats don't matter and it stops updating.
- ! lauren's seed handling could be decent! https://github.com/gheshu/gputracer/blob/master/src/depth.glsl#L43
+? why can't we see quads from the backside? totally should be able to.
 
 * make your own texture(s)!
  * try erode / dilute in gimp.  Not sure how to do the "even brightness" thing the paper talks about though.
@@ -46,14 +35,6 @@ Sean said he'd be willing to give me textures.
  * should know when actual models used
 
 * get rid of unused models and textures when done
-
-* somehow there are leaks (d3d11 warning of live objects) on shutdown
- ? maybe due to static variables and no explicit destruction time of global auto release pointers
-
-? does doing N samples per call instead of 1 make it run faster? decrease time spent on (texture) memory read / write?
- * make it output samples per second and see if doing this increases it. shader constant is fine.
-
-? why can't we see quads from the backside? totally should be able to.
 
 ================================= LATER IDEAS =================================
 

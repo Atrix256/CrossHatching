@@ -62,8 +62,8 @@ cbuffer ConstantsOnce
 
 cbuffer ConstantsPerFrame
 {
-  float4 frameRnd_appTime_zw;
-  uint4 sampleCount_yzw;
+  float4 frameRnd_w;
+  uint4 sampleCount_samplesPerFrame_zw;
 };
 
 //----------------------------------------------------------------------------

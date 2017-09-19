@@ -217,8 +217,8 @@ CONSTANT_BUFFER_BEGIN(ConstantsOnce)
 CONSTANT_BUFFER_END
 
 CONSTANT_BUFFER_BEGIN(ConstantsPerFrame)
-    CONSTANT_BUFFER_FIELD(frameRnd_appTime_zw, float4)
-    CONSTANT_BUFFER_FIELD(sampleCount_yzw, uint4)
+    CONSTANT_BUFFER_FIELD(frameRnd_w, float4)
+    CONSTANT_BUFFER_FIELD(sampleCount_samplesPerFrame_zw, uint4)
 CONSTANT_BUFFER_END
 
 //=================================================================
@@ -318,6 +318,7 @@ SHADER_VSPS_END
 
 SHADER_CS_BEGIN(pathTrace, L"Shaders/PathTrace.fx", "cs_main")
     SHADER_CS_STATICBRANCH(SBWhiteAlbedo)
+    SHADER_CS_STATICBRANCH(SBBlueNoise)
 SHADER_CS_END
 
 SHADER_CS_BEGIN(pathTraceFirstHit, L"Shaders/PathTraceFirstHit.fx", "cs_main")

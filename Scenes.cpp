@@ -171,7 +171,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
         context,
         [](ShaderTypes::ConstantBuffers::ConstantsPerFrame& data)
         {
-            data.sampleCount_yzw[0] = 0;
+            data.sampleCount_samplesPerFrame_zw[0] = 0;
         }
     );
 

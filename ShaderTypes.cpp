@@ -153,6 +153,10 @@ bool WriteShaderTypesHLSL (void)
 
 bool ShaderTypesInit (void)
 {
+    // write hlsl shadertypes.h
+    if (!WriteShaderTypesHLSL())
+        return false;
+
     // create constant buffers
     #define CONSTANT_BUFFER_BEGIN(NAME) if (!ShaderData::ConstantBuffers::NAME.Create(g_d3d.Device(), #NAME)) { ReportError("Could not create constant buffer: " #NAME "\n"); return false; }
     #include "ShaderTypesList.h"
@@ -184,10 +188,6 @@ bool ShaderTypesInit (void)
         size_t numSlices##NAME = sizeof(slices##NAME) / sizeof(slices##NAME[0]);\
         if (!ShaderData::Textures::NAME.CreateArray(g_d3d.Device(), g_d3d.Context(), slices##NAME, numSlices##NAME, #NAME)) { ReportError("Could not create texture array: " #NAME "\n"); return false; }
     #include "ShaderTypesList.h"
-
-    // write hlsl shadertypes.h
-    if (!WriteShaderTypesHLSL())
-        return false;
 
     // create shaders
     #define SHADER_CS_BEGIN(NAME, FILENAME, ENTRY) \
