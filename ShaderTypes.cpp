@@ -185,6 +185,10 @@ bool ShaderTypesInit (void)
         if (!ShaderData::Textures::NAME.CreateArray(g_d3d.Device(), g_d3d.Context(), slices##NAME, numSlices##NAME, #NAME)) { ReportError("Could not create texture array: " #NAME "\n"); return false; }
     #include "ShaderTypesList.h"
 
+    // write hlsl shadertypes.h
+    if (!WriteShaderTypesHLSL())
+        return false;
+
     // create shaders
     #define SHADER_CS_BEGIN(NAME, FILENAME, ENTRY) \
     { \
@@ -207,9 +211,6 @@ bool ShaderTypesInit (void)
         } \
     }
     #include "ShaderTypesList.h"
-
-    if (!WriteShaderTypesHLSL())
-        return false;
 
     return true;
 }

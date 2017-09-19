@@ -11,6 +11,8 @@
  ! need to keep the rng seed from becoming so huge that small floats don't matter and it stops updating.
  ! lauren's seed handling could be decent! https://github.com/gheshu/gputracer/blob/master/src/depth.glsl#L43
 
+* there's a bug where if you look too far upwards, it flips in a weird way. viewable in cornel box for instance, check it out.
+
 * make your own texture(s)!
  * try erode / dilute in gimp.  Not sure how to do the "even brightness" thing the paper talks about though.
   * need a new crosshatch texture
@@ -30,9 +32,10 @@
   * and here: https://github.com/movAX13h/HiOctaneTools/tree/master/Unpacked%20Assets/models
   * if using those high octane assets, need to texture them with atlas.png i think.
 
-* try some minor optimizations to see if they help much. (write details in notes for blog post i guess)
- * N samples per call, instead of just the 1.  may decrease time spent on (texture) memory read / write?
- * bounding volume (box? sphere?) as pre-test for rays for meshes.
+* it really would be nice if passing static branches would let you see names. Maybe a function that returns the correct type? Also make sure that all parameters are required. No silent failures!
+ * like here in main.cpp
+ * const CShader& shader = ShaderData::GetShader_showPathTrace({g_showGrey, g_showCrossHatch, g_smoothStep, g_aniso});
+ * if i give too few arguments it's just fine with it. they are all anonymous too.
 
 TODO's in code
 
@@ -49,6 +52,7 @@ Sean said he'd be willing to give me textures.
 * somehow there are leaks (d3d11 warning of live objects) on shutdown
  ? maybe due to static variables and no explicit destruction time of global auto release pointers
 
+? does doing N samples per call instead of 1 make it run faster? decrease time spent on (texture) memory read / write?
 
 ================================= LATER IDEAS =================================
 
@@ -70,8 +74,7 @@ Sean said he'd be willing to give me textures.
 
 * record movie support
 
-* use pow to sharpen triplanar blend area
- * could also offset each axis a little bit seperately
+* could also offset each axis a little bit seperately
  * these and more talked about here:
  * https://medium.com/@bgolus/normal-mapping-for-a-triplanar-shader-10bf39dca05a
 
@@ -107,3 +110,11 @@ DX11 guide: http://www.rastertek.com/dx11tut02.html
 
 * this uses triplanar projection to make uv's.  If your object already has uv's, you probably would want to use those instead, to do 1 texture lookup per pixel instead of 3!
  * or is triplanar somehow better being based on object normals?
+
+* the macro to reflect things are way handy until you have to debug them, then they are just a pain.
+ * VS needs to make it easier to debug macros, by letting you step through expanded macro code perhaps.
+
+
+ Questions for researcher:
+  * when doing triplanar are the normals in world space or screen space?
+  * taking a hand drawn (greyscale) image and making it constant brightness: ???

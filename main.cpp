@@ -78,7 +78,7 @@ bool init ()
             data.cameraAt_FOVY = { 0.0f, 0.0f, 0.0f, c_fovY };
             data.nearPlaneDist_missColor = { 0.0f, 0.0f, 0.0f, 0.0f };
             data.numSpheres_numTris_numOBBs_numQuads = { 0, 0, 0, 0 };
-			data.uvmultiplier_blackPoint_whitePoint_w = { 1.0f, 0.0f, 1.0f, 0.0f };
+			data.uvmultiplier_blackPoint_whitePoint_triplanarPow = { 1.0f, 0.0f, 1.0f, 1.0f };
         }
     );
     if (!writeOK)
@@ -159,6 +159,7 @@ void IMGUIWindow ()
         static float uvScale = 1.0f;
         static float blackPoint = 0.0f;
         static float whitePoint = 1.0f;
+        static float triplanarPow = 1.0f;
         static int scene = 0;
 
         bool updateConstants = false;
@@ -166,9 +167,10 @@ void IMGUIWindow ()
 
         if (firstTime)
         {
-            uvScale = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_w[0];
-            blackPoint = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_w[1];
-            whitePoint = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_w[2];
+            uvScale = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_triplanarPow[0];
+            blackPoint = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_triplanarPow[1];
+            whitePoint = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_triplanarPow[2];
+            triplanarPow = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_triplanarPow[3];
         }
 
         ImGui::Begin("", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
@@ -204,7 +206,8 @@ void IMGUIWindow ()
             ImGui::Checkbox("Grey Scale", &g_showGrey);
             ImGui::Checkbox("Cross Hatch", &g_showCrossHatch);
             ImGui::Checkbox("16x Anisotropic Sampling", &g_aniso);
-            updateConstants |= ImGui::SliderFloat("UV Scale", &uvScale, 0.001f, 3.0f);
+            updateConstants |= ImGui::SliderFloat("UV Scale", &uvScale, 0.1f, 3.0f);
+            updateConstants |= ImGui::SliderFloat("Triplanar Blend Sharpness", &triplanarPow, 0.1f, 8.0f);
         }
 
         if (ImGui::CollapsingHeader("Brightness", ImGuiTreeNodeFlags_DefaultOpen))
@@ -235,9 +238,10 @@ void IMGUIWindow ()
                 g_d3d.Context(),
                 [=] (ShaderTypes::ConstantBuffers::ConstantsOnce& data)
                 {
-                    data.uvmultiplier_blackPoint_whitePoint_w[0] = uvScale;
-                    data.uvmultiplier_blackPoint_whitePoint_w[1] = blackPoint;
-                    data.uvmultiplier_blackPoint_whitePoint_w[2] = whitePoint;
+                    data.uvmultiplier_blackPoint_whitePoint_triplanarPow[0] = uvScale;
+                    data.uvmultiplier_blackPoint_whitePoint_triplanarPow[1] = blackPoint;
+                    data.uvmultiplier_blackPoint_whitePoint_triplanarPow[2] = whitePoint;
+                    data.uvmultiplier_blackPoint_whitePoint_triplanarPow[3] = triplanarPow;
                 }
             );
         }
@@ -247,9 +251,10 @@ void IMGUIWindow ()
         {
             FillSceneData((EScene)scene, g_d3d.Context());
 
-            uvScale = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_w[0];
-            blackPoint = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_w[1];
-            whitePoint = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_w[2];
+            uvScale = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_triplanarPow[0];
+            blackPoint = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_triplanarPow[1];
+            whitePoint = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_triplanarPow[2];
+            triplanarPow = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_triplanarPow[3];
         }
     }
 
@@ -400,8 +405,6 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
             FillShaderParams<EShaderType::compute>(g_d3d.Context(), computeShader.GetReflector());
             computeShader.Dispatch(g_d3d.Context(), dispatchX, dispatchY, 1);
             UnbindShaderTextures<EShaderType::compute>(g_d3d.Context(), computeShader.GetReflector());
-
-            // TODO: it really would be nice if passing static branches would let you see names. Maybe a function that returns the correct type? Also make sure that all parameters are required. No silent failures!
 
             // vs/ps to show the results of the path tracing
             const CShader& shader = ShaderData::GetShader_showPathTrace({g_showGrey, g_showCrossHatch, g_smoothStep, g_aniso});

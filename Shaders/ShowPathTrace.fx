@@ -67,10 +67,16 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch, bool s
     // if the ray didn't hit anything, fake a planar hit for shading purposes
     if (rayHitInfo.m_intersectTime < 0.0f)
     {
-        rayHitInfo.m_intersectTime = 2.0f / uvmultiplier_blackPoint_whitePoint_w.x;
-        rayHitInfo.m_surfaceNormal = normalize(cameraPos_FOVX.xyz - cameraAt_FOVY.xyz);
-        rayHitInfo.m_albedo = float3(0.0f, 0.0f, 0.0f);
-        rayHitInfo.m_emissive = float3(0.0f, 0.0f, 0.0f);
+        // alternately could position the sphere at rayPos, but that makes the triplanar projection change as the camera moves!
+        rayPos = float3(0.0f, 0.0f, 0.0f);
+
+        SpherePrim sphere;
+        sphere.position_Radius = float4(rayPos, 10.0f);
+        sphere.albedo_w = float4(0.0f, 0.0f, 0.0f, 0.0f);
+        sphere.emissive_w = float4(0.0f, 0.0f, 0.0f, 0.0f);
+
+        RayIntersectsSphere(rayPos, rayDir, sphere, rayHitInfo);
+
         light = nearPlaneDist_missColor.yzw;
     }
 
@@ -81,7 +87,7 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch, bool s
 	float3 yuv = RGBToYUV(light);
 
     // remap the brightness using the black point / white point
-    yuv.x = uvmultiplier_blackPoint_whitePoint_w.y + yuv.x * (uvmultiplier_blackPoint_whitePoint_w.z - uvmultiplier_blackPoint_whitePoint_w.y);
+    yuv.x = uvmultiplier_blackPoint_whitePoint_triplanarPow.y + yuv.x * (uvmultiplier_blackPoint_whitePoint_triplanarPow.z - uvmultiplier_blackPoint_whitePoint_triplanarPow.y);
 
     // smoothstep the result if we are supposed to
     if (smoothStep)
@@ -98,9 +104,9 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch, bool s
         // sample the crosshatching with triplanar projection
         float3 pixelPos = rayPos + rayDir * rayHitInfo.m_intersectTime;
 
-        float2 uvx = pixelPos.yz * uvmultiplier_blackPoint_whitePoint_w.x;
-        float2 uvy = pixelPos.xz * uvmultiplier_blackPoint_whitePoint_w.x;
-        float2 uvz = pixelPos.xy * uvmultiplier_blackPoint_whitePoint_w.x;
+        float2 uvx = pixelPos.yz * uvmultiplier_blackPoint_whitePoint_triplanarPow.x;
+        float2 uvy = pixelPos.xz * uvmultiplier_blackPoint_whitePoint_triplanarPow.x;
+        float2 uvz = pixelPos.xy * uvmultiplier_blackPoint_whitePoint_triplanarPow.x;
 
         // caclulate the array slice to read
 		uint volumeDimsX, volumeDimsY, volumeDimsZ;
@@ -109,7 +115,7 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch, bool s
         
 		// triplanar projection sample the crosshatching texture
         // we need to manually lerp to get trilinear interpolation between slice samples
-        float3 absNormal = abs(rayHitInfo.m_surfaceNormal);
+        float3 absNormal = pow(abs(rayHitInfo.m_surfaceNormal), uvmultiplier_blackPoint_whitePoint_triplanarPow.w);
         float crossHatchTexelFloor;
         float crossHatchTexelCeil;
         if (aniso)
