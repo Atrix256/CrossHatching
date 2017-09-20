@@ -191,8 +191,8 @@ void IMGUIWindow ()
         if (ImGui::CollapsingHeader("Scene", ImGuiTreeNodeFlags_DefaultOpen))
         {
             updateScene |= ImGui::Combo("Scene", &scene, scenes, (int)EScene::COUNT);
-            updateScene |= ImGui::Checkbox("White Albedo", &g_whiteAlbedo);
-            bool resetRender = ImGui::Checkbox("Use Blue Noise & Golden Ratio", &g_blueNoise);
+            bool resetRender = ImGui::Checkbox("White Albedo", &g_whiteAlbedo);
+            resetRender |= ImGui::Checkbox("Use Blue Noise & Golden Ratio", &g_blueNoise);
             bool updateSamplesPerFrame = ImGui::SliderInt("Samples Per Frame", &g_samplesPerFrame, 1, 50);
             resetRender |= ImGui::Button("Reset Render");
 
