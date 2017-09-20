@@ -262,6 +262,42 @@ void RayIntersectsQuad (in float3 rayPos, in float3 rayDir, in QuadPrim quad, in
 }
 
 //----------------------------------------------------------------------------
+bool RayIntersectsSphereBoolean (in float3 rayPos, in float3 rayDir, in float3 position, in float radius, float maxIntersectTime)
+{
+    //get the vector from the center of this circle to where the ray begins.
+    float3 m = rayPos - position;
+
+    //get the dot product of the above vector and the ray's vector
+    float b = dot(m, rayDir);
+
+    float c = dot(m, m) - radius * radius;
+
+    //exit if r's origin outside s (c > 0) and r pointing away from s (b > 0)
+    if (c > 0.0 && b > 0.0)
+        return false;
+
+    //calculate discriminant
+    float discr = b * b - c;
+
+    //a negative discriminant corresponds to ray missing sphere
+    if (discr <= 0.0)
+        return false;
+
+    //ray now found to intersect sphere, compute smallest t value of intersection
+    float collisionTime = -b - sqrt(discr);
+
+    //if t is negative, ray started inside sphere so clamp t to zero and remember that we hit from the inside
+    if (collisionTime < 0.0)
+        collisionTime = -b + sqrt(discr);
+
+    //enforce a max distance if we should
+    if (maxIntersectTime >= 0.0 && collisionTime > maxIntersectTime)
+        return false;
+
+    return true;
+}
+
+//----------------------------------------------------------------------------
 void RayIntersectsSphere (in float3 rayPos, in float3 rayDir, in SpherePrim sphere, inout SRayHitInfo rayHitInfo)
 {
     //get the vector from the center of this circle to where the ray begins.
@@ -356,6 +392,18 @@ void RayIntersectsTriangle (in float3 rayPos, in float3 rayDir, in TrianglePrim 
 }
 
 //----------------------------------------------------------------------------
+void RayIntersectsModel (in float3 rayPos, in float3 rayDir, in ModelPrim modelPrim, inout SRayHitInfo rayHitInfo)
+{
+    // if the ray misses the bounding sphere of the mesh, it's a total miss
+    if (!RayIntersectsSphereBoolean(rayPos, rayDir, modelPrim.position_Radius.xyz, modelPrim.position_Radius.w, rayHitInfo.m_intersectTime))
+        return;
+
+    // else test each triangle in the mesh
+    for (int i = modelPrim.firstTriangle_lastTriangle_zw.x; i <= modelPrim.firstTriangle_lastTriangle_zw.y; ++i)
+        RayIntersectsTriangle(rayPos, rayDir, Triangles[i], rayHitInfo);
+}
+
+//----------------------------------------------------------------------------
 SRayHitInfo ClosestIntersection (in float3 rayPos, in float3 rayDir)
 {
     SRayHitInfo rayHitInfo;
@@ -389,6 +437,13 @@ SRayHitInfo ClosestIntersection (in float3 rayPos, in float3 rayDir)
         int numOBBs = numSpheres_numTris_numOBBs_numQuads.z;
         for (int i = 0; i < numOBBs; ++i)
             RayIntersectsOBB(rayPos, rayDir, OBBs[i], rayHitInfo);
+    }
+
+    // Models
+    {
+        int numModels = numModels_yzw.x;
+        for (int i = 0; i < numModels; ++i)
+            RayIntersectsModel(rayPos, rayDir, Models[i], rayHitInfo);
     }
 
     return rayHitInfo;

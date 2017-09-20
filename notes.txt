@@ -1,8 +1,25 @@
+* could have a bounding shape on "instanced meshes" which if the ray hits, gives a start/stop triangle index range to test ray against.
+ * could also possibly have a scale, translation, rotation for instance.
+ * try only if actually needed.
+ * should know when actual models used
+ * compare rendering speed, make sure it's worthwhile. It definitely should be, but...
+
 * make your own texture(s)!
  * try erode / dilute in gimp.  Not sure how to do the "even brightness" thing the paper talks about though.
   * need a new crosshatch texture
  * need to figure out how to process the cross hatching textures. dilation filter, even color texture etc.
   * eventually write code that does this, or figure out steps in gimp.
+
+* could do some mesh instancing where a model primitive transforms the incoming and outgoing ray / normals etc.
+ * instead of making more triangles.
+
+* make some better scenes that don't use models too. some spheres and boxes doing color bleed, shadows, multiple lights, etc.
+
+* get some fun models to use for testing, make some fun scenes.
+ * Models at turbosquid! https://www.turbosquid.com/
+  * and unity store
+  * and here: https://github.com/movAX13h/HiOctaneTools/tree/master/Unpacked%20Assets/models
+  * if using those high octane assets, need to texture them with atlas.png i think.
 
 ! for color cross hatching, try YCoCg-R instead of YUV? https://en.wikipedia.org/wiki/YCoCg
  * maybe make "full brightness" be based on albedo somehow? even though it's not... shrug
@@ -10,12 +27,6 @@
   * convert to hue / brightness. hue is tint for texture, brightness selects texture
   * could also try using texture as a lerp value between a light and dark color
  * make it use textures for shading - using the color to tint the non black parts of the textures.
-
-* get some fun models to use for testing, make some fun scenes.
- * Models at turbosquid! https://www.turbosquid.com/
-  * and unity store
-  * and here: https://github.com/movAX13h/HiOctaneTools/tree/master/Unpacked%20Assets/models
-  * if using those high octane assets, need to texture them with atlas.png i think.
 
 * it really would be nice if passing static branches would let you see names. Maybe a function that returns the correct type? Also make sure that all parameters are required. No silent failures!
  * like here in main.cpp
@@ -26,11 +37,6 @@ TODO's in code
 
 Sean said he'd be willing to give me textures.
  * how bout models?
-
-* could have a bounding shape on "instanced meshes" which if the ray hits, gives a start/stop triangle index range to test ray against.
- * could also possibly have a scale, translation, rotation for instance.
- * try only if actually needed.
- * should know when actual models used
 
 * get rid of unused models and textures when done
 

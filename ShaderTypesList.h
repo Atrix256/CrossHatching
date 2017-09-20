@@ -212,8 +212,9 @@ CONSTANT_BUFFER_BEGIN(ConstantsOnce)
     CONSTANT_BUFFER_FIELD(cameraPos_FOVX, float4)
     CONSTANT_BUFFER_FIELD(cameraAt_FOVY, float4)
     CONSTANT_BUFFER_FIELD(nearPlaneDist_missColor, float4)
+    CONSTANT_BUFFER_FIELD(uvmultiplier_blackPoint_whitePoint_triplanarPow, float4)
     CONSTANT_BUFFER_FIELD(numSpheres_numTris_numOBBs_numQuads, uint4)
-	CONSTANT_BUFFER_FIELD(uvmultiplier_blackPoint_whitePoint_triplanarPow, float4)
+    CONSTANT_BUFFER_FIELD(numModels_yzw, uint4)
 CONSTANT_BUFFER_END
 
 CONSTANT_BUFFER_BEGIN(ConstantsPerFrame)
@@ -258,6 +259,11 @@ STRUCTURED_BUFFER_BEGIN(OBBs, OBBPrim, 10, true)
     STRUCTURED_BUFFER_FIELD(ZAxis_w, float4)
     STRUCTURED_BUFFER_FIELD(albedo_w, float4)
     STRUCTURED_BUFFER_FIELD(emissive_w, float4)
+STRUCTURED_BUFFER_END
+
+STRUCTURED_BUFFER_BEGIN(Models, ModelPrim, 10, true)
+    STRUCTURED_BUFFER_FIELD(position_Radius, float4)
+    STRUCTURED_BUFFER_FIELD(firstTriangle_lastTriangle_zw, uint4)
 STRUCTURED_BUFFER_END
 
 STRUCTURED_BUFFER_BEGIN(FirstRayHits, FirstRayHit, c_width * c_height, false)

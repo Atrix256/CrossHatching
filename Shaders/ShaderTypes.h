@@ -56,8 +56,9 @@ cbuffer ConstantsOnce
   float4 cameraPos_FOVX;
   float4 cameraAt_FOVY;
   float4 nearPlaneDist_missColor;
-  uint4 numSpheres_numTris_numOBBs_numQuads;
   float4 uvmultiplier_blackPoint_whitePoint_triplanarPow;
+  uint4 numSpheres_numTris_numOBBs_numQuads;
+  uint4 numModels_yzw;
 };
 
 cbuffer ConstantsPerFrame
@@ -122,6 +123,12 @@ struct OBBPrim
   float4 emissive_w;
 };
 
+struct ModelPrim
+{
+  float4 position_Radius;
+  uint4 firstTriangle_lastTriangle_zw;
+};
+
 struct FirstRayHit
 {
   float4 surfaceNormal_intersectTime;
@@ -143,6 +150,9 @@ RWStructuredBuffer<QuadPrim> Quads_rw;
 
 StructuredBuffer<OBBPrim> OBBs;
 RWStructuredBuffer<OBBPrim> OBBs_rw;
+
+StructuredBuffer<ModelPrim> Models;
+RWStructuredBuffer<ModelPrim> Models_rw;
 
 StructuredBuffer<FirstRayHit> FirstRayHits;
 RWStructuredBuffer<FirstRayHit> FirstRayHits_rw;
