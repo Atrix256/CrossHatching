@@ -23,6 +23,11 @@ bool g_blueNoise = true;
 int g_samplesPerFrame = 1;
 int g_samplesTotal = 0;
 
+float g_triplanarPow = 4.0f;
+float g_uvScale = 0.25f;
+float g_blackPoint = 0.0f;
+float g_whitePoint = 1.0f;
+
 CModel<ShaderTypes::VertexFormats::Pos2D> g_fullScreenMesh;
 
 // For FPS calculation etc
@@ -81,7 +86,7 @@ bool init ()
             data.cameraAt_FOVY = { 0.0f, 0.0f, 0.0f, c_fovY };
             data.nearPlaneDist_missColor = { 0.0f, 0.0f, 0.0f, 0.0f };
             data.numSpheres_numTris_numOBBs_numQuads = { 0, 0, 0, 0 };
-			data.uvmultiplier_blackPoint_whitePoint_triplanarPow = { 1.0f, 0.0f, 1.0f, 1.0f };
+			data.uvmultiplier_blackPoint_whitePoint_triplanarPow = { g_uvScale, g_blackPoint, g_whitePoint, g_triplanarPow };
         }
     );
     if (!writeOK)
@@ -95,7 +100,7 @@ bool init ()
         [] (ShaderTypes::ConstantBuffers::ConstantsPerFrame& data)
         {
             data.frameRnd_w = { 0.0f, 0.0f, 0.0f, 0.0f };
-            data.sampleCount_samplesPerFrame_zw = {0, 1, 0, 0};
+            data.sampleCount_samplesPerFrame_zw = {0, (unsigned int)g_samplesPerFrame, 0, 0};
         }
     );
     if (!writeOK)
@@ -157,24 +162,10 @@ void IMGUIWindow ()
         }
 
         // handle UI
-        static bool firstTime = true;
-
-        static float uvScale = 1.0f;
-        static float blackPoint = 0.0f;
-        static float whitePoint = 1.0f;
-        static float triplanarPow = 1.0f;
         static int scene = 0;
 
         bool updateConstants = false;
         bool updateScene = false;
-
-        if (firstTime)
-        {
-            uvScale = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_triplanarPow[0];
-            blackPoint = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_triplanarPow[1];
-            whitePoint = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_triplanarPow[2];
-            triplanarPow = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_triplanarPow[3];
-        }
 
         ImGui::Begin("", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
 
@@ -225,14 +216,14 @@ void IMGUIWindow ()
             ImGui::Checkbox("Grey Scale", &g_showGrey);
             ImGui::Checkbox("Cross Hatch", &g_showCrossHatch);
             ImGui::Checkbox("16x Anisotropic Sampling", &g_aniso);
-            updateConstants |= ImGui::SliderFloat("UV Scale", &uvScale, 0.1f, 3.0f);
-            updateConstants |= ImGui::SliderFloat("Triplanar Blend Sharpness", &triplanarPow, 0.1f, 8.0f);
+            updateConstants |= ImGui::SliderFloat("UV Scale", &g_uvScale, 0.1f, 3.0f);
+            updateConstants |= ImGui::SliderFloat("Triplanar Blend Sharpness", &g_triplanarPow, 0.1f, 8.0f);
         }
 
         if (ImGui::CollapsingHeader("Brightness", ImGuiTreeNodeFlags_DefaultOpen))
         {
-            updateConstants |= ImGui::SliderFloat("Black", &blackPoint, 0.0f, 1.0f);
-            updateConstants |= ImGui::SliderFloat("White", &whitePoint, 0.0f, 1.0f);
+            updateConstants |= ImGui::SliderFloat("Black", &g_blackPoint, 0.0f, 1.0f);
+            updateConstants |= ImGui::SliderFloat("White", &g_whitePoint, 0.0f, 1.0f);
             ImGui::Checkbox("Smooth Step Brightness", &g_smoothStep);
         }
 
@@ -261,10 +252,7 @@ void IMGUIWindow ()
                 g_d3d.Context(),
                 [=] (ShaderTypes::ConstantBuffers::ConstantsOnce& data)
                 {
-                    data.uvmultiplier_blackPoint_whitePoint_triplanarPow[0] = uvScale;
-                    data.uvmultiplier_blackPoint_whitePoint_triplanarPow[1] = blackPoint;
-                    data.uvmultiplier_blackPoint_whitePoint_triplanarPow[2] = whitePoint;
-                    data.uvmultiplier_blackPoint_whitePoint_triplanarPow[3] = triplanarPow;
+                    data.uvmultiplier_blackPoint_whitePoint_triplanarPow = { g_uvScale, g_blackPoint, g_whitePoint, g_triplanarPow };
                 }
             );
         }
@@ -274,11 +262,6 @@ void IMGUIWindow ()
         {
             g_samplesTotal = 0;
             FillSceneData((EScene)scene, g_d3d.Context());
-
-            uvScale = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_triplanarPow[0];
-            blackPoint = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_triplanarPow[1];
-            whitePoint = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_triplanarPow[2];
-            triplanarPow = ShaderData::ConstantBuffers::ConstantsOnce.Read().uvmultiplier_blackPoint_whitePoint_triplanarPow[3];
         }
     }
 

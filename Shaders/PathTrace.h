@@ -196,10 +196,8 @@ void RayIntersectsQuad (in float3 rayPos, in float3 rayDir, in QuadPrim quad, in
     if (dot(quad.normal_w.xyz, rayDir) > 0.0f)
     {
         normal *= -1.0f;
-        posA = quad.positionD_w.xyz;
-        posB = quad.positionC_w.xyz;
-        posC = quad.positionB_w.xyz;
-        posD = quad.positionA_w.xyz;
+        posB = quad.positionD_w.xyz;
+        posD = quad.positionB_w.xyz;
     }
 
     // This function adapted from "Real Time Collision Detection" 5.3.5 Intersecting Line Against Quadrilateral

@@ -1,6 +1,3 @@
-* cornel box right wall (red) isn't correct
- * may be worth while to have a visualization for normals and depth and similar? maybe just temporarily dunno.
-
 * make your own texture(s)!
  * try erode / dilute in gimp.  Not sure how to do the "even brightness" thing the paper talks about though.
   * need a new crosshatch texture
