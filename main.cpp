@@ -86,6 +86,7 @@ bool init ()
             data.cameraAt_FOVY = { 0.0f, 0.0f, 0.0f, c_fovY };
             data.nearPlaneDist_missColor = { 0.0f, 0.0f, 0.0f, 0.0f };
             data.numSpheres_numTris_numOBBs_numQuads = { 0, 0, 0, 0 };
+            data.numModels_yzw = { 0, 0, 0, 0 };
 			data.uvmultiplier_blackPoint_whitePoint_triplanarPow = { g_uvScale, g_blackPoint, g_whitePoint, g_triplanarPow };
         }
     );
@@ -233,6 +234,7 @@ void IMGUIWindow ()
             float msPerFrame = FPSLast > 0 ? 1000.0f / FPSLast : 0.0f;
             float samplesPerSecond = FPSLast * float(ShaderData::ConstantBuffers::ConstantsPerFrame.Read().sampleCount_samplesPerFrame_zw[1]);
 
+            // TODO: need to handle ACTUAL triangle counts for meshes! maybe sum up the number of triangles used by each mesh individually?
             uint4 counts = ShaderData::ConstantBuffers::ConstantsOnce.Read().numSpheres_numTris_numOBBs_numQuads;
             ImGui::Text("Rendering at %u x %u\nSpheres: %u\nTriangles: %u\nOBBs: %u\nQuads: %u\n", c_width, c_height, counts[0], counts[1], counts[2], counts[3]);
             ImGui::Text("FPS: %0.2f (%0.2f ms)", framesPerSecond, msPerFrame);

@@ -398,6 +398,15 @@ void RayIntersectsModel (in float3 rayPos, in float3 rayDir, in ModelPrim modelP
     if (!RayIntersectsSphereBoolean(rayPos, rayDir, modelPrim.position_Radius.xyz, modelPrim.position_Radius.w, rayHitInfo.m_intersectTime))
         return;
 
+    // TODO: temp!
+    /*
+    rayHitInfo.m_intersectTime = 0.01f;
+    rayHitInfo.m_surfaceNormal = float3(1.0f, 0.0f, 0.0f);
+    rayHitInfo.m_albedo = float3(0.0f, 0.0f, 0.0f);
+    rayHitInfo.m_emissive = float3(1.0f, 0.0f, 1.0f);
+    return;
+    */
+
     // else test each triangle in the mesh
     for (int i = modelPrim.firstTriangle_lastTriangle_zw.x; i <= modelPrim.firstTriangle_lastTriangle_zw.y; ++i)
         RayIntersectsTriangle(rayPos, rayDir, Triangles[i], rayHitInfo);

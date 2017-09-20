@@ -194,6 +194,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                     scene.nearPlaneDist_missColor = { 0.1f, 0.0f, 0.0f, 0.0f };
 
                     scene.numSpheres_numTris_numOBBs_numQuads = { 2, 0, 0, 2 };
+                    scene.numModels_yzw = { 0, 0, 0, 0 };
                 }
             );
 
@@ -233,6 +234,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                     scene.nearPlaneDist_missColor = { 0.1f, 0.1f, 0.4f, 1.0f };
 
                     scene.numSpheres_numTris_numOBBs_numQuads = { 2, 0, 0, 2 };
+                    scene.numModels_yzw = { 0, 0, 0, 0 };
                 }
             );
 
@@ -273,6 +275,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                     scene.nearPlaneDist_missColor = { 0.1f, 0.0f, 0.0f, 0.0f };
 
                     scene.numSpheres_numTris_numOBBs_numQuads = { 0, 0, 2, 6 };
+                    scene.numModels_yzw = { 0, 0, 0, 0 };
                 }
             );
 
@@ -329,6 +332,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                     scene.nearPlaneDist_missColor = { 0.1f, 0.0f, 0.0f, 0.0f };
 
                     scene.numSpheres_numTris_numOBBs_numQuads = { 0, 0, 2, 5 };
+                    scene.numModels_yzw = { 0, 0, 0, 0 };
                 }
             );
 
@@ -381,6 +385,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                     scene.nearPlaneDist_missColor = { 0.1f, 0.5f, 0.5f, 0.5f };
 
                     scene.numSpheres_numTris_numOBBs_numQuads = { 1, 0, 0, 0 };
+                    scene.numModels_yzw = { 0, 0, 0, 0 };
                 }
             );
 
@@ -419,6 +424,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                     scene.nearPlaneDist_missColor = { 0.1f, 0.0f, 0.0f, 0.0f };
 
                     scene.numSpheres_numTris_numOBBs_numQuads = { 0, (unsigned int)triangleIndex, 0, 0 };
+                    scene.numModels_yzw = { 0, 0, 0, 0 };
                 }
             );
 
@@ -437,6 +443,19 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                 }
             );
 
+            // TODO: finish making the jet into a mesh!
+            // TODO: write mesh vertex count in debug display!
+            ret &= ShaderData::StructuredBuffers::Models.Write(
+                context,
+                [&] (ShaderTypes::StructuredBuffers::TModels& models)
+                {
+                    // TODO: this is not a good way to do the calculation!
+                    models[0].position_Radius = {-2.0f, -1.0f, 2.0f, 1.0f};
+                    // TODO: fill this in!
+                    models[0].firstTriangle_lastTriangle_zw = { 0, 0, 0, 0 };
+                }
+            );
+
             ret &= ShaderData::ConstantBuffers::ConstantsOnce.Write(
                 context,
                 [&](ShaderTypes::ConstantBuffers::ConstantsOnce& scene)
@@ -452,6 +471,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                     scene.nearPlaneDist_missColor = { 0.1f, 0.0f, 0.0f, 0.0f };
 
                     scene.numSpheres_numTris_numOBBs_numQuads = { 0, (unsigned int)triangleIndex, 0, 0 };
+                    scene.numModels_yzw = { 1, 0, 0, 0 };
                 }
             );
 
