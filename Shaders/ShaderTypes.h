@@ -129,6 +129,16 @@ struct ModelPrim
   uint4 firstTriangle_lastTriangle_zw;
 };
 
+struct ModelTrianglePrim
+{
+  float4 positionA_w;
+  float4 positionB_w;
+  float4 positionC_w;
+  float4 normal_w;
+  float4 albedo_w;
+  float4 emissive_w;
+};
+
 struct FirstRayHit
 {
   float4 surfaceNormal_intersectTime;
@@ -140,19 +150,16 @@ struct FirstRayHit
 //Structured Buffers
 //----------------------------------------------------------------------------
 StructuredBuffer<SpherePrim> Spheres;
-RWStructuredBuffer<SpherePrim> Spheres_rw;
 
 StructuredBuffer<TrianglePrim> Triangles;
-RWStructuredBuffer<TrianglePrim> Triangles_rw;
 
 StructuredBuffer<QuadPrim> Quads;
-RWStructuredBuffer<QuadPrim> Quads_rw;
 
 StructuredBuffer<OBBPrim> OBBs;
-RWStructuredBuffer<OBBPrim> OBBs_rw;
 
 StructuredBuffer<ModelPrim> Models;
-RWStructuredBuffer<ModelPrim> Models_rw;
+
+StructuredBuffer<ModelTrianglePrim> ModelTriangles;
 
 StructuredBuffer<FirstRayHit> FirstRayHits;
 RWStructuredBuffer<FirstRayHit> FirstRayHits_rw;

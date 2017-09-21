@@ -214,8 +214,9 @@ inline float3 ChangeBasis (const std::array<float, 3>& v, const std::array<float
     };
 }
 
+template <typename T>
 inline void MakeTriangle (
-    ShaderTypes::StructuredBuffers::TrianglePrim& triangle,
+    T& triangle,
     float3 a,
     float3 b,
     float3 c,

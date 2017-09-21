@@ -3,7 +3,8 @@
 #include "tiny_obj_loader.h"
 #include <d3d11.h>
 
-void AddMeshToTriangleSoup (const char* fileName, const char* basePath, ShaderTypes::StructuredBuffers::TTriangles& triangles, size_t& triangleIndex)
+template<typename T>
+void AddMeshToTriangleSoup (const char* fileName, const char* basePath, T& triangles, size_t& triangleIndex)
 {
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
@@ -70,7 +71,8 @@ void AddMeshToTriangleSoup (const char* fileName, const char* basePath, ShaderTy
     }
 }
 
-void AddMeshToTriangleSoup (const char* fileName, const char* basePath, ShaderTypes::StructuredBuffers::TTriangles& triangles, size_t& triangleIndex, float3 position, float3 scale, float3 rotationAxis, float rotationAngle)
+template<typename T>
+void AddMeshToTriangleSoup (const char* fileName, const char* basePath, T& triangles, size_t& triangleIndex, float3 position, float3 scale, float3 rotationAxis, float rotationAngle)
 {
     // remember where the first triangle of the model is going to go
     size_t startingTriangleIndex = triangleIndex;
@@ -438,21 +440,28 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                 [&] (ShaderTypes::StructuredBuffers::TTriangles& triangles)
                 {
                     AddMeshToTriangleSoup("Art/Models/cornell_box.obj", "./Art/Models/", triangles, triangleIndex, {-2.5f, -2.5f, 1.0f}, { 10.0f, 10.0f, 10.0f }, { 0.0f, 1.0f, 0.0f }, 0.0f);
-
-                    AddMeshToTriangleSoup("Art/Models/jet0-0.obj", "./Art/Models/", triangles, triangleIndex, {-2.0f, -1.0f, 2.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f }, DegreesToRadians(0.0f));
                 }
             );
 
-            // TODO: finish making the jet into a mesh!
-            // TODO: write mesh vertex count in debug display!
+            size_t modelTriangleIndex = 0;
+            ret &= ShaderData::StructuredBuffers::ModelTriangles.Write(
+                context,
+                [&] (ShaderTypes::StructuredBuffers::TModelTriangles& triangles)
+                {
+                    AddMeshToTriangleSoup("Art/Models/jet0-0.obj", "./Art/Models/", triangles, modelTriangleIndex, { -2.0f, -1.0f, 2.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f }, DegreesToRadians(0.0f));
+                }
+            );
+
+            // TODO: need to formalize this mesh loading more.
+
             ret &= ShaderData::StructuredBuffers::Models.Write(
                 context,
                 [&] (ShaderTypes::StructuredBuffers::TModels& models)
                 {
-                    // TODO: this is not a good way to do the calculation!
+                    // TODO: this is not a good way to do the bounding sphere calculation!
                     models[0].position_Radius = {-2.0f, -1.0f, 2.0f, 1.0f};
                     // TODO: fill this in!
-                    models[0].firstTriangle_lastTriangle_zw = { 0, 0, 0, 0 };
+                    models[0].firstTriangle_lastTriangle_zw = { 0, (unsigned int)modelTriangleIndex, 0, 0 };
                 }
             );
 

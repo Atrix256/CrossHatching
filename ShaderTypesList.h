@@ -266,6 +266,15 @@ STRUCTURED_BUFFER_BEGIN(Models, ModelPrim, 10, true)
     STRUCTURED_BUFFER_FIELD(firstTriangle_lastTriangle_zw, uint4)
 STRUCTURED_BUFFER_END
 
+STRUCTURED_BUFFER_BEGIN(ModelTriangles, ModelTrianglePrim, 1000, true)
+    STRUCTURED_BUFFER_FIELD(positionA_w, float4)
+    STRUCTURED_BUFFER_FIELD(positionB_w, float4)
+    STRUCTURED_BUFFER_FIELD(positionC_w, float4)
+    STRUCTURED_BUFFER_FIELD(normal_w, float4)
+    STRUCTURED_BUFFER_FIELD(albedo_w, float4)
+    STRUCTURED_BUFFER_FIELD(emissive_w, float4)
+STRUCTURED_BUFFER_END
+
 STRUCTURED_BUFFER_BEGIN(FirstRayHits, FirstRayHit, c_width * c_height, false)
     STRUCTURED_BUFFER_FIELD(surfaceNormal_intersectTime, float4)
     STRUCTURED_BUFFER_FIELD(albedo_w, float4)

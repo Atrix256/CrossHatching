@@ -99,6 +99,8 @@ public:
         return true;
     }
 
+    const std::array<T, NUMELEMENTS>& Read () const { return m_storage; }
+
     ID3D11ShaderResourceView* GetSRV () { return m_structuredBufferSRV.m_ptr; }
     ID3D11UnorderedAccessView* GetUAV() { return m_structuredBufferUAV.m_ptr; }
 

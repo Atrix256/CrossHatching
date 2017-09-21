@@ -392,6 +392,54 @@ void RayIntersectsTriangle (in float3 rayPos, in float3 rayDir, in TrianglePrim 
 }
 
 //----------------------------------------------------------------------------
+void RayIntersectsModelTriangle (in float3 rayPos, in float3 rayDir, in ModelTrianglePrim trianglePrim, inout SRayHitInfo rayHitInfo)
+{
+    // This function adapted from GraphicsCodex.com
+
+    /* If ray P + tw hits triangle V[0], V[1], V[2], then the function returns true,
+    stores the barycentric coordinates in b[], and stores the distance to the intersection
+    in t. Otherwise returns false and the other output parameters are undefined.*/
+
+    // Edge vectors
+    float3 e_1 = trianglePrim.positionB_w.xyz - trianglePrim.positionA_w.xyz;
+    float3 e_2 = trianglePrim.positionC_w.xyz - trianglePrim.positionA_w.xyz;
+
+    float3 q = cross(rayDir, e_2);
+    float a = dot(e_1, q);
+
+    if (abs(a) == 0.0f)
+        return;
+
+    float3 s = (rayPos - trianglePrim.positionA_w.xyz) / a;
+    float3 r = cross(s, e_1);
+    float3 b; // b is barycentric coordinates
+    b[0] = dot(s, q);
+    b[1] = dot(r, rayDir);
+    b[2] = 1.0f - b[0] - b[1];
+    // Intersected outside triangle?
+    if ((b[0] < 0.0f) || (b[1] < 0.0f) || (b[2] < 0.0f))
+        return;
+    float t = dot(e_2, r);
+    if (t < 0.0f)
+        return;
+
+    //enforce a max distance if we should
+    if (rayHitInfo.m_intersectTime >= 0.0 && t > rayHitInfo.m_intersectTime)
+        return;
+
+    // make sure normal is facing opposite of ray direction.
+    // this is for if we are hitting the object from the inside / back side.
+    float3 normal = trianglePrim.normal_w.xyz;
+    if (dot(normal, rayDir) > 0.0f)
+        normal *= -1.0f;
+
+    rayHitInfo.m_intersectTime = t;
+    rayHitInfo.m_surfaceNormal = normal;
+    rayHitInfo.m_albedo = trianglePrim.albedo_w.xyz;
+    rayHitInfo.m_emissive = trianglePrim.emissive_w.xyz;
+}
+
+//----------------------------------------------------------------------------
 void RayIntersectsModel (in float3 rayPos, in float3 rayDir, in ModelPrim modelPrim, inout SRayHitInfo rayHitInfo)
 {
     // if the ray misses the bounding sphere of the mesh, it's a total miss
@@ -409,7 +457,7 @@ void RayIntersectsModel (in float3 rayPos, in float3 rayDir, in ModelPrim modelP
 
     // else test each triangle in the mesh
     for (int i = modelPrim.firstTriangle_lastTriangle_zw.x; i <= modelPrim.firstTriangle_lastTriangle_zw.y; ++i)
-        RayIntersectsTriangle(rayPos, rayDir, Triangles[i], rayHitInfo);
+        RayIntersectsModelTriangle(rayPos, rayDir, ModelTriangles[i], rayHitInfo);
 }
 
 //----------------------------------------------------------------------------

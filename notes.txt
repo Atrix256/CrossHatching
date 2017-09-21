@@ -1,3 +1,6 @@
+? is bounding sphere / normalization correct?
+ * am i mixing diameter with radius?
+
 * could have a bounding shape on "instanced meshes" which if the ray hits, gives a start/stop triangle index range to test ray against.
  * could also possibly have a scale, translation, rotation for instance.
  * try only if actually needed.
