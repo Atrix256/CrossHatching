@@ -144,7 +144,11 @@ bool WriteShaderTypesHLSL (void)
 
     // write the structured buffer declarations
     fprintf(file, "//----------------------------------------------------------------------------\n//Structured Buffers\n//----------------------------------------------------------------------------\n");
-    #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT, CPUWRITES) fprintf(file, "StructuredBuffer<" #TYPENAME "> " #NAME ";\nRWStructuredBuffer<" #TYPENAME "> " #NAME "_rw;\n\n");
+    #define STRUCTURED_BUFFER_BEGIN(NAME, TYPENAME, COUNT, CPUWRITES) \
+        fprintf(file, "StructuredBuffer<" #TYPENAME "> " #NAME ";\n"); \
+        if (!CPUWRITES) fprintf(file, "RWStructuredBuffer<" #TYPENAME "> " #NAME "_rw;\n"); \
+        fprintf(file, "\n");
+
     #include "ShaderTypesList.h"
 
     fclose(file);
