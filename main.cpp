@@ -235,11 +235,12 @@ void IMGUIWindow ()
             float samplesPerSecond = FPSLast * float(ShaderData::ConstantBuffers::ConstantsPerFrame.Read().sampleCount_samplesPerFrame_zw[1]);
 
             unsigned int meshTriangleCount = 0;
-            for (size_t i = 0, count = ShaderData::ConstantBuffers::ConstantsOnce.Read().numModels_yzw[0]; i < count; ++i)
+            unsigned int meshCount = ShaderData::ConstantBuffers::ConstantsOnce.Read().numModels_yzw[0];
+            for (size_t i = 0; i < meshCount; ++i)
                 meshTriangleCount += ShaderData::StructuredBuffers::Models.Read()[i].firstTriangle_lastTriangle_zw[1] - ShaderData::StructuredBuffers::Models.Read()[i].firstTriangle_lastTriangle_zw[0];
 
             uint4 counts = ShaderData::ConstantBuffers::ConstantsOnce.Read().numSpheres_numTris_numOBBs_numQuads;
-            ImGui::Text("Rendering at %u x %u\nSpheres: %u\nTriangles: %u\nOBBs: %u\nQuads: %u\nMesh Triangles: %u\n", c_width, c_height, counts[0], counts[1], counts[2], counts[3], meshTriangleCount);
+            ImGui::Text("Rendering at %u x %u\nSpheres: %u\nTriangles: %u\nOBBs: %u\nQuads: %u\nMeshes: %u triangles in %u meshes\n", c_width, c_height, counts[0], counts[1], counts[2], counts[3], meshTriangleCount, meshCount);
             ImGui::Text("FPS: %0.2f (%0.2f ms)", framesPerSecond, msPerFrame);
             ImGui::Text("%u samples (%0.2f samples per second)\n", g_samplesTotal, samplesPerSecond);
             ImGui::Separator();

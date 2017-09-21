@@ -177,12 +177,18 @@ std::array<float, N> operator* (const std::array<float, N>& A, float B)
 }
 
 template <size_t N>
+inline float LengthSq (std::array<float, N>& v)
+{
+    float lensq = 0.0f;
+    for (float f : v)
+        lensq += f*f;
+    return lensq;
+}
+
+template <size_t N>
 inline float Length (std::array<float, N>& v)
 {
-    float len = 0.0f;
-    for (float f : v)
-        len += f*f;
-    return std::sqrtf(len);
+    return std::sqrtf(LengthSq(v));
 }
 
 template <size_t N>

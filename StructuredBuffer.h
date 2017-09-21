@@ -74,11 +74,14 @@ public:
     }
 
     template <typename LAMBDA>
-    bool Write (ID3D11DeviceContext* deviceContext, LAMBDA& lambda)
+    void WriteNoFlush (LAMBDA& lambda)
     {
         // let the caller write to the storage. They can accept it as a reference
         lambda(m_storage);
+    }
 
+    bool FlushWrites (ID3D11DeviceContext* deviceContext)
+    {
         // prepare to write to the structred buffer
         HRESULT result;
         D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -97,6 +100,13 @@ public:
         // We are done writing
         deviceContext->Unmap(m_structuredBuffer.m_ptr, 0);
         return true;
+    }
+
+    template <typename LAMBDA>
+    bool Write (ID3D11DeviceContext* deviceContext, LAMBDA& lambda)
+    {
+        WriteNoFlush(lambda);
+        return FlushWrites(deviceContext);
     }
 
     const std::array<T, NUMELEMENTS>& Read () const { return m_storage; }

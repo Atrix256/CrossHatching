@@ -72,7 +72,7 @@ void AddMeshToTriangleSoup (const char* fileName, const char* basePath, T& trian
 }
 
 template<typename T>
-void AddMeshToTriangleSoup (const char* fileName, const char* basePath, T& triangles, size_t& triangleIndex, float3 position, float3 scale, float3 rotationAxis, float rotationAngle)
+float AddMeshToTriangleSoup (const char* fileName, const char* basePath, T& triangles, size_t& triangleIndex, float3 position, float3 scale, float3 rotationAxis, float rotationAngle)
 {
     // remember where the first triangle of the model is going to go
     size_t startingTriangleIndex = triangleIndex;
@@ -82,7 +82,7 @@ void AddMeshToTriangleSoup (const char* fileName, const char* basePath, T& trian
 
     // bail out if no triangles added for this mesh
     if (startingTriangleIndex == triangleIndex)
-        return;
+        return 0.0f;
 
     // get the largest absolute valued position vector component so we can scale the mesh to fit within a normalized cube
     float Max = 0.0f;
@@ -162,6 +162,52 @@ void AddMeshToTriangleSoup (const char* fileName, const char* basePath, T& trian
         triangles[i].normal_w[1] = norm[1];
         triangles[i].normal_w[2] = norm[2];
     }
+
+    // return the radius of the mesh: the distance to the farthest point, from position.
+    float radiusSq = 0.0f;
+    for (size_t i = startingTriangleIndex; i < triangleIndex; ++i)
+    {
+        float lengthSq = LengthSq(XYZ(triangles[i].positionA_w) - position);
+        radiusSq = max(radiusSq, lengthSq);
+
+        lengthSq = LengthSq(XYZ(triangles[i].positionB_w) - position);
+        radiusSq = max(radiusSq, lengthSq);
+
+        lengthSq = LengthSq(XYZ(triangles[i].positionC_w) - position);
+        radiusSq = max(radiusSq, lengthSq);
+    }
+
+    return std::sqrt(radiusSq);
+}
+
+void AddMeshToScene (const char* fileName, size_t& modelIndex, size_t& modelTriangleIndex, float3 position, float3 scale, float3 rotationAxis, float rotationAngle)
+{
+    size_t firstTriangle = modelTriangleIndex;
+
+    float meshRadius = 0.0f;
+    ShaderData::StructuredBuffers::ModelTriangles.WriteNoFlush(
+        [&] (ShaderTypes::StructuredBuffers::TModelTriangles& triangles)
+        {
+            meshRadius = AddMeshToTriangleSoup(fileName, "./Art/Models/", triangles, modelTriangleIndex, position, scale, rotationAxis, rotationAngle);
+        }
+    );
+
+    ShaderData::StructuredBuffers::Models.WriteNoFlush(
+        [&] (ShaderTypes::StructuredBuffers::TModels& models)
+        {
+            models[modelIndex].position_Radius = { position[0], position[1], position[2], meshRadius};
+            models[modelIndex].firstTriangle_lastTriangle_zw = { (unsigned int)firstTriangle, (unsigned int)modelTriangleIndex, 0, 0 };
+        }
+    );
+
+    ++modelIndex;
+}
+
+bool FinalizeSceneMeshes (ID3D11DeviceContext* context)
+{
+    return
+        ShaderData::StructuredBuffers::ModelTriangles.FlushWrites(context) &&
+        ShaderData::StructuredBuffers::Models.FlushWrites(context);
 }
 
 bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
@@ -435,6 +481,9 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
         case EScene::ObjTest:
         {
             size_t triangleIndex = 0;
+            size_t modelTriangleIndex = 0;
+            size_t modelIndex = 0;
+
             ret &= ShaderData::StructuredBuffers::Triangles.Write(
                 context,
                 [&] (ShaderTypes::StructuredBuffers::TTriangles& triangles)
@@ -443,27 +492,9 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                 }
             );
 
-            size_t modelTriangleIndex = 0;
-            ret &= ShaderData::StructuredBuffers::ModelTriangles.Write(
-                context,
-                [&] (ShaderTypes::StructuredBuffers::TModelTriangles& triangles)
-                {
-                    AddMeshToTriangleSoup("Art/Models/jet0-0.obj", "./Art/Models/", triangles, modelTriangleIndex, { -2.0f, -1.0f, 2.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f }, DegreesToRadians(0.0f));
-                }
-            );
-
-            // TODO: need to formalize this mesh loading more.
-
-            ret &= ShaderData::StructuredBuffers::Models.Write(
-                context,
-                [&] (ShaderTypes::StructuredBuffers::TModels& models)
-                {
-                    // TODO: this is not a good way to do the bounding sphere calculation!
-                    models[0].position_Radius = {-2.0f, -1.0f, 2.0f, 1.0f};
-                    // TODO: fill this in!
-                    models[0].firstTriangle_lastTriangle_zw = { 0, (unsigned int)modelTriangleIndex, 0, 0 };
-                }
-            );
+            AddMeshToScene("Art/Models/jet0-0.obj", modelIndex, modelTriangleIndex, { -2.0f, -1.0f, 2.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f }, DegreesToRadians(0.0f));
+            AddMeshToScene("Art/Models/jet0-0.obj", modelIndex, modelTriangleIndex, { -1.0f, -0.9f, 2.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f }, DegreesToRadians(0.0f));
+            ret &= FinalizeSceneMeshes(context);
 
             ret &= ShaderData::ConstantBuffers::ConstantsOnce.Write(
                 context,
@@ -480,7 +511,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                     scene.nearPlaneDist_missColor = { 0.1f, 0.0f, 0.0f, 0.0f };
 
                     scene.numSpheres_numTris_numOBBs_numQuads = { 0, (unsigned int)triangleIndex, 0, 0 };
-                    scene.numModels_yzw = { 1, 0, 0, 0 };
+                    scene.numModels_yzw = { (unsigned int)modelIndex, 0, 0, 0 };
                 }
             );
 

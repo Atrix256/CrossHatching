@@ -1,12 +1,3 @@
-? is bounding sphere / normalization correct?
- * am i mixing diameter with radius?
-
-* could have a bounding shape on "instanced meshes" which if the ray hits, gives a start/stop triangle index range to test ray against.
- * could also possibly have a scale, translation, rotation for instance.
- * try only if actually needed.
- * should know when actual models used
- * compare rendering speed, make sure it's worthwhile. It definitely should be, but...
-
 * make your own texture(s)!
  * try erode / dilute in gimp.  Not sure how to do the "even brightness" thing the paper talks about though.
   * need a new crosshatch texture
@@ -62,6 +53,10 @@ Sean said he'd be willing to give me textures.
 * could also directly sample the light to make it converge faster (i think you should, if it's unbiased!)
 
 * record movie support
+
+* alternate idea: the texture could be thresholded instead of having slices. (From Jason)
+ * but texture goes to 1bit basically instead of greyscale.
+ * artists may also want control, like changing technique at different darkness levels.
 
 * could also offset each axis a little bit seperately
  * these and more talked about here:
