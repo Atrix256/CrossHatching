@@ -22,28 +22,6 @@ SPixelInput vs_main(Pos2D input)
 }
 
 //----------------------------------------------------------------------------
-// TODO: put these color conversion functions in a header
-// TODO: may not need these in the end
-// from https://www.pcmag.com/encyclopedia/term/55166/yuv-rgb-conversion-formulas
-float3 RGBToYUV (float3 rgb)
-{
-	float3 yuv;
-	yuv.x = dot(rgb, float3(0.299f, 0.587f, 0.114f));
-	yuv.y = 0.492f * (rgb.b - yuv.x);
-	yuv.z = 0.877f * (rgb.r - yuv.x);
-	return yuv;
-}
-
-float3 YUVToRGB (float3 yuv)
-{
-	float3 rgb;
-	rgb.r = yuv.x + 1.140f*yuv.z;
-	rgb.g = yuv.x - 0.395f*yuv.y - 0.581f*yuv.z;
-	rgb.b = yuv.x + 2.032f*yuv.y;
-	return clamp(rgb, 0.0f, 1.0f);
-}
-
-//----------------------------------------------------------------------------
 float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch, bool smoothStep, bool aniso)
 {
     // get our first ray hit info from the FirstRayHits buffer
@@ -83,20 +61,15 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch, bool s
 	// reinhard operator to convert from HDR to SDR
 	light = light / (light + 1.0f);
 
-	// convert SDR RGB to YUV. Y is brightness and UV is hue.
-	float3 yuv = RGBToYUV(light);
+	// get the brightness of this SDR RGB value. aka get Y from YUV.
+    float brightness = dot(light, float3(0.299f, 0.587f, 0.114f));
 
     // remap the brightness using the black point / white point
-    yuv.x = uvmultiplier_blackPoint_whitePoint_triplanarPow.y + yuv.x * (uvmultiplier_blackPoint_whitePoint_triplanarPow.z - uvmultiplier_blackPoint_whitePoint_triplanarPow.y);
+    brightness = uvmultiplier_blackPoint_whitePoint_triplanarPow.y + brightness * (uvmultiplier_blackPoint_whitePoint_triplanarPow.z - uvmultiplier_blackPoint_whitePoint_triplanarPow.y);
 
     // smoothstep the result if we are supposed to
     if (smoothStep)
-        yuv.x = smoothstep(0.0f, 1.0f, yuv.x);
-
-	// convert full bright UV back to RGB to get the fully bright color of this pixel
-	// TODO: honestly i think maybe the idea of full bright color is flawed. need to rethink this...
-	// TODO: how do we get full bright color??
-	//float3 fullBrightRGB = YUVToRGB(float3(0.5f, yuv.yz));
+        brightness = smoothstep(0.0f, 1.0f, brightness);
 
     // apply cross hatching
     if (crossHatch)
@@ -111,7 +84,7 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch, bool s
         // caclulate the array slice to read
 		uint volumeDimsX, volumeDimsY, volumeDimsZ;
         circlesarray.GetDimensions(volumeDimsX, volumeDimsY, volumeDimsZ);
-        float w = yuv.x * float(volumeDimsZ);
+        float w = brightness * float(volumeDimsZ);
         
 		// triplanar projection sample the crosshatching texture
         // we need to manually lerp to get trilinear interpolation between slice samples
@@ -155,7 +128,7 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch, bool s
     }
 	else if (greyScale)
 	{
-		light.xyz = yuv.x;
+		light.xyz = brightness;
 	}
 
     // return sRGB corrected value

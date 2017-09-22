@@ -100,7 +100,18 @@ DX11 guide: http://www.rastertek.com/dx11tut02.html
 * the macro to reflect things are way handy until you have to debug them, then they are just a pain.
  * VS needs to make it easier to debug macros, by letting you step through expanded macro code perhaps.
 
-
- Questions for researcher:
-  * when doing triplanar are the normals in world space or screen space?
-  * taking a hand drawn (greyscale) image and making it constant brightness: ???
+Tonemapping:
+* I do a simple per channel reinhard tone mapping to go from HDR to SDR.
+  * To go to greyscale, i get the Y (as in YUV) brightness
+   * this value is linearly remapped (same percentage) as being from 0 to 1, to being between the black point and white point.
+   * you can optionally smoothstep this value which is an S curve that increases contrast.
+  * This greyscale / brightness value is what is used to select where to sample in the texture array. it interpolates between the two closest slices.
+? why do reinhardt per color channel?
+ * apparently it is a feature, not a bug.
+ * also... reinhard is a single hump curve. filmic is an S curve.  I do reinhard, and then optionally let you give an s curve with the smoothstep, and adjust white / black with those settings.
+ * This stuff is a deep topic with many subjective opinions. Some places to read more details:
+  * https://imdoingitwrong.wordpress.com/2010/08/19/why-reinhard-desaturates-my-blacks-3/
+  * https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
+  * http://filmicworlds.com/blog/filmic-tonemapping-operators/
+  * http://filmicworlds.com/blog/filmic-tonemapping-with-piecewise-power-curves/
+  * http://filmicworlds.com/blog/why-reinhard-desaturates-your-blacks/

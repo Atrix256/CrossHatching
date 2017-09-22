@@ -492,8 +492,11 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                 }
             );
 
-            AddMeshToScene("Art/Models/jet0-0.obj", modelIndex, modelTriangleIndex, { -2.0f, -1.0f, 2.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f }, DegreesToRadians(0.0f));
-            AddMeshToScene("Art/Models/jet0-0.obj", modelIndex, modelTriangleIndex, { -1.0f, -0.9f, 2.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f }, DegreesToRadians(0.0f));
+            AddMeshToScene("Art/Models/jet0-0.obj", modelIndex, modelTriangleIndex, { -2.0f, -1.0f, 2.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 1.0f }, DegreesToRadians(0.0f));
+            AddMeshToScene("Art/Models/jet0-0.obj", modelIndex, modelTriangleIndex, { -1.0f, -0.8f, 2.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 1.0f }, DegreesToRadians(20.0f));
+            AddMeshToScene("Art/Models/jet0-0.obj", modelIndex, modelTriangleIndex, {  0.0f, -0.6f, 2.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 1.0f }, DegreesToRadians(40.0f));
+            AddMeshToScene("Art/Models/jet0-0.obj", modelIndex, modelTriangleIndex, {  1.0f, -0.4f, 2.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 1.0f }, DegreesToRadians(60.0f));
+            AddMeshToScene("Art/Models/jet0-0.obj", modelIndex, modelTriangleIndex, {  2.0f, -0.2f, 2.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 1.0f }, DegreesToRadians(80.0f));
             ret &= FinalizeSceneMeshes(context);
 
             ret &= ShaderData::ConstantBuffers::ConstantsOnce.Write(
@@ -519,8 +522,6 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
         }
         case EScene::Spheres:
         {
-            // TODO: a scene with more pieces of geometry and a few different lights, and less overpowering sky color
-
             ret &= ShaderData::ConstantBuffers::ConstantsOnce.Write(
                 context,
                 [](ShaderTypes::ConstantBuffers::ConstantsOnce& scene)
@@ -535,7 +536,7 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
 
                     scene.nearPlaneDist_missColor = { 0.1f, 0.01f, 0.01f, 0.01f };
 
-                    scene.numSpheres_numTris_numOBBs_numQuads = { 6, 0, 3, 2 };
+                    scene.numSpheres_numTris_numOBBs_numQuads = { 9, 0, 3, 2 };
                     scene.numModels_yzw = { 0, 0, 0, 0 };
                 }
             );
@@ -547,6 +548,10 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
                     MakeSphere(spheres[0], { 4.0f, 4.0f, 6.0f }, 0.5f, { 0.0f, 0.0f, 0.0f }, { 10.0f, 5.0f, 5.0f });
                     MakeSphere(spheres[4], { 6.0f, 4.0f, -4.0f }, 0.5f, { 0.0f, 0.0f, 0.0f }, { 5.0f, 10.0f, 5.0f });
                     MakeSphere(spheres[5], { -4.0f, 4.0f, -2.0f }, 0.5f, { 0.0f, 0.0f, 0.0f }, { 5.0f, 5.0f, 10.0f });
+
+                    MakeSphere(spheres[6], { 2.0f, -1.75f, 3.0f }, 0.25f, { 0.0f, 0.0f, 0.0f }, { 20.0f, 0.0f, 0.0f });
+                    MakeSphere(spheres[7], { 3.0f, -1.75f, -1.0f }, 0.25f, { 0.0f, 0.0f, 0.0f }, { 0.0f, 20.0f, 0.0f });
+                    MakeSphere(spheres[8], { 0.0f, -1.75f, 0.0f }, 0.25f, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 20.0f });
 
                     MakeSphere(spheres[1], { 0.0f, 0.0f, 4.0f }, 2.0f, { 1.0f, 0.1f, 0.1f }, { 0.0f, 0.0f, 0.0f });
                     MakeSphere(spheres[2], { 3.0f, -1.0f, 5.0f }, 1.0f, { 0.1f, 1.0f, 0.1f }, { 0.0f, 0.0f, 0.0f });
