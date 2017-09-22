@@ -62,6 +62,8 @@ Sean said he'd be willing to give me textures.
  * these and more talked about here:
  * https://medium.com/@bgolus/normal-mapping-for-a-triplanar-shader-10bf39dca05a
 
+* BVH for ray traversal. using surface area heuristic?
+
 ================================= HIGH LEVEL GOALS =================================
 
 1) path trace diffuse / emissive of a scene with a mesh. (monochromatic?)

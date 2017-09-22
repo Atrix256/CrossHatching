@@ -177,7 +177,8 @@ void IMGUIWindow ()
             "Cornell Box Big Light",
             "Furnace Test",
             "Cornell Obj",
-            "Obj Test"
+            "Obj Test",
+            "Spheres"
         };
 
         if (ImGui::CollapsingHeader("Scene", ImGuiTreeNodeFlags_DefaultOpen))

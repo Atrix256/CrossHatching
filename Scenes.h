@@ -11,6 +11,7 @@ enum class EScene
     FurnaceTest,
     CornellObj,
     ObjTest,
+    Spheres,
     COUNT
 };
 

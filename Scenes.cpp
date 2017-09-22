@@ -517,6 +517,63 @@ bool FillSceneData (EScene scene, ID3D11DeviceContext* context)
 
             break;
         }
+        case EScene::Spheres:
+        {
+            // TODO: a scene with more pieces of geometry and a few different lights, and less overpowering sky color
+
+            ret &= ShaderData::ConstantBuffers::ConstantsOnce.Write(
+                context,
+                [](ShaderTypes::ConstantBuffers::ConstantsOnce& scene)
+                {
+                    scene.cameraPos_FOVX[0] = 0.0f;
+                    scene.cameraPos_FOVX[1] = 0.0f;
+                    scene.cameraPos_FOVX[2] = -10.0f;
+
+                    scene.cameraAt_FOVY[0] = 0.0f;
+                    scene.cameraAt_FOVY[1] = 0.0f;
+                    scene.cameraAt_FOVY[2] = 0.0f;
+
+                    scene.nearPlaneDist_missColor = { 0.1f, 0.01f, 0.01f, 0.01f };
+
+                    scene.numSpheres_numTris_numOBBs_numQuads = { 6, 0, 3, 2 };
+                    scene.numModels_yzw = { 0, 0, 0, 0 };
+                }
+            );
+
+            ret &= ShaderData::StructuredBuffers::Spheres.Write(
+                context,
+                [] (ShaderTypes::StructuredBuffers::TSpheres& spheres)
+                {
+                    MakeSphere(spheres[0], { 4.0f, 4.0f, 6.0f }, 0.5f, { 0.0f, 0.0f, 0.0f }, { 10.0f, 5.0f, 5.0f });
+                    MakeSphere(spheres[4], { 6.0f, 4.0f, -4.0f }, 0.5f, { 0.0f, 0.0f, 0.0f }, { 5.0f, 10.0f, 5.0f });
+                    MakeSphere(spheres[5], { -4.0f, 4.0f, -2.0f }, 0.5f, { 0.0f, 0.0f, 0.0f }, { 5.0f, 5.0f, 10.0f });
+
+                    MakeSphere(spheres[1], { 0.0f, 0.0f, 4.0f }, 2.0f, { 1.0f, 0.1f, 0.1f }, { 0.0f, 0.0f, 0.0f });
+                    MakeSphere(spheres[2], { 3.0f, -1.0f, 5.0f }, 1.0f, { 0.1f, 1.0f, 0.1f }, { 0.0f, 0.0f, 0.0f });
+                    MakeSphere(spheres[3], { 5.5f, -1.0f, 4.0f }, 1.0f, { 0.1f, 0.1f, 1.0f }, { 0.0f, 0.0f, 0.0f });
+                }
+            );
+
+            ret &= ShaderData::StructuredBuffers::OBBs.Write(
+                context,
+                [] (ShaderTypes::StructuredBuffers::TOBBs& quads)
+                {
+                    MakeOBB(quads[0], { 0.0f, -1.0f, -2.0f }, { 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f }, DegreesToRadians(45.0f), { 0.1f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f });
+                    MakeOBB(quads[1], { 3.0f, -1.0f, -3.0f }, { 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f }, DegreesToRadians(80.0f), { 1.0f, 0.1f, 1.0f }, { 0.0f, 0.0f, 0.0f });
+                    MakeOBB(quads[2], { 5.5f, -1.0f, -2.0f }, { 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f }, DegreesToRadians(22.0f), { 1.0f, 1.0f, 0.1f }, { 0.0f, 0.0f, 0.0f });
+                }
+            );
+
+            ret &= ShaderData::StructuredBuffers::Quads.Write(
+                context,
+                [] (ShaderTypes::StructuredBuffers::TQuads& Quads)
+                {
+                    MakeQuad(Quads[0], { -4.0f, -3.0f, -4.0f }, { -4.0f, 2.0f, -4.0f }, { -4.0f, 2.0f, 12.0f }, { -4.0f, -3.0f, 12.0f }, { 0.8f, 0.9f, 0.8f }, { 0.0f, 0.0f, 0.0f });
+                    MakeQuad(Quads[1], { -15.0f, -2.0f, 15.0f }, { 15.0f, -2.0f, 15.0f }, { 15.0f, -2.0f, -15.0f }, { -15.0f, -2.0f, -15.0f }, { 0.9f, 0.8f, 0.8f }, { 0.0f, 0.0f, 0.0f });
+                }
+            );
+            break;
+        }
         default:
         {
             ret = false;
