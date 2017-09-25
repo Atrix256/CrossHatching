@@ -16,6 +16,7 @@
 // globals
 bool g_showGrey = false;
 bool g_showCrossHatch = false;
+bool g_explicitCrossHatch = false;
 bool g_smoothStep = false;
 bool g_aniso = false;
 bool g_whiteAlbedo = false;
@@ -217,6 +218,7 @@ void IMGUIWindow ()
         {
             ImGui::Checkbox("Grey Scale", &g_showGrey);
             ImGui::Checkbox("Cross Hatch", &g_showCrossHatch);
+            ImGui::Checkbox("Explicit Cross Hatch", &g_explicitCrossHatch);
             ImGui::Checkbox("16x Anisotropic Sampling", &g_aniso);
             updateConstants |= ImGui::SliderFloat("UV Scale", &g_uvScale, 0.1f, 3.0f);
             updateConstants |= ImGui::SliderFloat("Triplanar Blend Sharpness", &g_triplanarPow, 0.1f, 8.0f);
@@ -429,7 +431,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
             UnbindShaderTextures<EShaderType::compute>(g_d3d.Context(), computeShader.GetReflector());
 
             // vs/ps to show the results of the path tracing
-            const CShader& shader = ShaderData::GetShader_showPathTrace({g_showGrey, g_showCrossHatch, g_smoothStep, g_aniso});
+            const CShader& shader = ShaderData::GetShader_showPathTrace({g_showGrey, g_showCrossHatch, g_smoothStep, g_aniso, g_explicitCrossHatch});
             FillShaderParams<EShaderType::vertex>(g_d3d.Context(), shader.GetVSReflector());
             FillShaderParams<EShaderType::pixel>(g_d3d.Context(), shader.GetPSReflector());
             g_fullScreenMesh.Set(g_d3d.Context());

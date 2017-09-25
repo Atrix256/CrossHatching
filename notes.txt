@@ -1,3 +1,7 @@
+* things that would be nice to do from http://www.floored.com/blog/2014sketch-rendering/
+ * optional: edge detect / highlight using "planes" technique.
+ * optional: imperfect line using wavy texture. more wavyness at center of screen.
+
 * make your own texture(s)!
  * try erode / dilute in gimp.  Not sure how to do the "even brightness" thing the paper talks about though.
   * need a new crosshatch texture
@@ -115,3 +119,6 @@ Tonemapping:
   * http://filmicworlds.com/blog/filmic-tonemapping-operators/
   * http://filmicworlds.com/blog/filmic-tonemapping-with-piecewise-power-curves/
   * http://filmicworlds.com/blog/why-reinhard-desaturates-your-blacks/
+
+
+* the explicit crosshatching option comes from the floored.com page

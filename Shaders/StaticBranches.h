@@ -4,3 +4,4 @@
 #define SBCrossHatch 1
 #define SBSmoothStep 1
 #define SBAniso 1
+#define SBExplicitCrossHatch 1
