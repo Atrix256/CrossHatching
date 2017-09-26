@@ -28,6 +28,7 @@ float g_triplanarPow = 4.0f;
 float g_uvScale = 0.25f;
 float g_blackPoint = 0.0f;
 float g_whitePoint = 1.0f;
+float g_overlayOpacity = 1.0f;
 
 CModel<ShaderTypes::VertexFormats::Pos2D> g_fullScreenMesh;
 
@@ -89,6 +90,7 @@ bool init ()
             data.numSpheres_numTris_numOBBs_numQuads = { 0, 0, 0, 0 };
             data.numModels_yzw = { 0, 0, 0, 0 };
 			data.uvmultiplier_blackPoint_whitePoint_triplanarPow = { g_uvScale, g_blackPoint, g_whitePoint, g_triplanarPow };
+            data.overlayOpacity_yzw = { g_overlayOpacity, 0.0f, 0.0f, 0.0f };
         }
     );
     if (!writeOK)
@@ -222,6 +224,7 @@ void IMGUIWindow ()
             ImGui::Checkbox("16x Anisotropic Sampling", &g_aniso);
             updateConstants |= ImGui::SliderFloat("UV Scale", &g_uvScale, 0.1f, 3.0f);
             updateConstants |= ImGui::SliderFloat("Triplanar Blend Sharpness", &g_triplanarPow, 0.1f, 8.0f);
+            updateConstants |= ImGui::SliderFloat("Overlay Opacity", &g_overlayOpacity, 0.0f, 1.0f);
         }
 
         if (ImGui::CollapsingHeader("Brightness", ImGuiTreeNodeFlags_DefaultOpen))
@@ -262,6 +265,7 @@ void IMGUIWindow ()
                 [=] (ShaderTypes::ConstantBuffers::ConstantsOnce& data)
                 {
                     data.uvmultiplier_blackPoint_whitePoint_triplanarPow = { g_uvScale, g_blackPoint, g_whitePoint, g_triplanarPow };
+                    data.overlayOpacity_yzw[0] = g_overlayOpacity;
                 }
             );
         }

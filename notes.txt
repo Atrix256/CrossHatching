@@ -8,11 +8,6 @@
  * need to figure out how to process the cross hatching textures. dilation filter, even color texture etc.
   * eventually write code that does this, or figure out steps in gimp.
 
-* could do some mesh instancing where a model primitive transforms the incoming and outgoing ray / normals etc.
- * instead of making more triangles.
-
-* make some better scenes that don't use models too. some spheres and boxes doing color bleed, shadows, multiple lights, etc.
-
 * get some fun models to use for testing, make some fun scenes.
  * Models at turbosquid! https://www.turbosquid.com/
   * and unity store
@@ -30,6 +25,14 @@
  * like here in main.cpp
  * const CShader& shader = ShaderData::GetShader_showPathTrace({g_showGrey, g_showCrossHatch, g_smoothStep, g_aniso});
  * if i give too few arguments it's just fine with it. they are all anonymous too.
+
+* find the features you like from here and implement: http://www.floored.com/blog/2014sketch-rendering/
+ * wiggly lines
+ * cross hatching
+ * etc
+
+* find the features you like from here and implement: http://hhoppe.com/proj/hatching/
+ * lines follow curvature, like sean and i were chatting about, but there's more to sean's thing.
 
 TODO's in code
 
@@ -68,6 +71,14 @@ Sean said he'd be willing to give me textures.
 
 * BVH for ray traversal. using surface area heuristic?
 
+* object space path tracing. store samples into a texture that covers the scene, since lighting etc is static. should be a great help for camera movement.
+
+* an option for doing specular reflection? simple: do fresnel to decide probabilty of diffuse vs spec. random number to choose which to do.
+
+* could do some mesh instancing where a model primitive transforms the incoming and outgoing ray / normals etc.
+ * instead of making more triangles.
+
+
 ================================= HIGH LEVEL GOALS =================================
 
 1) path trace diffuse / emissive of a scene with a mesh. (monochromatic?)
@@ -90,6 +101,7 @@ DX11 guide: http://www.rastertek.com/dx11tut02.html
 * tiny obj loader: https://github.com/syoyo/tinyobjloader
 
 * a similar, interesting technique: http://www.floored.com/blog/2014sketch-rendering/
+* and another: http://hhoppe.com/proj/hatching/
 
 * imgui: https://github.com/ocornut/imgui
 

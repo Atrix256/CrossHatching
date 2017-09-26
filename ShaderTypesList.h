@@ -213,6 +213,7 @@ CONSTANT_BUFFER_BEGIN(ConstantsOnce)
     CONSTANT_BUFFER_FIELD(cameraAt_FOVY, float4)
     CONSTANT_BUFFER_FIELD(nearPlaneDist_missColor, float4)
     CONSTANT_BUFFER_FIELD(uvmultiplier_blackPoint_whitePoint_triplanarPow, float4)
+    CONSTANT_BUFFER_FIELD(overlayOpacity_yzw, float4)
     CONSTANT_BUFFER_FIELD(numSpheres_numTris_numOBBs_numQuads, uint4)
     CONSTANT_BUFFER_FIELD(numModels_yzw, uint4)
 CONSTANT_BUFFER_END

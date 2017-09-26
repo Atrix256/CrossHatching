@@ -57,6 +57,7 @@ cbuffer ConstantsOnce
   float4 cameraAt_FOVY;
   float4 nearPlaneDist_missColor;
   float4 uvmultiplier_blackPoint_whitePoint_triplanarPow;
+  float4 overlayOpacity_yzw;
   uint4 numSpheres_numTris_numOBBs_numQuads;
   uint4 numModels_yzw;
 };

@@ -114,6 +114,9 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch, bool s
         light = nearPlaneDist_missColor.yzw;
     }
 
+    // store off the color sample for use with overlay opacity blending
+    float3 colorSample = light;
+
 	// reinhard operator to convert from HDR to SDR
 	light = light / (light + 1.0f);
 
@@ -144,6 +147,9 @@ float3 GetPixelColor (SPixelInput input, bool greyScale, bool crossHatch, bool s
 	{
 		light.xyz = brightness;
 	}
+
+    // do overlay opacity blending
+    light = lerp(colorSample, light, overlayOpacity_yzw.x);
 
     // return sRGB corrected value
     return pow(light, 1.0f / 2.0f);

@@ -5,6 +5,8 @@ VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CrossHatching", "CrossHatching.vcxproj", "{AEB611E0-1C67-4605-9A33-D35B634B8218}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TAMGenerator", "TAMGenerator\TAMGenerator.vcxproj", "{6D1AF80F-9F41-442A-B3BF-F78F777FC224}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +23,14 @@ Global
 		{AEB611E0-1C67-4605-9A33-D35B634B8218}.Release|x64.Build.0 = Release|x64
 		{AEB611E0-1C67-4605-9A33-D35B634B8218}.Release|x86.ActiveCfg = Release|Win32
 		{AEB611E0-1C67-4605-9A33-D35B634B8218}.Release|x86.Build.0 = Release|Win32
+		{6D1AF80F-9F41-442A-B3BF-F78F777FC224}.Debug|x64.ActiveCfg = Debug|x64
+		{6D1AF80F-9F41-442A-B3BF-F78F777FC224}.Debug|x64.Build.0 = Debug|x64
+		{6D1AF80F-9F41-442A-B3BF-F78F777FC224}.Debug|x86.ActiveCfg = Debug|Win32
+		{6D1AF80F-9F41-442A-B3BF-F78F777FC224}.Debug|x86.Build.0 = Debug|Win32
+		{6D1AF80F-9F41-442A-B3BF-F78F777FC224}.Release|x64.ActiveCfg = Release|x64
+		{6D1AF80F-9F41-442A-B3BF-F78F777FC224}.Release|x64.Build.0 = Release|x64
+		{6D1AF80F-9F41-442A-B3BF-F78F777FC224}.Release|x86.ActiveCfg = Release|Win32
+		{6D1AF80F-9F41-442A-B3BF-F78F777FC224}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
