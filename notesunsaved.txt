@@ -1,12 +1,3 @@
-! diff these versus notes unsaved!
-
-* generate some TAMs yourself.
- * also tell sean if he wants to make a texture im totally ready
-
-* things that would be nice to do from http://www.floored.com/blog/2014sketch-rendering/
- * optional: edge detect / highlight using "planes" technique.
- * optional: imperfect line using wavy texture. more wavyness at center of screen.
-
 * make your own texture(s)!
  * try erode / dilute in gimp.  Not sure how to do the "even brightness" thing the paper talks about though.
   * need a new crosshatch texture
@@ -45,14 +36,6 @@ Sean said he'd be willing to give me textures.
  * how bout models?
 
 * get rid of unused models and textures when done
-
-* try without black/white slice in circles (and whatever other) textures
- * if it adds something, make an option for it or something, or just different textures?
-
-* yes basic movie features so you can see it in motion
- * Specify how many samples per frame, how many frames, and have it spit out those numbered images.
- * Hard code some camera movement stuff?
- * Use ffmpeg to make into a video?
 
 ================================= LATER IDEAS =================================
 
@@ -144,6 +127,3 @@ Tonemapping:
   * http://filmicworlds.com/blog/filmic-tonemapping-operators/
   * http://filmicworlds.com/blog/filmic-tonemapping-with-piecewise-power-curves/
   * http://filmicworlds.com/blog/why-reinhard-desaturates-your-blacks/
-
-
-* the explicit crosshatching option comes from the floored.com page
