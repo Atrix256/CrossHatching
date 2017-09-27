@@ -226,11 +226,13 @@ public:
 
         m_posX = dist(rng);
         m_posY = dist(rng);
+        m_radius = targetBrightness / 10.0f; // TODO: is this a decent heuristic?
     }
 
     void DrawStroke (SImageData& image)
     {
         // TODO: is floor ok? or should we add half before flooring?
+        // TODO: draw a circle!
         uint8* pixel = &image.m_pixels[size_t(m_posY) * image.m_pitch + size_t(m_posX) * 3];
         ((SColor*)pixel)->Set(0, 0, 0);
     }
@@ -290,7 +292,7 @@ public:
 
     float GenerateStrokes (SImageData& image, float currentBrightness, float targetBrightness)
     {
-        // TODO: this works for pixels but not for brush strokes and other things
+        // TODO: this works for pixels but not for circles, brush strokes and other things. need to periodically check brightness levels i think. Maybe stroke type controls strategy.
         size_t desiredStrokes = size_t(float(image.m_width * image.m_width) * (currentBrightness - targetBrightness));
         size_t tick = desiredStrokes / 100;
 
@@ -338,9 +340,9 @@ void GenerateTAM (const char* baseFileName, size_t dimensions, size_t numShades)
 int main (int argc, char** argv)
 {
     // TODO: this blue noise kinda sucks for tiling, and also sucks when it's denser.  Increasing candidate count didn't really help much.
-    GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Pixel, 1000>>("TAMs/Dots/Dots_%zu.bmp", 32, 8);
+    //GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Pixel, 1000>>("TAMs/Dots/Dots_%zu.bmp", 32, 8);
 
-    //GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Circle, 1000>>("TAMs/Dots/Circles_%zu.bmp", 32, 8);
+    GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Circle, 1000>>("TAMs/Dots/Circles_%zu.bmp", 32, 8);
 
     return 0;
 }
