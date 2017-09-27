@@ -40,13 +40,15 @@ static bool LoadTarga(char* filename, int& height, int& width, std::vector<unsig
     bpp = (int)targaFileHeader.bpp;
 
     // Check that it is 32 bit and not 24 bit.
-    if (bpp != 32)
+    if (bpp != 24 && bpp != 32)
     {
         return false;
     }
 
+    int bytesPerPixel = bpp / 8;
+
     // Calculate the size of the 32 bit image data.
-    imageSize = width * height * 4;
+    imageSize = width * height * bytesPerPixel;
 
     // Allocate memory for the targa image data.
     targaImage.resize(imageSize);
@@ -66,31 +68,54 @@ static bool LoadTarga(char* filename, int& height, int& width, std::vector<unsig
     }
 
     // Allocate memory for the targa destination data.
-    targaData.resize(imageSize);
+    targaData.resize(imageSize / bytesPerPixel * 4);
 
     // Initialize the index into the targa destination data array.
     index = 0;
 
     // Initialize the index into the targa image data.
-    k = (width * height * 4) - (width * 4);
+    k = (width * height * bytesPerPixel) - (width * bytesPerPixel);
 
     // Now copy the targa image data into the targa destination array in the correct order since the targa format is stored upside down.
-    for (j = 0; j < height; j++)
+    if (bpp == 32)
     {
-        for (i = 0; i < width; i++)
+        for (j = 0; j < height; j++)
         {
-            targaData[index + 0] = targaImage[k + 2];  // Red.
-            targaData[index + 1] = targaImage[k + 1];  // Green.
-            targaData[index + 2] = targaImage[k + 0];  // Blue
-            targaData[index + 3] = targaImage[k + 3];  // Alpha
+            for (i = 0; i < width; i++)
+            {
+                targaData[index + 0] = targaImage[k + 2];  // Red.
+                targaData[index + 1] = targaImage[k + 1];  // Green.
+                targaData[index + 2] = targaImage[k + 0];  // Blue
+                targaData[index + 3] = targaImage[k + 3];  // Alpha
 
-                                                         // Increment the indexes into the targa data.
-            k += 4;
-            index += 4;
+                                                             // Increment the indexes into the targa data.
+                k += bytesPerPixel;
+                index += 4;
+            }
+
+            // Set the targa image data index back to the preceding row at the beginning of the column since its reading it in upside down.
+            k -= (width * 2 * bytesPerPixel);
         }
+    }
+    else
+    {
+        for (j = 0; j < height; j++)
+        {
+            for (i = 0; i < width; i++)
+            {
+                targaData[index + 0] = targaImage[k + 2];  // Red.
+                targaData[index + 1] = targaImage[k + 1];  // Green.
+                targaData[index + 2] = targaImage[k + 0];  // Blue
+                targaData[index + 3] = 255;  // Alpha
 
-        // Set the targa image data index back to the preceding row at the beginning of the column since its reading it in upside down.
-        k -= (width * 8);
+                                                           // Increment the indexes into the targa data.
+                k += bytesPerPixel;
+                index += 4;
+            }
+
+            // Set the targa image data index back to the preceding row at the beginning of the column since its reading it in upside down.
+            k -= (width * 2 * bytesPerPixel);
+        }
     }
 
     return true;

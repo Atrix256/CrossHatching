@@ -26,7 +26,7 @@ float SampleHatchingTexture (float3 worldPos, float3 normal, float brightness, b
 {
     // caclulate the array slice to read
     uint volumeDimsX, volumeDimsY, volumeDimsZ;
-    circlesarray.GetDimensions(volumeDimsX, volumeDimsY, volumeDimsZ);
+    dotsarray.GetDimensions(volumeDimsX, volumeDimsY, volumeDimsZ);
     float w = brightness * float(volumeDimsZ);
 
     // triplanar projection sample the crosshatching texture
@@ -41,15 +41,15 @@ float SampleHatchingTexture (float3 worldPos, float3 normal, float brightness, b
     float absNormalWeight = absNormal.x + absNormal.y + absNormal.z;
 
     float crossHatchTexelFloor =
-        circlesarray.Sample(chosenSampler, float3(uvx, floor(w))).r * absNormal.x +
-        circlesarray.Sample(chosenSampler, float3(uvy, floor(w))).r * absNormal.y +
-        circlesarray.Sample(chosenSampler, float3(uvz, floor(w))).r * absNormal.z;
+        dotsarray.Sample(chosenSampler, float3(uvx, floor(w))).r * absNormal.x +
+        dotsarray.Sample(chosenSampler, float3(uvy, floor(w))).r * absNormal.y +
+        dotsarray.Sample(chosenSampler, float3(uvz, floor(w))).r * absNormal.z;
     crossHatchTexelFloor /= absNormalWeight;
 
     float crossHatchTexelCeil =
-        circlesarray.Sample(chosenSampler, float3(uvx, ceil(w))).r * absNormal.x +
-        circlesarray.Sample(chosenSampler, float3(uvy, ceil(w))).r * absNormal.y +
-        circlesarray.Sample(chosenSampler, float3(uvz, ceil(w))).r * absNormal.z;
+        dotsarray.Sample(chosenSampler, float3(uvx, ceil(w))).r * absNormal.x +
+        dotsarray.Sample(chosenSampler, float3(uvy, ceil(w))).r * absNormal.y +
+        dotsarray.Sample(chosenSampler, float3(uvz, ceil(w))).r * absNormal.z;
     crossHatchTexelCeil /= absNormalWeight;
     
     float crossHatchTexel = lerp(crossHatchTexelFloor, crossHatchTexelCeil, frac(w));
@@ -58,15 +58,15 @@ float SampleHatchingTexture (float3 worldPos, float3 normal, float brightness, b
     if (explicitCrossHatch)
     {
         crossHatchTexelFloor =
-            circlesarray.Sample(chosenSampler, float3(uvx.yx * 2.0f, floor(w))).r * absNormal.x +
-            circlesarray.Sample(chosenSampler, float3(uvy.yx * 2.0f, floor(w))).r * absNormal.y +
-            circlesarray.Sample(chosenSampler, float3(uvz.yx * 2.0f, floor(w))).r * absNormal.z;
+            dotsarray.Sample(chosenSampler, float3(uvx.yx * 2.0f, floor(w))).r * absNormal.x +
+            dotsarray.Sample(chosenSampler, float3(uvy.yx * 2.0f, floor(w))).r * absNormal.y +
+            dotsarray.Sample(chosenSampler, float3(uvz.yx * 2.0f, floor(w))).r * absNormal.z;
         crossHatchTexelFloor /= absNormalWeight;
 
         crossHatchTexelCeil =
-            circlesarray.Sample(chosenSampler, float3(uvx.yx * 2.0f, ceil(w))).r * absNormal.x +
-            circlesarray.Sample(chosenSampler, float3(uvy.yx * 2.0f, ceil(w))).r * absNormal.y +
-            circlesarray.Sample(chosenSampler, float3(uvz.yx * 2.0f, ceil(w))).r * absNormal.z;
+            dotsarray.Sample(chosenSampler, float3(uvx.yx * 2.0f, ceil(w))).r * absNormal.x +
+            dotsarray.Sample(chosenSampler, float3(uvy.yx * 2.0f, ceil(w))).r * absNormal.y +
+            dotsarray.Sample(chosenSampler, float3(uvz.yx * 2.0f, ceil(w))).r * absNormal.z;
         crossHatchTexelCeil /= absNormalWeight;
 
         float otherCrossHatchTexel = lerp(crossHatchTexelFloor, crossHatchTexelCeil, frac(w));

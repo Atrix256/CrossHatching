@@ -447,7 +447,7 @@ void RayIntersectsModel (in float3 rayPos, in float3 rayDir, in ModelPrim modelP
         return;
 
     // else test each triangle in the mesh
-    for (int i = modelPrim.firstTriangle_lastTriangle_zw.x; i < modelPrim.firstTriangle_lastTriangle_zw.y; ++i)
+    for (uint i = modelPrim.firstTriangle_lastTriangle_zw.x; i < modelPrim.firstTriangle_lastTriangle_zw.y; ++i)
         RayIntersectsModelTriangle(rayPos, rayDir, ModelTriangles[i], rayHitInfo);
 }
 

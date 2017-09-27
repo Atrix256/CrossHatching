@@ -47,6 +47,32 @@ RWTexture2D<float4> circles4_rw;
 
 Texture2DArray circlesarray;
 
+Texture2D dots0;
+RWTexture2D<float4> dots0_rw;
+
+Texture2D dots1;
+RWTexture2D<float4> dots1_rw;
+
+Texture2D dots2;
+RWTexture2D<float4> dots2_rw;
+
+Texture2D dots3;
+RWTexture2D<float4> dots3_rw;
+
+Texture2D dots4;
+RWTexture2D<float4> dots4_rw;
+
+Texture2D dots5;
+RWTexture2D<float4> dots5_rw;
+
+Texture2D dots6;
+RWTexture2D<float4> dots6_rw;
+
+Texture2D dots7;
+RWTexture2D<float4> dots7_rw;
+
+Texture2DArray dotsarray;
+
 //----------------------------------------------------------------------------
 //Constant Buffers
 //----------------------------------------------------------------------------

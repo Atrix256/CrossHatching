@@ -325,6 +325,27 @@ TEXTURE_ARRAY_BEGIN(circlesarray)
     TEXTURE_ARRAY_SLICE(circleneg4)
 TEXTURE_ARRAY_END
 
+// TODO: this texture is kind of sucking... get rid of it when you have better
+TEXTURE_IMAGE(dots0, "Art/Dots_0.tga")
+TEXTURE_IMAGE(dots1, "Art/Dots_0.tga")
+TEXTURE_IMAGE(dots2, "Art/Dots_0.tga")
+TEXTURE_IMAGE(dots3, "Art/Dots_0.tga")
+TEXTURE_IMAGE(dots4, "Art/Dots_0.tga")
+TEXTURE_IMAGE(dots5, "Art/Dots_0.tga")
+TEXTURE_IMAGE(dots6, "Art/Dots_0.tga")
+TEXTURE_IMAGE(dots7, "Art/Dots_0.tga")
+
+TEXTURE_ARRAY_BEGIN(dotsarray)
+    TEXTURE_ARRAY_SLICE(dots7)
+    TEXTURE_ARRAY_SLICE(dots6)
+    TEXTURE_ARRAY_SLICE(dots5)
+    TEXTURE_ARRAY_SLICE(dots4)
+    TEXTURE_ARRAY_SLICE(dots3)
+    TEXTURE_ARRAY_SLICE(dots2)
+    TEXTURE_ARRAY_SLICE(dots1)
+    TEXTURE_ARRAY_SLICE(dots0)
+TEXTURE_ARRAY_END
+
 //=================================================================
 //                       Shaders
 //=================================================================

@@ -111,7 +111,7 @@ inline float Lerp (float A, float B, float t)
 }
 
 //======================================================================================
-inline float ColorBrightness(const SColor& color)
+inline float ColorBrightness (const SColor& color)
 {
     return (float(color.R) * 0.3f + float(color.G * 0.59f) + float(color.B * 0.11f)) / 255.0f;
 }
@@ -155,22 +155,30 @@ void ImageBox (SImageData& image, size_t x1, size_t x2, size_t y1, size_t y2, co
 class TAMStroke_Pixel
 {
 public:
-    inline float Distance (const TAMStroke_Pixel& other)
+    inline float Distance (const TAMStroke_Pixel& other, int width)
     {
-        float dx = float(other.m_posX - m_posX);
-        float dy = float(other.m_posY - m_posY);
+        // this returns the toroidal distance between the points
+        // aka the interval [0, width) wraps around
+        float dx = std::abs(other.m_posX - m_posX);
+        float dy = std::abs(other.m_posY - m_posY);
+
+        if (dx > float(width / 2))
+            dx = float(width) - dx;
+
+        if (dy > float(width / 2))
+            dy = float(width) - dy;
 
         // returning squared distance cause why not
-        return (dx*dx + dy*dy);
+        return dx*dx + dy*dy;
     }
 
-    void Randomize (size_t imageSize)
+    void Randomize (size_t imageSize, float targetBrightness)
     {
         // seed the random number generator
         static std::random_device rd;
         static std::mt19937 rng(rd());
 
-        std::uniform_int_distribution<unsigned int> dist(0, (unsigned int)imageSize-1);
+        std::uniform_real_distribution<float> dist(0, float(imageSize));
 
         m_posX = dist(rng);
         m_posY = dist(rng);
@@ -178,12 +186,58 @@ public:
 
     void DrawStroke (SImageData& image)
     {
-        uint8* pixel = &image.m_pixels[m_posY * image.m_pitch + m_posX * 3];
+        // TODO: is floor ok? or should we add half before flooring?
+        uint8* pixel = &image.m_pixels[size_t(m_posY) * image.m_pitch + size_t(m_posX) * 3];
         ((SColor*)pixel)->Set(0, 0, 0);
     }
 
-    int m_posX;
-    int m_posY;
+    float m_posX;
+    float m_posY;
+};
+
+//======================================================================================
+class TAMStroke_Circle
+{
+public:
+    inline float Distance (const TAMStroke_Circle& other, int width)
+    {
+        // this returns the toroidal distance between the points
+        // aka the interval [0, width) wraps around
+        float dx = std::abs(other.m_posX - m_posX);
+        float dy = std::abs(other.m_posY - m_posY);
+
+        if (dx > float(width / 2))
+            dx = float(width) - dx;
+
+        if (dy > float(width / 2))
+            dy = float(width) - dy;
+
+        // returning squared distance cause why not
+        return dx*dx + dy*dy;
+    }
+
+    void Randomize (size_t imageSize, float targetBrightness)
+    {
+        // seed the random number generator
+        static std::random_device rd;
+        static std::mt19937 rng(rd());
+
+        std::uniform_real_distribution<float> dist(0, float(imageSize));
+
+        m_posX = dist(rng);
+        m_posY = dist(rng);
+    }
+
+    void DrawStroke (SImageData& image)
+    {
+        // TODO: is floor ok? or should we add half before flooring?
+        uint8* pixel = &image.m_pixels[size_t(m_posY) * image.m_pitch + size_t(m_posX) * 3];
+        ((SColor*)pixel)->Set(0, 0, 0);
+    }
+
+    float m_posX;
+    float m_posY;
+    float m_radius;
 };
 
 //======================================================================================
@@ -199,7 +253,7 @@ public:
         return ColorBrightness(SColor(255, 255, 255));
     }
 
-    void GenerateStroke (SImageData& image)
+    void GenerateStroke (SImageData& image, float targetBrightness)
     {
         TAMSTROKE bestCandidate;
         TAMSTROKE currentCandidate;
@@ -207,7 +261,7 @@ public:
         for (size_t i = 0; i < NUMCANDIDATES; ++i)
         {
             // generate a candidate
-            currentCandidate.Randomize(image.m_width);
+            currentCandidate.Randomize(image.m_width, targetBrightness);
 
             // TODO: use a grid for finding closest point. should speed things up a lot as things get denser, which should allow for higher candidate counts
 
@@ -215,7 +269,7 @@ public:
             float score = FLT_MAX;
             for (TAMSTROKE& stroke : m_strokes)
             {
-                float dist = stroke.Distance(currentCandidate);
+                float dist = stroke.Distance(currentCandidate, (int)image.m_width);
                 score = min(score, dist);
             }
 
@@ -242,7 +296,7 @@ public:
 
         for (size_t i = 0; i < desiredStrokes; ++i)
         {
-            GenerateStroke(image);
+            GenerateStroke(image, targetBrightness);
 
             if (i % tick == 0)
             {
@@ -269,28 +323,24 @@ void GenerateTAM (const char* baseFileName, size_t dimensions, size_t numShades)
     ImageInit(image, dimensions, dimensions);
     float brightness = generator.InitializeImage(image);
 
-    // TODO: formalize this!
-    brightness = generator.GenerateStrokes(image, brightness, 0.9f);
-    sprintf(fileName, baseFileName, 0);
-    ImageSave(image, fileName);
-    printf("\n[0] brightness = %f\n\n", brightness);
-
-    brightness = generator.GenerateStrokes(image, brightness, 0.8f);
-    sprintf(fileName, baseFileName, 1);
-    ImageSave(image, fileName);
-    printf("\n[1]brightness = %f\n\n", brightness);
-
-    brightness = generator.GenerateStrokes(image, brightness, 0.7f);
-    sprintf(fileName, baseFileName, 2);
-    ImageSave(image, fileName);
-    printf("\n[2]brightness = %f\n\n", brightness);
- 
+    // generate each shade, but don't include pure black or pure white as those are easy to generate
+    for (size_t i = 0; i < numShades; ++i)
+    {
+        float desiredBrightness = 1.0f - float(i + 1) / float(numShades + 1);
+        brightness = generator.GenerateStrokes(image, brightness, desiredBrightness);
+        sprintf(fileName, baseFileName, i);
+        ImageSave(image, fileName);
+        printf("\n%s brightness = %f\n\n", fileName, brightness);
+    }
 }
 
 //======================================================================================
 int main (int argc, char** argv)
 {
-    GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Pixel, 100>>("TAMs/Dots/Dots_%zu.bmp", 256, 3);
+    // TODO: this blue noise kinda sucks for tiling, and also sucks when it's denser.  Increasing candidate count didn't really help much.
+    GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Pixel, 1000>>("TAMs/Dots/Dots_%zu.bmp", 32, 8);
+
+    //GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Circle, 1000>>("TAMs/Dots/Circles_%zu.bmp", 32, 8);
 
     return 0;
 }
@@ -331,5 +381,7 @@ TAM GENERATOR TODO:
 ? what should we do about mips not going to 1 px? maybe manually make those mips? maybe don't have the CrossHatching program use them? (limit # of mips). dunno
 
 * get these loaded / working in the cross hatching project
+
+? maybe ask stack exchange how to make high density 1 bit blue noise textures?
 
 */
