@@ -111,6 +111,12 @@ inline float Lerp (float A, float B, float t)
 }
 
 //======================================================================================
+inline float ColorBrightness(const SColor& color)
+{
+    return (float(color.R) * 0.3f + float(color.G * 0.59f) + float(color.B * 0.11f)) / 255.0f;
+}
+
+//======================================================================================
 float ImageAverageBrightness (const SImageData& image)
 {
     size_t sampleCount = 0;
@@ -123,8 +129,7 @@ float ImageAverageBrightness (const SImageData& image)
 
         for (size_t pixelIndex = 0; pixelIndex < image.m_width; ++pixelIndex)
         {
-            float brightness = float(pixels[pixelIndex].R) * 0.3f + float(pixels[pixelIndex].G * 0.59f) + float(pixels[pixelIndex].B * 0.11f);
-            brightness /= 255.0f;
+            float brightness = ColorBrightness(pixels[pixelIndex]);
             sampleCount++;
             averageBrightness = Lerp(averageBrightness, brightness, 1.0f / float(sampleCount));
         }
@@ -183,124 +188,109 @@ public:
 
 //======================================================================================
 // TODO: this may be overkill to have this be it's own thing. Everything may follow this code.
-template <typename TAMSTROKE>
+template <typename TAMSTROKE, size_t NUMCANDIDATES>
 class TAMGenerator_BlueNoise
 {
 public:
-    inline void InitializeImage (SImageData& imageData)
+    inline float InitializeImage (SImageData& imageData)
     {
+        // clear to white and return the brightness of the fill
         ImageClear(imageData, SColor(255, 255, 255));
+        return ColorBrightness(SColor(255, 255, 255));
     }
 
-    void GenerateStroke (SImageData& image, size_t numCandidates)
+    void GenerateStroke (SImageData& image)
     {
-        // generate some candidates
-        m_candidates.resize(numCandidates);
-        for (TAMSTROKE& stroke : m_candidates)
-            stroke.Randomize(image.m_width);
-
-        // TODO: maybe instead of keeping candidates around, we just keep the best candidate around and it's score.
-
-        // score the candidates by finding the shortest distance from the candidate to the other strokes
-        m_candidateScores.resize(numCandidates);
-        for (size_t i = 0; i < numCandidates; ++i)
+        TAMSTROKE bestCandidate;
+        TAMSTROKE currentCandidate;
+        float bestScore = 0.0f;
+        for (size_t i = 0; i < NUMCANDIDATES; ++i)
         {
-            TAMSTROKE& candidate = m_candidates[i];
-            float& score = m_candidateScores[i];
-            score = FLT_MAX;
+            // generate a candidate
+            currentCandidate.Randomize(image.m_width);
 
-            // TODO: need to consider wrap around when calculating distance!
+            // TODO: use a grid for finding closest point. should speed things up a lot as things get denser, which should allow for higher candidate counts
+
+            // score this candidate by finding the shortest distance from it to all other strokes
+            float score = FLT_MAX;
             for (TAMSTROKE& stroke : m_strokes)
             {
-                float dist = stroke.Distance(candidate);
+                float dist = stroke.Distance(currentCandidate);
                 score = min(score, dist);
             }
-        }
 
-        // find the candidate with the largest score
-        float largestScoreValue = m_candidateScores[0];
-        size_t largestScoreIndex = 0;
-        for (size_t i = 1; i < numCandidates; ++i)
-        {
-            if (m_candidateScores[i] > largestScoreValue)
+            // if this score is higher than our previous best, take it as our best
+            if (score > bestScore)
             {
-                largestScoreValue = m_candidateScores[i];
-                largestScoreIndex = i;
+                bestScore = score;
+                bestCandidate = currentCandidate;
             }
         }
 
         // commit the stroke to the stroke list
-        m_strokes.push_back(m_candidates[largestScoreIndex]);
+        m_strokes.push_back(bestCandidate);
 
         // commit the stroke to the texture
         m_strokes.rbegin()->DrawStroke(image);
     }
 
+    float GenerateStrokes (SImageData& image, float currentBrightness, float targetBrightness)
+    {
+        // TODO: this works for pixels but not for brush strokes and other things
+        size_t desiredStrokes = size_t(float(image.m_width * image.m_width) * (currentBrightness - targetBrightness));
+        size_t tick = desiredStrokes / 100;
+
+        for (size_t i = 0; i < desiredStrokes; ++i)
+        {
+            GenerateStroke(image);
+
+            if (i % tick == 0)
+            {
+                printf("               \r%i%%  (%zu / %zu)\r", int(100.0f*float(i) / float(desiredStrokes)), i, desiredStrokes);
+            }
+        }
+
+        // return the actual brightness level
+        return ImageAverageBrightness(image);
+    }
+
     std::vector<TAMSTROKE> m_strokes;
-    std::vector<TAMSTROKE> m_candidates;
-    std::vector<float> m_candidateScores;
 };
 
 //======================================================================================
 template <typename TAMGENERATOR>
-void GenerateTAM (const char* baseFileName, size_t dimensions, size_t numShades, size_t numCandidates)
+void GenerateTAM (const char* baseFileName, size_t dimensions, size_t numShades)
 {
     TAMGENERATOR generator;
+    char fileName[1024];
 
-    // initialize the starting image to it's starting state
+    // initialize an image to it's starting state
     SImageData image;
     ImageInit(image, dimensions, dimensions);
-    generator.InitializeImage(image);
+    float brightness = generator.InitializeImage(image);
 
-    float brightness = ImageAverageBrightness(image);
-
-    size_t desiredStrokes = (dimensions * dimensions) / 10;
-    size_t tick = desiredStrokes / 100;
-
-    for (size_t i = 0; i < desiredStrokes; ++i)
-    {
-        generator.GenerateStroke(image, numCandidates);
-
-        if (i % tick == 0)
-        {
-            printf("               \r%i%%  (%zu / %zu)\r", int(100.0f*float(i)/float(desiredStrokes)), i, desiredStrokes);
-        }
-    }
-
-    float brightness2 = ImageAverageBrightness(image);
-
-    /*
-    while (brightness > 0.99f)
-    {
-        for (size_t i = 0; i < 100; ++i)
-            generator.GenerateStroke(image, numCandidates);
-        brightness = ImageAverageBrightness(image);
-        printf("          \r%f\r", brightness);
-    }
-    */
-
-
-
-    /*
-    float brightness = ImageAverageBrightness(image);
-
-    ImageClear(image, SColor(128, 128, 128));
-
-    float brightness2 = ImageAverageBrightness(image);
-    */
-
-    // TODO: the work here! for each mip column, do the stuff! a lambda passed in for a stroke and maybe the fitness function too. Likely also the number of "best candidates" to review at each step
-
-    // save this image
-    char fileName[1024];
+    // TODO: formalize this!
+    brightness = generator.GenerateStrokes(image, brightness, 0.9f);
     sprintf(fileName, baseFileName, 0);
     ImageSave(image, fileName);
+    printf("\n[0] brightness = %f\n\n", brightness);
+
+    brightness = generator.GenerateStrokes(image, brightness, 0.8f);
+    sprintf(fileName, baseFileName, 1);
+    ImageSave(image, fileName);
+    printf("\n[1]brightness = %f\n\n", brightness);
+
+    brightness = generator.GenerateStrokes(image, brightness, 0.7f);
+    sprintf(fileName, baseFileName, 2);
+    ImageSave(image, fileName);
+    printf("\n[2]brightness = %f\n\n", brightness);
+ 
 }
 
 //======================================================================================
 int main (int argc, char** argv)
 {
-    GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Pixel>>("TAMs/Dots/Dots_%zu.bmp", 256, 3, 100);
+    GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Pixel, 100>>("TAMs/Dots/Dots_%zu.bmp", 256, 3);
 
     return 0;
 }
