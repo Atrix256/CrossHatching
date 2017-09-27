@@ -145,5 +145,11 @@ Tonemapping:
   * http://filmicworlds.com/blog/filmic-tonemapping-with-piecewise-power-curves/
   * http://filmicworlds.com/blog/why-reinhard-desaturates-your-blacks/
 
-
 * the explicit crosshatching option comes from the floored.com page
+
+* procedurally generating textures:
+ * I modified the TAM (Tonal Art Map) thing from the microsoft paper.
+ * They basically blue noise place brush strokes (etc) until the desired average tone is achieved. Use that as a starting point for the next darker tone. I do this too.
+ * They also made mip levels manually where lower res mips had fewer of the brush strokes, this made it so you could zoom in/out and it wouldn't affect tone (maybe?) and so it wouldn't alias.
+ * I didn't want that, so left the custom mips out.
+
