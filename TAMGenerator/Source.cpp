@@ -150,7 +150,6 @@ void ImageBox (SImageData& image, size_t x1, size_t x2, size_t y1, size_t y2, co
 class TAMStroke_Pixel
 {
 public:
-    // TODO: rename to score or something?
     inline float Distance (const TAMStroke_Pixel& other)
     {
         float dx = float(other.m_posX - m_posX);
@@ -178,8 +177,8 @@ public:
         ((SColor*)pixel)->Set(0, 0, 0);
     }
 
-    size_t m_posX;
-    size_t m_posY;
+    int m_posX;
+    int m_posY;
 };
 
 //======================================================================================
@@ -200,12 +199,15 @@ public:
         for (TAMSTROKE& stroke : m_candidates)
             stroke.Randomize(image.m_width);
 
+        // TODO: maybe instead of keeping candidates around, we just keep the best candidate around and it's score.
+
         // score the candidates by finding the shortest distance from the candidate to the other strokes
         m_candidateScores.resize(numCandidates);
         for (size_t i = 0; i < numCandidates; ++i)
         {
             TAMSTROKE& candidate = m_candidates[i];
             float& score = m_candidateScores[i];
+            score = FLT_MAX;
 
             // TODO: need to consider wrap around when calculating distance!
             for (TAMSTROKE& stroke : m_strokes)
@@ -252,9 +254,7 @@ void GenerateTAM (const char* baseFileName, size_t dimensions, size_t numShades,
 
     float brightness = ImageAverageBrightness(image);
 
-    // TODO: this doesn't seem to work!
-
-    size_t desiredStrokes = 100;// (dimensions * dimensions) * 999 / 1000;
+    size_t desiredStrokes = (dimensions * dimensions) / 10;
     size_t tick = desiredStrokes / 100;
 
     for (size_t i = 0; i < desiredStrokes; ++i)
@@ -263,7 +263,7 @@ void GenerateTAM (const char* baseFileName, size_t dimensions, size_t numShades,
 
         if (i % tick == 0)
         {
-            printf("          \r%i%%\r", int(100.0f*float(i)/float(desiredStrokes)));
+            printf("               \r%i%%  (%zu / %zu)\r", int(100.0f*float(i)/float(desiredStrokes)), i, desiredStrokes);
         }
     }
 
@@ -300,7 +300,7 @@ void GenerateTAM (const char* baseFileName, size_t dimensions, size_t numShades,
 //======================================================================================
 int main (int argc, char** argv)
 {
-    GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Pixel>>("TAMs/Dots/Dots_%zu.bmp", 256, 3, 10);
+    GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Pixel>>("TAMs/Dots/Dots_%zu.bmp", 256, 3, 100);
 
     return 0;
 }
