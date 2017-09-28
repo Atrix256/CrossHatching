@@ -105,6 +105,59 @@ void ImageClear (SImageData& image, const SColor& color)
 }
 
 //======================================================================================
+// circle algorithm from http://www.dailyfreecode.com/code/midpoint-circle-drawing-695.aspx
+// TODO: this circle algorithm is kinda cache unfriendly...
+void ImageCircleDraw (SImageData& image, int x, int y, int xC, int yC, const SColor& color)
+{
+    auto putpixel = [&] (int _x, int _y) {
+        if (_x < 0)
+            _x += int(image.m_width);
+        else if (_x >= image.m_width)
+            _x -= int(image.m_width);
+
+        if (_y < 0)
+            _y += int(image.m_height);
+        else if (_y >= image.m_height)
+            _y -= int(image.m_height);
+
+        *((SColor*)&image.m_pixels[_y * image.m_pitch + _x * 3]) = color;
+    };
+
+    // TODO: need to fill the circle in by filling rows of pixels
+
+    putpixel(xC + x, yC + y);
+    putpixel(xC + x, yC - y);
+    putpixel(xC - x, yC + y);
+    putpixel(xC - x, yC - y);
+    putpixel(xC + y, yC + x);
+    putpixel(xC - y, yC + x);
+    putpixel(xC + y, yC - x);
+    putpixel(xC - y, yC - x);
+}
+
+void ImageCircle (SImageData& image, int Radius,int xC,int yC, const SColor& color)
+{
+    int P = 1 - Radius;
+    int x = 0;
+    int y = Radius;
+    ImageCircleDraw(image, x, y, xC, yC, color);
+    while (x<=y)
+    {
+        x++;
+        if (P<0)
+        {
+            P += 2 * x + 1;
+        }
+        else
+        {
+            P += 2 * (x - y) + 1;
+            y--;
+        }
+        ImageCircleDraw(image, x, y, xC, yC, color);
+    }
+}
+
+//======================================================================================
 inline float Lerp (float A, float B, float t)
 {
     return A * (1 - t) + B * t;
@@ -201,8 +254,10 @@ class TAMStroke_Circle
 public:
     inline float Distance (const TAMStroke_Circle& other, int width)
     {
-        // this returns the toroidal distance between the points
+        // this returns the toroidal distance between the circles
         // aka the interval [0, width) wraps around
+
+        // calculate the squared distance between the circle centerpoints
         float dx = std::abs(other.m_posX - m_posX);
         float dy = std::abs(other.m_posY - m_posY);
 
@@ -212,8 +267,14 @@ public:
         if (dy > float(width / 2))
             dy = float(width) - dy;
 
-        // returning squared distance cause why not
-        return dx*dx + dy*dy;
+        float distSquared = dx*dx + dy*dy;
+
+        // calculate the square of the sum of the radii.
+        float combinedRadiusSquared = m_radius + other.m_radius;
+        combinedRadiusSquared *= combinedRadiusSquared;
+
+        // return the distance minus the radius (but both are squared), so a negative distance means the circles overlap
+        return distSquared - combinedRadiusSquared;
     }
 
     void Randomize (size_t imageSize, float targetBrightness)
@@ -226,15 +287,15 @@ public:
 
         m_posX = dist(rng);
         m_posY = dist(rng);
-        m_radius = targetBrightness / 10.0f; // TODO: is this a decent heuristic?
+
+        // TODO: should we randomize circle sizes? I feel like we should.
+        m_radius = float(imageSize) * targetBrightness / 10.0f; // TODO: is this a decent heuristic?
     }
 
     void DrawStroke (SImageData& image)
     {
         // TODO: is floor ok? or should we add half before flooring?
-        // TODO: draw a circle!
-        uint8* pixel = &image.m_pixels[size_t(m_posY) * image.m_pitch + size_t(m_posX) * 3];
-        ((SColor*)pixel)->Set(0, 0, 0);
+        ImageCircle(image, int(m_radius), int(m_posX), int(m_posY), SColor(0, 0, 0));
     }
 
     float m_posX;
@@ -257,6 +318,7 @@ public:
 
     void GenerateStroke (SImageData& image, float targetBrightness)
     {
+        bool haveBestCandidate = false;
         TAMSTROKE bestCandidate;
         TAMSTROKE currentCandidate;
         float bestScore = 0.0f;
@@ -276,8 +338,9 @@ public:
             }
 
             // if this score is higher than our previous best, take it as our best
-            if (score > bestScore)
+            if (!haveBestCandidate || score > bestScore)
             {
+                haveBestCandidate = true;
                 bestScore = score;
                 bestCandidate = currentCandidate;
             }
@@ -295,6 +358,9 @@ public:
         // TODO: this works for pixels but not for circles, brush strokes and other things. need to periodically check brightness levels i think. Maybe stroke type controls strategy.
         size_t desiredStrokes = size_t(float(image.m_width * image.m_width) * (currentBrightness - targetBrightness));
         size_t tick = desiredStrokes / 100;
+
+        // TODO: temp!
+        desiredStrokes = 5;
 
         for (size_t i = 0; i < desiredStrokes; ++i)
         {
@@ -340,9 +406,9 @@ void GenerateTAM (const char* baseFileName, size_t dimensions, size_t numShades)
 int main (int argc, char** argv)
 {
     // TODO: this blue noise kinda sucks for tiling, and also sucks when it's denser.  Increasing candidate count didn't really help much.
-    //GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Pixel, 1000>>("TAMs/Dots/Dots_%zu.bmp", 32, 8);
+    //GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Pixel, 1000>>("TAMs/Dots/Dots_%zu.bmp", 64, 8);
 
-    GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Circle, 1000>>("TAMs/Dots/Circles_%zu.bmp", 32, 8);
+    GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Circle, 1000>>("TAMs/Dots/Circles_%zu.bmp", 64, 8);
 
     return 0;
 }
