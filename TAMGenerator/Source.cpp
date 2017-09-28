@@ -106,9 +106,9 @@ void ImageClear (SImageData& image, const SColor& color)
 
 //======================================================================================
 // circle algorithm from http://www.dailyfreecode.com/code/midpoint-circle-drawing-695.aspx
-// TODO: this circle algorithm is kinda cache unfriendly...
-void ImageCircleDraw (SImageData& image, int x, int y, int xC, int yC, const SColor& color)
+void ImageCircleSectionDraw (SImageData& image, int x, int y, int xC, int yC, const SColor& color)
 {
+    // not the most cache friendly, but whatever
     auto putpixel = [&] (int _x, int _y) {
         if (_x < 0)
             _x += int(image.m_width);
@@ -123,24 +123,59 @@ void ImageCircleDraw (SImageData& image, int x, int y, int xC, int yC, const SCo
         *((SColor*)&image.m_pixels[_y * image.m_pitch + _x * 3]) = color;
     };
 
-    // TODO: need to fill the circle in by filling rows of pixels
-
-    putpixel(xC + x, yC + y);
-    putpixel(xC + x, yC - y);
     putpixel(xC - x, yC + y);
+    putpixel(xC + x, yC + y);
+
     putpixel(xC - x, yC - y);
-    putpixel(xC + y, yC + x);
+    putpixel(xC + x, yC - y);
+    
     putpixel(xC - y, yC + x);
-    putpixel(xC + y, yC - x);
+    putpixel(xC + y, yC + x);
+    
     putpixel(xC - y, yC - x);
+    putpixel(xC + y, yC - x);
 }
 
+void ImageCircleSectionDrawFilled (SImageData& image, int x, int y, int xC, int yC, const SColor& color)
+{
+    // not the most efficient, but whatever
+    auto putpixel = [&] (int _x, int _y) {
+        if (_x < 0)
+            _x += int(image.m_width);
+        else if (_x >= image.m_width)
+            _x -= int(image.m_width);
+
+        if (_y < 0)
+            _y += int(image.m_height);
+        else if (_y >= image.m_height)
+            _y -= int(image.m_height);
+
+        *((SColor*)&image.m_pixels[_y * image.m_pitch + _x * 3]) = color;
+    };
+
+    for (int i = -x; i <= x; ++i)
+    {
+        putpixel(xC + i, yC + y);
+        putpixel(xC + i, yC - y);
+    }
+
+    for (int i = -y; i <= y; ++i)
+    {
+        putpixel(xC + i, yC + x);
+        putpixel(xC + i, yC - x);
+    }
+}
+
+template <bool FILLED>
 void ImageCircle (SImageData& image, int Radius,int xC,int yC, const SColor& color)
 {
     int P = 1 - Radius;
     int x = 0;
     int y = Radius;
-    ImageCircleDraw(image, x, y, xC, yC, color);
+    if (FILLED)
+        ImageCircleSectionDrawFilled(image, x, y, xC, yC, color);
+    else
+        ImageCircleSectionDraw(image, x, y, xC, yC, color);
     while (x<=y)
     {
         x++;
@@ -153,7 +188,10 @@ void ImageCircle (SImageData& image, int Radius,int xC,int yC, const SColor& col
             P += 2 * (x - y) + 1;
             y--;
         }
-        ImageCircleDraw(image, x, y, xC, yC, color);
+        if (FILLED)
+            ImageCircleSectionDrawFilled(image, x, y, xC, yC, color);
+        else
+            ImageCircleSectionDraw(image, x, y, xC, yC, color);
     }
 }
 
@@ -239,9 +277,13 @@ public:
 
     void DrawStroke (SImageData& image)
     {
-        // TODO: is floor ok? or should we add half before flooring?
         uint8* pixel = &image.m_pixels[size_t(m_posY) * image.m_pitch + size_t(m_posX) * 3];
         ((SColor*)pixel)->Set(0, 0, 0);
+    }
+
+    static size_t DesiredStrokes (SImageData& image, float currentBrightness, float targetBrightness)
+    {
+        return size_t(float(image.m_width * image.m_width) * (currentBrightness - targetBrightness));
     }
 
     float m_posX;
@@ -283,19 +325,27 @@ public:
         static std::random_device rd;
         static std::mt19937 rng(rd());
 
+        // calculate position
         std::uniform_real_distribution<float> dist(0, float(imageSize));
-
         m_posX = dist(rng);
         m_posY = dist(rng);
 
-        // TODO: should we randomize circle sizes? I feel like we should.
-        m_radius = float(imageSize) * targetBrightness / 10.0f; // TODO: is this a decent heuristic?
+        // TODO: is this a decent radius calculation?
+        // calculate radius
+        m_radius = float(imageSize) * targetBrightness / 10.0f; 
+        std::uniform_real_distribution<float> distRadiusMultiplier(0.5f, 2.0f);
+        m_radius *= distRadiusMultiplier(rng);
+        m_radius = max(m_radius, 1.0f);
     }
 
     void DrawStroke (SImageData& image)
     {
-        // TODO: is floor ok? or should we add half before flooring?
-        ImageCircle(image, int(m_radius), int(m_posX), int(m_posY), SColor(0, 0, 0));
+        ImageCircle<true>(image, int(m_radius), int(m_posX), int(m_posY), SColor(0, 0, 0));
+    }
+
+    static size_t DesiredStrokes(SImageData& image, float currentBrightness, float targetBrightness)
+    {
+        return 0;
     }
 
     float m_posX;
@@ -327,8 +377,6 @@ public:
             // generate a candidate
             currentCandidate.Randomize(image.m_width, targetBrightness);
 
-            // TODO: use a grid for finding closest point. should speed things up a lot as things get denser, which should allow for higher candidate counts
-
             // score this candidate by finding the shortest distance from it to all other strokes
             float score = FLT_MAX;
             for (TAMSTROKE& stroke : m_strokes)
@@ -353,27 +401,46 @@ public:
         m_strokes.rbegin()->DrawStroke(image);
     }
 
+    // returns the brightness level
     float GenerateStrokes (SImageData& image, float currentBrightness, float targetBrightness)
     {
-        // TODO: this works for pixels but not for circles, brush strokes and other things. need to periodically check brightness levels i think. Maybe stroke type controls strategy.
-        size_t desiredStrokes = size_t(float(image.m_width * image.m_width) * (currentBrightness - targetBrightness));
-        size_t tick = desiredStrokes / 100;
+        size_t desiredStrokes = TAMSTROKE::DesiredStrokes(image, currentBrightness, targetBrightness);
 
-        // TODO: temp!
-        desiredStrokes = 5;
-
-        for (size_t i = 0; i < desiredStrokes; ++i)
+        if (desiredStrokes > 0)
         {
-            GenerateStroke(image, targetBrightness);
+            size_t tick = desiredStrokes / 100;
 
-            if (i % tick == 0)
+            for (size_t i = 0; i < desiredStrokes; ++i)
             {
-                printf("               \r%i%%  (%zu / %zu)\r", int(100.0f*float(i) / float(desiredStrokes)), i, desiredStrokes);
-            }
-        }
+                GenerateStroke(image, targetBrightness);
 
-        // return the actual brightness level
-        return ImageAverageBrightness(image);
+                if (i % tick == 0)
+                {
+                    printf("               \r%i%%  (%zu / %zu)\r", int(100.0f*float(i) / float(desiredStrokes)), i, desiredStrokes);
+                }
+            }
+            return ImageAverageBrightness(image);
+        }
+        else
+        {
+            int lastPercent = -1;
+
+            float brightness = currentBrightness;
+            while (brightness > targetBrightness)
+            {
+                GenerateStroke(image, targetBrightness);
+                brightness = ImageAverageBrightness(image);
+
+                int percent = 100 - int(100.0f * (targetBrightness - brightness) / (targetBrightness - currentBrightness));
+                percent = min(percent, 100);
+                if (percent != lastPercent)
+                {
+                    lastPercent = percent;
+                    printf("               \r%i%%  (%0.2f / %0.2f)\r", lastPercent, brightness, targetBrightness);
+                }
+            }
+            return brightness;
+        }
     }
 
     std::vector<TAMSTROKE> m_strokes;
@@ -408,7 +475,7 @@ int main (int argc, char** argv)
     // TODO: this blue noise kinda sucks for tiling, and also sucks when it's denser.  Increasing candidate count didn't really help much.
     //GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Pixel, 1000>>("TAMs/Dots/Dots_%zu.bmp", 64, 8);
 
-    GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Circle, 1000>>("TAMs/Dots/Circles_%zu.bmp", 64, 8);
+    GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Circle, 1000>>("TAMs/Dots/Circles_%zu.bmp", 256, 8);
 
     return 0;
 }
