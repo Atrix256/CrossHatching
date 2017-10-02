@@ -5,8 +5,34 @@
 #include <stdint.h>
 #include <vector>
 #include <random>
+#include <chrono>
+#include <complex>
 
 typedef uint8_t uint8;
+
+const float c_pi = 3.14159265359f;
+
+#define DO_DFT() false
+
+//======================================================================================
+//                                     SBlockTimer
+//======================================================================================
+// times a block of code
+struct SBlockTimer
+{
+    SBlockTimer(const char* label)
+    {
+        m_start = std::chrono::high_resolution_clock::now();
+    }
+
+    ~SBlockTimer()
+    {
+        std::chrono::duration<float> seconds = std::chrono::high_resolution_clock::now() - m_start;
+        printf("%0.2f seconds\n", seconds.count());
+    }
+
+    std::chrono::high_resolution_clock::time_point m_start;
+};
 
 //======================================================================================
 struct SImageData
@@ -22,6 +48,7 @@ struct SImageData
     std::vector<uint8> m_pixels;
 };
  
+//======================================================================================
 struct SColor
 {
     SColor (uint8 _R = 0, uint8 _G = 0, uint8 _B = 0)
@@ -37,6 +64,171 @@ struct SColor
  
     uint8 B, G, R;
 };
+
+//======================================================================================
+struct SImageDataComplex
+{
+    SImageDataComplex ()
+        : m_width(0)
+        , m_height(0)
+    { }
+ 
+    size_t m_width;
+    size_t m_height;
+    std::vector<std::complex<float>> m_pixels;
+};
+
+//======================================================================================
+std::complex<float> DFTPixel (const SImageData &srcImage, int K, int L)
+{
+    std::complex<float> ret(0.0f, 0.0f);
+ 
+    for (int x = 0; x < srcImage.m_width; ++x)
+    {
+        for (int y = 0; y < srcImage.m_height; ++y)
+        {
+            // Get the pixel value (assuming greyscale) and convert it to [0,1] space
+            const uint8 *src = &srcImage.m_pixels[(y * srcImage.m_pitch) + x * 3];
+            float grey = float(src[0]) / 255.0f;
+ 
+            // Add to the sum of the return value
+            float v = float(K * x) / float(srcImage.m_width);
+            v += float(L * y) / float(srcImage.m_height);
+            ret += std::complex<float>(grey, 0.0f) * std::polar<float>(1.0f, -2.0f * c_pi * v);
+        }
+    }
+ 
+    return ret;
+}
+ 
+//======================================================================================
+void DFTImage (const SImageData &srcImage, SImageDataComplex &destImage)
+{
+    // NOTE: this function assumes srcImage is greyscale, so works on only the red component of srcImage.
+    // ImageToGrey() will convert an image to greyscale.
+ 
+    // size the output dft data
+    destImage.m_width = srcImage.m_width;
+    destImage.m_height = srcImage.m_height;
+    destImage.m_pixels.resize(destImage.m_width*destImage.m_height);
+  
+    // calculate 2d dft (brute force, not using fast fourier transform)
+    int lastPercent = -1;
+    for (int x = 0; x < srcImage.m_width; ++x)
+    {
+        for (int y = 0; y < srcImage.m_height; ++y)
+        {
+            // calculate DFT for that pixel / frequency
+            destImage.m_pixels[y * destImage.m_width + x] = DFTPixel(srcImage, x, y);
+        }
+        int percent = int(100.0f * float(x) / float(srcImage.m_height));
+        if (lastPercent != percent)
+        {
+            lastPercent = percent;
+            printf("            \rDFT: %i%%", lastPercent);
+        }
+    }
+    printf("\n");
+}
+
+//======================================================================================
+void GetMagnitudeData (const SImageDataComplex& srcImage, SImageData& destImage)
+{
+    // size the output image
+    destImage.m_width = srcImage.m_width;
+    destImage.m_height = srcImage.m_height;
+    destImage.m_pitch = srcImage.m_width * 3;
+    if (destImage.m_pitch & 3)
+    {
+        destImage.m_pitch &= ~3;
+        destImage.m_pitch += 4;
+    }
+    destImage.m_pixels.resize(destImage.m_pitch*destImage.m_height);
+ 
+    // get floating point magnitude data
+    std::vector<float> magArray;
+    magArray.resize(srcImage.m_width*srcImage.m_height);
+    float maxmag = 0.0f;
+    for (int x = 0; x < srcImage.m_width; ++x)
+    {
+        for (int y = 0; y < srcImage.m_height; ++y)
+        {
+            // Offset the information by half width & height in the positive direction.
+            // This makes frequency 0 (DC) be at the image origin, like most diagrams show it.
+            int k = (x + (int)srcImage.m_width / 2) % (int)srcImage.m_width;
+            int l = (y + (int)srcImage.m_height / 2) % (int)srcImage.m_height;
+            const std::complex<float> &src = srcImage.m_pixels[l*srcImage.m_width + k];
+ 
+            float mag = std::abs(src);
+            if (mag > maxmag)
+                maxmag = mag;
+ 
+            magArray[y*srcImage.m_width + x] = mag;
+        }
+    }
+    if (maxmag == 0.0f)
+        maxmag = 1.0f;
+ 
+    const float c = 255.0f / log(1.0f+maxmag);
+ 
+    // normalize the magnitude data and send it back in [0, 255]
+    for (int x = 0; x < srcImage.m_width; ++x)
+    {
+        for (int y = 0; y < srcImage.m_height; ++y)
+        {
+            float src = c * log(1.0f + magArray[y*srcImage.m_width + x]);
+ 
+            uint8 magu8 = uint8(src);
+ 
+            uint8* dest = &destImage.m_pixels[y*destImage.m_pitch + x * 3];
+            dest[0] = magu8;
+            dest[1] = magu8;
+            dest[2] = magu8;
+        }
+    }
+}
+ 
+//======================================================================================
+void GetPhaseData (const SImageDataComplex& srcImage, SImageData& destImage)
+{
+    // size the output image
+    destImage.m_width = srcImage.m_width;
+    destImage.m_height = srcImage.m_height;
+    destImage.m_pitch = srcImage.m_width * 3;
+    if (destImage.m_pitch & 3)
+    {
+        destImage.m_pitch &= ~3;
+        destImage.m_pitch += 4;
+    }
+    destImage.m_pixels.resize(destImage.m_pitch*destImage.m_height);
+ 
+    // get floating point phase data, and encode it in [0,255]
+    for (int x = 0; x < srcImage.m_width; ++x)
+    {
+        for (int y = 0; y < srcImage.m_height; ++y)
+        {
+            // Offset the information by half width & height in the positive direction.
+            // This makes frequency 0 (DC) be at the image origin, like most diagrams show it.
+            int k = (x + (int)srcImage.m_width / 2) % (int)srcImage.m_width;
+            int l = (y + (int)srcImage.m_height / 2) % (int)srcImage.m_height;
+            const std::complex<float> &src = srcImage.m_pixels[l*srcImage.m_width + k];
+ 
+            // get phase, and change it from [-pi,+pi] to [0,255]
+            float phase = (0.5f + 0.5f * std::atan2(src.real(), src.imag()) / c_pi);
+            if (phase < 0.0f)
+                phase = 0.0f;
+            if (phase > 1.0f)
+                phase = 1.0;
+            uint8 phase255 = uint8(phase * 255);
+ 
+            // write the phase as grey scale color
+            uint8* dest = &destImage.m_pixels[y*destImage.m_pitch + x * 3];
+            dest[0] = phase255;
+            dest[1] = phase255;
+            dest[2] = phase255;
+        }
+    }
+}
 
 //======================================================================================
 bool ImageSave (const SImageData &image, const char *fileName)
@@ -332,10 +524,15 @@ public:
 
         // TODO: is this a decent radius calculation?
         // calculate radius
+        std::uniform_real_distribution<float> distRadiusMultiplier(0.01f, 0.05f);
+        m_radius = float(imageSize) * distRadiusMultiplier(rng);
+        m_radius = max(m_radius, 1.0f);
+        /*
         m_radius = float(imageSize) * targetBrightness / 10.0f; 
         std::uniform_real_distribution<float> distRadiusMultiplier(0.5f, 2.0f);
         m_radius *= distRadiusMultiplier(rng);
         m_radius = max(m_radius, 1.0f);
+        */
     }
 
     void DrawStroke (SImageData& image)
@@ -452,20 +649,52 @@ void GenerateTAM (const char* baseFileName, size_t dimensions, size_t numShades)
 {
     TAMGENERATOR generator;
     char fileName[1024];
+    char dftFileName[1024];
 
-    // initialize an image to it's starting state
+    // initialize image to starting state
     SImageData image;
     ImageInit(image, dimensions, dimensions);
     float brightness = generator.InitializeImage(image);
 
+    // images for DFT
+    SImageDataComplex dftImage;
+    SImageData dftDataImage;
+
     // generate each shade, but don't include pure black or pure white as those are easy to generate
     for (size_t i = 0; i < numShades; ++i)
     {
-        float desiredBrightness = 1.0f - float(i + 1) / float(numShades + 1);
-        brightness = generator.GenerateStrokes(image, brightness, desiredBrightness);
+        // print file name
         sprintf(fileName, baseFileName, i);
-        ImageSave(image, fileName);
-        printf("\n%s brightness = %f\n\n", fileName, brightness);
+        printf("%s\n", fileName);
+
+        // generate the strokes, save the image and report final brightness
+        {
+            SBlockTimer timer(fileName);
+
+            float desiredBrightness = 1.0f - float(i + 1) / float(numShades + 1);
+            brightness = generator.GenerateStrokes(image, brightness, desiredBrightness);
+            ImageSave(image, fileName);
+
+            printf("\nbrightness = %f\n", brightness);
+        }
+
+        // DFT the image and save amplitude / phase information, if we should
+        if (DO_DFT())
+        {
+            SBlockTimer timer(fileName);
+            DFTImage(image, dftImage);
+
+            GetMagnitudeData(dftImage, dftDataImage);
+            strcpy(dftFileName, fileName);
+            strcat(dftFileName, ".mag.bmp");
+            ImageSave(dftDataImage, dftFileName);
+
+            GetPhaseData(dftImage, dftDataImage);
+            strcpy(dftFileName, fileName);
+            strcat(dftFileName, ".phase.bmp");
+            ImageSave(dftDataImage, dftFileName);
+        }
+        printf("\n");
     }
 }
 
@@ -483,16 +712,9 @@ int main (int argc, char** argv)
 /*
 TAM GENERATOR TODO:
 
-! do the TAM thing, but don't auto-generate mips
+* i think the circle radius varies too much.  Maybe allow random circle sizes but a smaller window, and keep the window the same for all darkness levels?
 
 ? figure out good cost function, like length or what?
-
-1) make a column of mips, initialize to white.
-2) find a candidate stroke / dot / etc to add to all the mips
-3) use the best candidate and apply to all mips
-4) repeat until we have desired average brightness
-5) move to next column up mips, using this as a starting point.
-6) rinse and repeat until all columns are filled
 
 * do a few types of tams:
  * blue noise pixels 
@@ -506,17 +728,15 @@ TAM GENERATOR TODO:
  * white on black
  * colors?
 
-* maybe have different image generations run on different threads. could have an option for numThreads, or just use however many cores there are.
-
 * check this out with sleepy to see what is slow
 
-? can we multithread this? I bet we can for the "best candidate" generation / selection
-* make it print out progress if it takes long enough.
+* get these loaded / working in the cross hatching project and check em out
 
-? what should we do about mips not going to 1 px? maybe manually make those mips? maybe don't have the CrossHatching program use them? (limit # of mips). dunno
+? is dense blue noise the same as sparse blue noise with image inverted? do DFT i think and check it out?
+ ? maybe ask stack exchange how to make high density 1 bit blue noise textures?
 
-* get these loaded / working in the cross hatching project
+? does it matter that the final brightness may be much dimmer than desired? maybe need to deal with that somehow by penalizing going over?
 
-? maybe ask stack exchange how to make high density 1 bit blue noise textures?
+? maybe be able to write out as tga so easier to load into other program? or have the other program able to read bmps too (maybe that's easier!)
 
 */
