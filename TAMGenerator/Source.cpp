@@ -15,6 +15,14 @@ const float c_pi = 3.14159265359f;
 #define DO_DFT() false
 
 //======================================================================================
+void WaitForEnter()
+{
+    printf("Press Enter to quit");
+    fflush(stdin);
+    getchar();
+}
+
+//======================================================================================
 //                                     SBlockTimer
 //======================================================================================
 // times a block of code
@@ -328,6 +336,7 @@ void ImageCircleSectionDraw (SImageData& image, int x, int y, int xC, int yC, co
     putpixel(xC + y, yC - x);
 }
 
+//======================================================================================
 void ImageCircleSectionDrawFilled (SImageData& image, int x, int y, int xC, int yC, const SColor& color)
 {
     // not the most efficient, but whatever
@@ -358,6 +367,7 @@ void ImageCircleSectionDrawFilled (SImageData& image, int x, int y, int xC, int 
     }
 }
 
+//======================================================================================
 template <bool FILLED>
 void ImageCircle (SImageData& image, int Radius,int xC,int yC, const SColor& color)
 {
@@ -384,6 +394,127 @@ void ImageCircle (SImageData& image, int Radius,int xC,int yC, const SColor& col
             ImageCircleSectionDrawFilled(image, x, y, xC, yC, color);
         else
             ImageCircleSectionDraw(image, x, y, xC, yC, color);
+    }
+}
+
+//======================================================================================
+// Generic Line Drawing
+// X and Y are flipped for Y maxor axis lines, but the pixel writes are handled correctly due to
+// minor and major axis pixel movement
+void DrawLineMajorAxis(
+    SColor* pixel,
+    int majorAxisPixelMovement,
+    int minorAxisPixelMovement,
+    int dx,
+    int dy,
+    const SColor& color
+)
+{
+    // calculate some constants
+    const int dx2 = dx * 2;
+    const int dy2 = dy * 2;
+    const int dy2Mindx2 = dy2 - dx2;
+ 
+    // calculate the starting error value
+    int Error = dy2 - dx;
+ 
+    // draw the first pixel
+    *pixel = color;
+ 
+    // loop across the major axis
+    while (dx--)
+    {
+        // move on major axis and minor axis
+        if (Error > 0)
+        {
+            pixel += majorAxisPixelMovement + minorAxisPixelMovement;
+            Error += dy2Mindx2;
+        }
+        // move on major axis only
+        else
+        {
+            pixel += majorAxisPixelMovement;
+            Error += dy2;
+        }
+ 
+        // draw the next pixel
+        *pixel = color;
+    }
+}
+
+//======================================================================================
+// Specialized Line Drawing optimized for horizontal or vertical lines
+// X and Y are flipped for Y maxor axis lines, but the pixel writes are handled correctly due to
+// minor and major axis pixel movement
+void DrawLineSingleAxis(SColor* pixel, int majorAxisPixelMovement, int dx, const SColor& color)
+{
+    // draw the first pixel
+    *pixel = color;
+ 
+    // loop across the major axis and draw the rest of the pixels
+    while (dx--)
+    {
+        pixel += majorAxisPixelMovement;
+        *pixel = color;
+    };
+}
+
+//======================================================================================
+// Draw an arbitrary line.  Assumes start and end point are within valid range
+// pixels is a pointer to where the pixels you want to draw to start aka (0,0)
+// pixelStride is the number of unsigned ints to get from one row of pixels to the next.
+// Usually, that is the same as the width of the image you are drawing to, but sometimes is not.
+void DrawLine(SImageData& image, int x1, int y1, int x2, int y2, const SColor& color)
+{
+    // calculate our deltas
+    int dx = x2 - x1;
+    int dy = y2 - y1;
+ 
+    // if the X axis is the major axis
+    if (abs(dx) >= abs(dy))
+    {
+        // if x2 < x1, flip the points to have fewer special cases
+        if (dx < 0)
+        {
+            dx *= -1;
+            dy *= -1;
+            std::swap(x1, x2);
+            std::swap(y1, y2);
+        }
+ 
+        // get the address of the pixel at (x1,y1)
+        SColor* startPixel = (SColor*)&image.m_pixels[y1 * image.m_width + x1];
+ 
+        // determine special cases
+        if (dy > 0)
+            DrawLineMajorAxis(startPixel, 1, (int)image.m_width, dx, dy, color);
+        else if (dy < 0)
+            DrawLineMajorAxis(startPixel, 1, -(int)image.m_width, dx, -dy, color);
+        else
+            DrawLineSingleAxis(startPixel, 1, dx, color);
+    }
+    // else the Y axis is the major axis
+    else
+    {
+        // if y2 < y1, flip the points to have fewer special cases
+        if (dy < 0)
+        {
+            dx *= -1;
+            dy *= -1;
+            std::swap(x1, x2);
+            std::swap(y1, y2);
+        }
+ 
+        // get the address of the pixel at (x1,y1)
+        SColor* startPixel = (SColor*)&image.m_pixels[y1 * image.m_width + x1];
+ 
+        // determine special cases
+        if (dx > 0)
+            DrawLineMajorAxis(startPixel, (int)image.m_width, 1, dy, dx, color);
+        else if (dx < 0)
+            DrawLineMajorAxis(startPixel, (int)image.m_width, -1, dy, -dx, color);
+        else
+            DrawLineSingleAxis(startPixel, (int)image.m_width, dy, color);
     }
 }
 
@@ -551,6 +682,50 @@ public:
 };
 
 //======================================================================================
+class TAMStroke_LineSegment
+{
+public:
+    // TODO: rename distance 2nd parameter to imageWidth in all 3 places
+    inline float Distance (const TAMStroke_LineSegment& other, int width)
+    {
+        // TODO: this! toroidal distance between two line segments
+        return 0.0f;
+    }
+
+    void Randomize (size_t imageSize, float targetBrightness)
+    {
+        // seed the random number generator
+        static std::random_device rd;
+        static std::mt19937 rng(rd());
+
+        // calculate positions
+        std::uniform_real_distribution<float> dist(0, float(imageSize));
+        m_X1 = dist(rng);
+        m_Y1 = dist(rng);
+        m_X2 = dist(rng);
+        m_Y2 = dist(rng);
+    }
+
+    void DrawStroke (SImageData& image)
+    {
+        // TODO: need to make DrawLine handle wrap around! maybe have it take the image as a param
+        // TODO: actually no clipping needed as it takes the shortest route currently.  Maybe we need a point, direction vector and length or something? we want wrap around lines
+        // TODO: bresenham is overkill actually.. start with horizontal lines!
+        DrawLine(image, (int)m_X1, (int)m_Y1, (int)m_X2, (int)m_Y2, SColor(0, 0, 0));
+    }
+
+    static size_t DesiredStrokes(SImageData& image, float currentBrightness, float targetBrightness)
+    {
+        return 0;
+    }
+
+    float m_X1;
+    float m_Y1;
+    float m_X2;
+    float m_Y2;
+};
+
+//======================================================================================
 // TODO: this may be overkill to have this be it's own thing. Everything may follow this code.
 template <typename TAMSTROKE, size_t NUMCANDIDATES>
 class TAMGenerator_BlueNoise
@@ -611,7 +786,7 @@ public:
             {
                 GenerateStroke(image, targetBrightness);
 
-                if (i % tick == 0)
+                if (tick == 0 || i % tick == 0)
                 {
                     printf("               \r%i%%  (%zu / %zu)\r", int(100.0f*float(i) / float(desiredStrokes)), i, desiredStrokes);
                 }
@@ -704,15 +879,17 @@ int main (int argc, char** argv)
     // TODO: this blue noise kinda sucks for tiling, and also sucks when it's denser.  Increasing candidate count didn't really help much.
     //GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Pixel, 1000>>("TAMs/Dots/Dots_%zu.bmp", 64, 8);
 
-    GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Circle, 1000>>("TAMs/Dots/Circles_%zu.bmp", 256, 8);
+    //GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Circle, 1000>>("TAMs/Dots/Circles_%zu.bmp", 256, 8);
+
+    GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_LineSegment, 100>>("TAMs/Dots/Lines_%zu.bmp", 256, 8);
+
+    WaitForEnter();
 
     return 0;
 }
 
 /*
 TAM GENERATOR TODO:
-
-* i think the circle radius varies too much.  Maybe allow random circle sizes but a smaller window, and keep the window the same for all darkness levels?
 
 ? figure out good cost function, like length or what?
 
@@ -738,5 +915,7 @@ TAM GENERATOR TODO:
 ? does it matter that the final brightness may be much dimmer than desired? maybe need to deal with that somehow by penalizing going over?
 
 ? maybe be able to write out as tga so easier to load into other program? or have the other program able to read bmps too (maybe that's easier!)
+
+? clean up this code a bit? maybe multiple files? drawing routines, dft, etc?
 
 */
