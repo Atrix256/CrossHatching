@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <vector>
+#include <array>
 #include <random>
 #include <chrono>
 #include <complex>
@@ -874,6 +875,79 @@ void GenerateTAM (const char* baseFileName, size_t dimensions, size_t numShades)
 }
 
 //======================================================================================
+
+void GenerateBlueNoiseStipplingByRelaxation (const char* baseFileName, size_t dimensions, size_t numShades)
+{
+    // there must be an odd number of shades because we reflect around 50%!
+    if (numShades % 2 == 0)
+    {
+        printf("ERROR: GenerateBlueNoiseStipplingByRelaxation() numShades must be an odd number!\n");
+        return;
+    }
+
+    // initialize images
+    std::vector<SImageData> images;
+    images.resize(numShades);
+    for (SImageData& image : images)
+    {
+        ImageInit(image, dimensions, dimensions);
+        ImageClear(image, SColor(255, 255, 255));
+    }
+
+    // generate the images from brightest to 50% darkness
+    char fileName[1024];
+    static std::random_device rd;
+    static std::mt19937 rng(rd());
+    std::uniform_real_distribution<float> dist(0, float(dimensions));
+    std::vector<std::array<float, 2>> unmovablePoints;
+    std::vector<std::array<float, 2>> points;
+    float currentBrightness = 1.0f;
+    for (size_t i = 0; i < (numShades + 1) / 2; ++i)
+    {
+        float desiredBrightness = 1.0f - float(i + 1) / float(numShades + 1);
+
+        // generate new points to match the desired brightness
+        points.resize(size_t(float(dimensions) * float(dimensions) * (currentBrightness - desiredBrightness)));
+        for (std::array<float, 2>& point : points)
+        {
+            point[0] = dist(rng);
+            point[1] = dist(rng);
+        }
+
+        // TODO: relaxation steps
+
+        // commit points to unmovablePoints
+        unmovablePoints.insert(unmovablePoints.end(), points.begin(), points.end());
+
+        // commit all unmovablePoints to image
+        SImageData& image = images[i];
+        for (std::array<float, 2>& point : unmovablePoints)
+        {
+            uint8* pixel = &image.m_pixels[size_t(point[0]) * image.m_pitch + size_t(point[1]) * 3];
+            ((SColor*)pixel)->Set(0, 0, 0);
+        }
+
+        // save the image
+        sprintf(fileName, baseFileName, i);
+        ImageSave(image, fileName);
+
+        //store off our brightness for the next image
+        currentBrightness = desiredBrightness;
+    }
+
+    // TODO: invert the lighter images to make the darker images
+
+    // TODO: verify hypothesis with DFT
+
+    // TODO: finish this.
+    // TODO: make sure that no two pixels reside in the same spot (?)
+    // TODO: report progress
+    int ijkl = 0;
+
+    // TODO: read details of relaxation stuff here: http://www.mia.uni-saarland.de/Research/Electrostatic_Halftoning/index.shtml
+}
+
+//======================================================================================
 int main (int argc, char** argv)
 {
     // TODO: this blue noise kinda sucks for tiling, and also sucks when it's denser.  Increasing candidate count didn't really help much.
@@ -881,7 +955,10 @@ int main (int argc, char** argv)
 
     //GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Circle, 1000>>("TAMs/Dots/Circles_%zu.bmp", 256, 8);
 
-    GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_LineSegment, 100>>("TAMs/Dots/Lines_%zu.bmp", 256, 8);
+    // TODO: lines don't really work right now and they crash
+    //GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_LineSegment, 100>>("TAMs/Dots/Lines_%zu.bmp", 256, 8);
+
+    GenerateBlueNoiseStipplingByRelaxation("TAMs/Dots/Dots2_%zu.bmp", 64, 9);
 
     WaitForEnter();
 
@@ -911,11 +988,15 @@ TAM GENERATOR TODO:
 
 ? is dense blue noise the same as sparse blue noise with image inverted? do DFT i think and check it out?
  ? maybe ask stack exchange how to make high density 1 bit blue noise textures?
+ * hypothesis: at 50% darkness, you ought to invert the problem.  Maybe work towards 50% darkness, and then invert all the textures < 50% to make > 50%?
+ * if this works, may be worth a blog post.
 
 ? does it matter that the final brightness may be much dimmer than desired? maybe need to deal with that somehow by penalizing going over?
 
 ? maybe be able to write out as tga so easier to load into other program? or have the other program able to read bmps too (maybe that's easier!)
 
 ? clean up this code a bit? maybe multiple files? drawing routines, dft, etc?
+
+? should you rename things not to be TAM since it isn't a tonal art map anymore? since there are no mips?
 
 */

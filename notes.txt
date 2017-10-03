@@ -94,6 +94,8 @@ Sean said he'd be willing to give me textures.
 * could do some mesh instancing where a model primitive transforms the incoming and outgoing ray / normals etc.
  * instead of making more triangles.
 
+? should you try TAMs that have mips? may help the problem of making screen space texture density?
+? should you try recursive blue noise wang tiles? may also help the problem of making screen space texture density.
 
 ================================= HIGH LEVEL GOALS =================================
 
@@ -156,3 +158,19 @@ Tonemapping:
  * They also made mip levels manually where lower res mips had fewer of the brush strokes, this made it so you could zoom in/out and it wouldn't affect tone (maybe?) and so it wouldn't alias.
  * I didn't want that, so left the custom mips out.
 
+! electrostatic half toning very related: http://www.mia.uni-saarland.de/Research/Electrostatic_Halftoning/index.shtml
+ * 
+
+* crazy idea for stylized art thing
+ * have a bunch of black particles in some initial state (uniform grid. maybe piled up on the ground like sand?)
+ * each particle has a pixel location as well as some basic physical information, like velocity.
+  * possibly add some random variation like weight (a force diminisher) so not all particles behave the same
+ * for every frame of a greyscale image, do N iterations of particle updates, using the brightness of the image as a density constraint.
+ * have sliders to adjust spring stiffness and such.
+  * could start out by 
+ ? maybe do a webgl thing of this?
+  * rasterize some animated thing
+  * checkbox to show as greyscale
+  * checkbox to show particle simulation
+ * could animate stiffness over time.  EG: slowly picks sand up, then sand sticks to image while it plays, then sand falls away.
+ * could possibly have a course grid that had density information as an acceleration structure? dunno.
