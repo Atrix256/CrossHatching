@@ -159,7 +159,8 @@ Tonemapping:
  * I didn't want that, so left the custom mips out.
 
 ! electrostatic half toning very related: http://www.mia.uni-saarland.de/Research/Electrostatic_Halftoning/index.shtml
- * 
+ 
+* generate blue noise dots from light to whatever is <= 50% dark. Invert them to get the darker versions?
 
 * crazy idea for stylized art thing
  * have a bunch of black particles in some initial state (uniform grid. maybe piled up on the ground like sand?)

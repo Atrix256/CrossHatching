@@ -13,7 +13,8 @@ typedef uint8_t uint8;
 
 const float c_pi = 3.14159265359f;
 
-#define DO_DFT() false
+#define DO_DFT() true
+#define DO_DFT_PHASE() false
 
 //======================================================================================
 void WaitForEnter()
@@ -303,6 +304,20 @@ void ImageClear (SImageData& image, const SColor& color)
  
         row += image.m_pitch;
     }
+}
+
+//======================================================================================
+void ImageCopy (SImageData& dest, const SImageData& src)
+{
+    ImageInit(dest, src.m_width, src.m_height);
+    dest.m_pixels = src.m_pixels;
+}
+
+//======================================================================================
+void ImageInvert (SImageData& image)
+{
+    for (uint8& c : image.m_pixels)
+        c = 255 - c;
 }
 
 //======================================================================================
@@ -821,16 +836,18 @@ public:
 
 //======================================================================================
 template <typename TAMGENERATOR>
-void GenerateTAM (const char* baseFileName, size_t dimensions, size_t numShades)
+void GenerateTAM (const char* baseFileName, size_t dimensions, size_t numShades, bool invertToMakeDarkHalf)
 {
     TAMGENERATOR generator;
     char fileName[1024];
     char dftFileName[1024];
 
-    // initialize image to starting state
-    SImageData image;
-    ImageInit(image, dimensions, dimensions);
-    float brightness = generator.InitializeImage(image);
+    // initialize images to starting state
+    std::vector<SImageData> images;
+    images.resize(numShades);
+    for (size_t i = 0; i < numShades; ++i)
+        ImageInit(images[i], dimensions, dimensions);
+    float brightness = generator.InitializeImage(images[0]);
 
     // images for DFT
     SImageDataComplex dftImage;
@@ -839,11 +856,16 @@ void GenerateTAM (const char* baseFileName, size_t dimensions, size_t numShades)
     // generate each shade, but don't include pure black or pure white as those are easy to generate
     for (size_t i = 0; i < numShades; ++i)
     {
+        SImageData& image = images[i];
+        if (i > 0)
+            ImageCopy(image, images[i - 1]);
+
         // print file name
         sprintf(fileName, baseFileName, i);
         printf("%s\n", fileName);
 
         // generate the strokes, save the image and report final brightness
+        if (!invertToMakeDarkHalf || i < (numShades + 1) / 2)
         {
             SBlockTimer timer(fileName);
 
@@ -852,6 +874,20 @@ void GenerateTAM (const char* baseFileName, size_t dimensions, size_t numShades)
             ImageSave(image, fileName);
 
             printf("\nbrightness = %f\n", brightness);
+        }
+        // invert the other images if we should
+        else
+        {
+            SBlockTimer timer(fileName);
+
+            ImageCopy(image, images[numShades - 1 - i]);
+            ImageInvert(image);
+
+            brightness = ImageAverageBrightness(image);
+
+            ImageSave(image, fileName);
+
+            printf("inverting image %zu\nbrightness = %f\n", numShades - 1 - i, brightness);
         }
 
         // DFT the image and save amplitude / phase information, if we should
@@ -865,10 +901,13 @@ void GenerateTAM (const char* baseFileName, size_t dimensions, size_t numShades)
             strcat(dftFileName, ".mag.bmp");
             ImageSave(dftDataImage, dftFileName);
 
-            GetPhaseData(dftImage, dftDataImage);
-            strcpy(dftFileName, fileName);
-            strcat(dftFileName, ".phase.bmp");
-            ImageSave(dftDataImage, dftFileName);
+            if (DO_DFT_PHASE())
+            {
+                GetPhaseData(dftImage, dftDataImage);
+                strcpy(dftFileName, fileName);
+                strcat(dftFileName, ".phase.bmp");
+                ImageSave(dftDataImage, dftFileName);
+            }
         }
         printf("\n");
     }
@@ -950,15 +989,18 @@ void GenerateBlueNoiseStipplingByRelaxation (const char* baseFileName, size_t di
 //======================================================================================
 int main (int argc, char** argv)
 {
-    // TODO: this blue noise kinda sucks for tiling, and also sucks when it's denser.  Increasing candidate count didn't really help much.
-    //GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Pixel, 1000>>("TAMs/Dots/Dots_%zu.bmp", 64, 8);
+    // TODO: this blue noise kinda sucks for tiling (why?), and also sucks when it's denser.  Increasing candidate count didn't really help much.
+    //GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Pixel, 1000>>("TAMs/Dots/Dots_%zu.bmp", 64, 8, false);
+
+
+    GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Pixel, 1000>>("TAMs/Dots/DotsInverted_%zu.bmp", 64, 8, true);
 
     //GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Circle, 1000>>("TAMs/Dots/Circles_%zu.bmp", 256, 8);
 
     // TODO: lines don't really work right now and they crash
     //GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_LineSegment, 100>>("TAMs/Dots/Lines_%zu.bmp", 256, 8);
 
-    GenerateBlueNoiseStipplingByRelaxation("TAMs/Dots/Dots2_%zu.bmp", 64, 9);
+    //GenerateBlueNoiseStipplingByRelaxation("TAMs/Dots/Dots2_%zu.bmp", 64, 9);
 
     WaitForEnter();
 
@@ -967,6 +1009,8 @@ int main (int argc, char** argv)
 
 /*
 TAM GENERATOR TODO:
+
+! i think a problem is that my blue noise dart throwing is float, not discrete?
 
 ? figure out good cost function, like length or what?
 
