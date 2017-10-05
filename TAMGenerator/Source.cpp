@@ -13,7 +13,7 @@ typedef uint8_t uint8;
 
 const float c_pi = 3.14159265359f;
 
-#define DO_DFT() true
+#define DO_DFT() false
 #define DO_DFT_PHASE() false
 
 //======================================================================================
@@ -743,7 +743,7 @@ public:
 
 //======================================================================================
 // TODO: this may be overkill to have this be it's own thing. Everything may follow this code.
-template <typename TAMSTROKE, size_t NUMCANDIDATES>
+template <typename TAMSTROKE, size_t CANDIDATESPERSTROKE>
 class TAMGenerator_BlueNoise
 {
 public:
@@ -760,7 +760,13 @@ public:
         TAMSTROKE bestCandidate;
         TAMSTROKE currentCandidate;
         float bestScore = 0.0f;
-        for (size_t i = 0; i < NUMCANDIDATES; ++i)
+        
+        // TODO: formalize this somehow, as a numerator / denom template param maybe?
+        size_t numCandidates = m_strokes.size() * CANDIDATESPERSTROKE + 1;
+        if (numCandidates > image.m_width * image.m_height / 2)
+            numCandidates = image.m_width * image.m_height / 2;
+
+        for (size_t i = 0; i < numCandidates; ++i)
         {
             // generate a candidate
             currentCandidate.Randomize(image.m_width, targetBrightness);
@@ -990,12 +996,10 @@ void GenerateBlueNoiseStipplingByRelaxation (const char* baseFileName, size_t di
 int main (int argc, char** argv)
 {
     // TODO: this blue noise kinda sucks for tiling (why?), and also sucks when it's denser.  Increasing candidate count didn't really help much.
-    //GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Pixel, 1000>>("TAMs/Dots/Dots_%zu.bmp", 64, 8, false);
+    //GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Pixel, 5>>("TAMs/Dots/Dots_%zu.bmp", 64, 8, false);
+    //GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Pixel, 5>>("TAMs/Dots/DotsInverted_%zu.bmp", 64, 8, true);
 
-
-    GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Pixel, 1000>>("TAMs/Dots/DotsInverted_%zu.bmp", 64, 8, true);
-
-    //GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Circle, 1000>>("TAMs/Dots/Circles_%zu.bmp", 256, 8);
+    GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Circle, 5>>("TAMs/Dots/Circles_%zu.bmp", 256, 8, false);
 
     // TODO: lines don't really work right now and they crash
     //GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_LineSegment, 100>>("TAMs/Dots/Lines_%zu.bmp", 256, 8);
@@ -1010,7 +1014,10 @@ int main (int argc, char** argv)
 /*
 TAM GENERATOR TODO:
 
+! remake all images with this new m * n sample count thing!
+
 ! i think a problem is that my blue noise dart throwing is float, not discrete?
+ * nah. you were doing mitchell's best candidate algorithm wrong!
 
 ? figure out good cost function, like length or what?
 
