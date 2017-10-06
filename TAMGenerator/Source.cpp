@@ -414,127 +414,6 @@ void ImageCircle (SImageData& image, int Radius,int xC,int yC, const SColor& col
 }
 
 //======================================================================================
-// Generic Line Drawing
-// X and Y are flipped for Y maxor axis lines, but the pixel writes are handled correctly due to
-// minor and major axis pixel movement
-void DrawLineMajorAxis(
-    SColor* pixel,
-    int majorAxisPixelMovement,
-    int minorAxisPixelMovement,
-    int dx,
-    int dy,
-    const SColor& color
-)
-{
-    // calculate some constants
-    const int dx2 = dx * 2;
-    const int dy2 = dy * 2;
-    const int dy2Mindx2 = dy2 - dx2;
- 
-    // calculate the starting error value
-    int Error = dy2 - dx;
- 
-    // draw the first pixel
-    *pixel = color;
- 
-    // loop across the major axis
-    while (dx--)
-    {
-        // move on major axis and minor axis
-        if (Error > 0)
-        {
-            pixel += majorAxisPixelMovement + minorAxisPixelMovement;
-            Error += dy2Mindx2;
-        }
-        // move on major axis only
-        else
-        {
-            pixel += majorAxisPixelMovement;
-            Error += dy2;
-        }
- 
-        // draw the next pixel
-        *pixel = color;
-    }
-}
-
-//======================================================================================
-// Specialized Line Drawing optimized for horizontal or vertical lines
-// X and Y are flipped for Y maxor axis lines, but the pixel writes are handled correctly due to
-// minor and major axis pixel movement
-void DrawLineSingleAxis(SColor* pixel, int majorAxisPixelMovement, int dx, const SColor& color)
-{
-    // draw the first pixel
-    *pixel = color;
- 
-    // loop across the major axis and draw the rest of the pixels
-    while (dx--)
-    {
-        pixel += majorAxisPixelMovement;
-        *pixel = color;
-    };
-}
-
-//======================================================================================
-// Draw an arbitrary line.  Assumes start and end point are within valid range
-// pixels is a pointer to where the pixels you want to draw to start aka (0,0)
-// pixelStride is the number of unsigned ints to get from one row of pixels to the next.
-// Usually, that is the same as the width of the image you are drawing to, but sometimes is not.
-void DrawLine(SImageData& image, int x1, int y1, int x2, int y2, const SColor& color)
-{
-    // calculate our deltas
-    int dx = x2 - x1;
-    int dy = y2 - y1;
- 
-    // if the X axis is the major axis
-    if (abs(dx) >= abs(dy))
-    {
-        // if x2 < x1, flip the points to have fewer special cases
-        if (dx < 0)
-        {
-            dx *= -1;
-            dy *= -1;
-            std::swap(x1, x2);
-            std::swap(y1, y2);
-        }
- 
-        // get the address of the pixel at (x1,y1)
-        SColor* startPixel = (SColor*)&image.m_pixels[y1 * image.m_width + x1];
- 
-        // determine special cases
-        if (dy > 0)
-            DrawLineMajorAxis(startPixel, 1, (int)image.m_width, dx, dy, color);
-        else if (dy < 0)
-            DrawLineMajorAxis(startPixel, 1, -(int)image.m_width, dx, -dy, color);
-        else
-            DrawLineSingleAxis(startPixel, 1, dx, color);
-    }
-    // else the Y axis is the major axis
-    else
-    {
-        // if y2 < y1, flip the points to have fewer special cases
-        if (dy < 0)
-        {
-            dx *= -1;
-            dy *= -1;
-            std::swap(x1, x2);
-            std::swap(y1, y2);
-        }
- 
-        // get the address of the pixel at (x1,y1)
-        SColor* startPixel = (SColor*)&image.m_pixels[y1 * image.m_width + x1];
- 
-        // determine special cases
-        if (dx > 0)
-            DrawLineMajorAxis(startPixel, (int)image.m_width, 1, dy, dx, color);
-        else if (dx < 0)
-            DrawLineMajorAxis(startPixel, (int)image.m_width, -1, dy, -dx, color);
-        else
-            DrawLineSingleAxis(startPixel, (int)image.m_width, dy, color);
-    }
-}
-
-//======================================================================================
 inline float Lerp (float A, float B, float t)
 {
     return A * (1 - t) + B * t;
@@ -585,18 +464,18 @@ void ImageBox (SImageData& image, size_t x1, size_t x2, size_t y1, size_t y2, co
 class TAMStroke_Pixel
 {
 public:
-    inline float Distance (const TAMStroke_Pixel& other, int width)
+    inline float Distance (const TAMStroke_Pixel& other, int imageWidth)
     {
         // this returns the toroidal distance between the points
         // aka the interval [0, width) wraps around
         float dx = std::abs(other.m_posX - m_posX);
         float dy = std::abs(other.m_posY - m_posY);
 
-        if (dx > float(width / 2))
-            dx = float(width) - dx;
+        if (dx > float(imageWidth / 2))
+            dx = float(imageWidth) - dx;
 
-        if (dy > float(width / 2))
-            dy = float(width) - dy;
+        if (dy > float(imageWidth / 2))
+            dy = float(imageWidth) - dy;
 
         // returning squared distance cause why not
         return dx*dx + dy*dy;
@@ -633,7 +512,7 @@ public:
 class TAMStroke_Circle
 {
 public:
-    inline float Distance (const TAMStroke_Circle& other, int width)
+    inline float Distance (const TAMStroke_Circle& other, int imageWidth)
     {
         // this returns the toroidal distance between the circles
         // aka the interval [0, width) wraps around
@@ -642,11 +521,11 @@ public:
         float dx = std::abs(other.m_posX - m_posX);
         float dy = std::abs(other.m_posY - m_posY);
 
-        if (dx > float(width / 2))
-            dx = float(width) - dx;
+        if (dx > float(imageWidth / 2))
+            dx = float(imageWidth) - dx;
 
-        if (dy > float(width / 2))
-            dy = float(width) - dy;
+        if (dy > float(imageWidth / 2))
+            dy = float(imageWidth) - dy;
 
         float distSquared = dx*dx + dy*dy;
 
@@ -669,17 +548,10 @@ public:
         m_posX = dist(rng);
         m_posY = dist(rng);
 
-        // TODO: is this a decent radius calculation?
         // calculate radius
         std::uniform_real_distribution<float> distRadiusMultiplier(0.01f, 0.05f);
         m_radius = float(imageSize) * distRadiusMultiplier(rng);
         m_radius = max(m_radius, 1.0f);
-        /*
-        m_radius = float(imageSize) * targetBrightness / 10.0f; 
-        std::uniform_real_distribution<float> distRadiusMultiplier(0.5f, 2.0f);
-        m_radius *= distRadiusMultiplier(rng);
-        m_radius = max(m_radius, 1.0f);
-        */
     }
 
     void DrawStroke (SImageData& image)
@@ -698,13 +570,15 @@ public:
 };
 
 //======================================================================================
-class TAMStroke_LineSegment
+class TAMStroke_HorizontalLineSegment
 {
 public:
     // TODO: rename distance 2nd parameter to imageWidth in all 3 places
-    inline float Distance (const TAMStroke_LineSegment& other, int width)
+    inline float Distance (const TAMStroke_HorizontalLineSegment& other, int imageWidth)
     {
-        // TODO: this! toroidal distance between two line segments
+        // TODO: this! toroidal distance between two horizontal line segments
+        // TODO: something like, if they have any overlap on x axis, their distance is their y difference.
+        // if they don't have any overlap, find which end points are closer to eachother and use the distance between them?
         return 0.0f;
     }
 
@@ -716,18 +590,22 @@ public:
 
         // calculate positions
         std::uniform_real_distribution<float> dist(0, float(imageSize));
-        m_X1 = dist(rng);
-        m_Y1 = dist(rng);
-        m_X2 = dist(rng);
-        m_Y2 = dist(rng);
+        m_X = dist(rng);
+        m_Y = dist(rng);
+        m_length = dist(rng);
     }
 
     void DrawStroke (SImageData& image)
     {
-        // TODO: need to make DrawLine handle wrap around! maybe have it take the image as a param
-        // TODO: actually no clipping needed as it takes the shortest route currently.  Maybe we need a point, direction vector and length or something? we want wrap around lines
-        // TODO: bresenham is overkill actually.. start with horizontal lines!
-        DrawLine(image, (int)m_X1, (int)m_Y1, (int)m_X2, (int)m_Y2, SColor(0, 0, 0));
+        // not the most efficient way to draw a horizontal line but whatever
+        for (size_t index = 0; index < m_length; ++index)
+        {
+            size_t x = (size_t(m_X) + index) % image.m_width;
+            size_t y = size_t(m_Y);
+
+            uint8* pixel = &image.m_pixels[y * image.m_pitch + x * 3];
+            ((SColor*)pixel)->Set(0, 0, 0);
+        }
     }
 
     static size_t DesiredStrokes(SImageData& image, float currentBrightness, float targetBrightness)
@@ -735,10 +613,9 @@ public:
         return 0;
     }
 
-    float m_X1;
-    float m_Y1;
-    float m_X2;
-    float m_Y2;
+    float m_X;
+    float m_Y;
+    float m_length;
 };
 
 //======================================================================================
@@ -926,13 +803,13 @@ int main (int argc, char** argv)
     // TODO: use a grid for dots to make finding closest neighbor easier
 
     // TODO: this blue noise kinda sucks for tiling (why?), and also sucks when it's denser.  Increasing candidate count didn't really help much.
-    GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Pixel, 5, 1024>>("TAMs/Dots/Dots_%zu.bmp", 64, 8, false);
-    GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Pixel, 5, 1024>>("TAMs/Dots/DotsInverted_%zu.bmp", 64, 8, true);
+    //GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Pixel, 5, 1024>>("TAMs/Dots/Dots_%zu.bmp", 64, 8, false);
+    //GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Pixel, 5, 1024>>("TAMs/Dots/DotsInverted_%zu.bmp", 64, 8, true);
 
-    GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Circle, 1, 50>>("TAMs/Dots/Circles_%zu.bmp", 256, 8, false);
+    //GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Circle, 1, 50>>("TAMs/Dots/Circles_%zu.bmp", 256, 8, false);
 
-    // TODO: lines don't really work right now and they crash
-    //GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_LineSegment, 100>>("TAMs/Dots/Lines_%zu.bmp", 256, 8);
+    // TODO: make lines calculate distance!
+    GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_HorizontalLineSegment, 1, 50>>("TAMs/Dots/Lines_%zu.bmp", 256, 8, false);
 
     WaitForEnter();
 
@@ -942,12 +819,15 @@ int main (int argc, char** argv)
 /*
 TAM GENERATOR TODO:
 
-! remake all images with this new m * n sample count thing!
+* test the dots and circle images in the path tracer now that you've improved them a bit
+ * could try circle inversion
+ * could try line inversion
 
-! i think a problem is that my blue noise dart throwing is float, not discrete?
- * nah. you were doing mitchell's best candidate algorithm wrong!
+* use a grid to help find closest objects faster.
+ * each grid cell is a list of indices of things inside of them
+ * they basically rasterize into it like they rasterize into an image i guess? or similar? maybe implement it per object.
 
-? figure out good cost function, like length or what?
+? figure out good cost function, like length or what? (for brushy type strokes)
 
 * do a few types of tams:
  * blue noise pixels 
