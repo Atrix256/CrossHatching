@@ -743,7 +743,7 @@ public:
 
 //======================================================================================
 // TODO: this may be overkill to have this be it's own thing. Everything may follow this code.
-template <typename TAMSTROKE, size_t CANDIDATESPERSTROKE>
+template <typename TAMSTROKE, size_t CANDIDATESPERSTROKE, size_t MAXCANDIDATES>
 class TAMGenerator_BlueNoise
 {
 public:
@@ -761,11 +761,12 @@ public:
         TAMSTROKE currentCandidate;
         float bestScore = 0.0f;
         
-        // TODO: formalize this somehow, as a numerator / denom template param maybe?
+        // calculate the number of candidates to generate
         size_t numCandidates = m_strokes.size() * CANDIDATESPERSTROKE + 1;
-        if (numCandidates > image.m_width * image.m_height / 2)
-            numCandidates = image.m_width * image.m_height / 2;
+        if (numCandidates > MAXCANDIDATES)
+            numCandidates = MAXCANDIDATES;
 
+        // generate the candidates
         for (size_t i = 0; i < numCandidates; ++i)
         {
             // generate a candidate
@@ -920,91 +921,18 @@ void GenerateTAM (const char* baseFileName, size_t dimensions, size_t numShades,
 }
 
 //======================================================================================
-
-void GenerateBlueNoiseStipplingByRelaxation (const char* baseFileName, size_t dimensions, size_t numShades)
-{
-    // there must be an odd number of shades because we reflect around 50%!
-    if (numShades % 2 == 0)
-    {
-        printf("ERROR: GenerateBlueNoiseStipplingByRelaxation() numShades must be an odd number!\n");
-        return;
-    }
-
-    // initialize images
-    std::vector<SImageData> images;
-    images.resize(numShades);
-    for (SImageData& image : images)
-    {
-        ImageInit(image, dimensions, dimensions);
-        ImageClear(image, SColor(255, 255, 255));
-    }
-
-    // generate the images from brightest to 50% darkness
-    char fileName[1024];
-    static std::random_device rd;
-    static std::mt19937 rng(rd());
-    std::uniform_real_distribution<float> dist(0, float(dimensions));
-    std::vector<std::array<float, 2>> unmovablePoints;
-    std::vector<std::array<float, 2>> points;
-    float currentBrightness = 1.0f;
-    for (size_t i = 0; i < (numShades + 1) / 2; ++i)
-    {
-        float desiredBrightness = 1.0f - float(i + 1) / float(numShades + 1);
-
-        // generate new points to match the desired brightness
-        points.resize(size_t(float(dimensions) * float(dimensions) * (currentBrightness - desiredBrightness)));
-        for (std::array<float, 2>& point : points)
-        {
-            point[0] = dist(rng);
-            point[1] = dist(rng);
-        }
-
-        // TODO: relaxation steps
-
-        // commit points to unmovablePoints
-        unmovablePoints.insert(unmovablePoints.end(), points.begin(), points.end());
-
-        // commit all unmovablePoints to image
-        SImageData& image = images[i];
-        for (std::array<float, 2>& point : unmovablePoints)
-        {
-            uint8* pixel = &image.m_pixels[size_t(point[0]) * image.m_pitch + size_t(point[1]) * 3];
-            ((SColor*)pixel)->Set(0, 0, 0);
-        }
-
-        // save the image
-        sprintf(fileName, baseFileName, i);
-        ImageSave(image, fileName);
-
-        //store off our brightness for the next image
-        currentBrightness = desiredBrightness;
-    }
-
-    // TODO: invert the lighter images to make the darker images
-
-    // TODO: verify hypothesis with DFT
-
-    // TODO: finish this.
-    // TODO: make sure that no two pixels reside in the same spot (?)
-    // TODO: report progress
-    int ijkl = 0;
-
-    // TODO: read details of relaxation stuff here: http://www.mia.uni-saarland.de/Research/Electrostatic_Halftoning/index.shtml
-}
-
-//======================================================================================
 int main (int argc, char** argv)
 {
-    // TODO: this blue noise kinda sucks for tiling (why?), and also sucks when it's denser.  Increasing candidate count didn't really help much.
-    //GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Pixel, 5>>("TAMs/Dots/Dots_%zu.bmp", 64, 8, false);
-    //GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Pixel, 5>>("TAMs/Dots/DotsInverted_%zu.bmp", 64, 8, true);
+    // TODO: use a grid for dots to make finding closest neighbor easier
 
-    GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Circle, 5>>("TAMs/Dots/Circles_%zu.bmp", 256, 8, false);
+    // TODO: this blue noise kinda sucks for tiling (why?), and also sucks when it's denser.  Increasing candidate count didn't really help much.
+    GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Pixel, 5, 1024>>("TAMs/Dots/Dots_%zu.bmp", 64, 8, false);
+    GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Pixel, 5, 1024>>("TAMs/Dots/DotsInverted_%zu.bmp", 64, 8, true);
+
+    GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_Circle, 1, 50>>("TAMs/Dots/Circles_%zu.bmp", 256, 8, false);
 
     // TODO: lines don't really work right now and they crash
     //GenerateTAM<TAMGenerator_BlueNoise<TAMStroke_LineSegment, 100>>("TAMs/Dots/Lines_%zu.bmp", 256, 8);
-
-    //GenerateBlueNoiseStipplingByRelaxation("TAMs/Dots/Dots2_%zu.bmp", 64, 9);
 
     WaitForEnter();
 
@@ -1049,5 +977,7 @@ TAM GENERATOR TODO:
 ? clean up this code a bit? maybe multiple files? drawing routines, dft, etc?
 
 ? should you rename things not to be TAM since it isn't a tonal art map anymore? since there are no mips?
+
+* the blue noise dots get worse as they get darker, maybe need to find out how to make dense blue noise samples?
 
 */
