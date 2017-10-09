@@ -1,5 +1,9 @@
 ! diff these versus notes unsaved!
 
+* object space stippling (with a blue noise texture)
+ * can threshold the image too, to make it lighter / darker.
+ * i think thresholding blue noise spaced things in general is probably a good idea. i think this relates to SDF's.
+
 * generate some TAMs yourself.
  * also tell sean if he wants to make a texture im totally ready
 
