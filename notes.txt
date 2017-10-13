@@ -179,3 +179,5 @@ Tonemapping:
   * checkbox to show particle simulation
  * could animate stiffness over time.  EG: slowly picks sand up, then sand sticks to image while it plays, then sand falls away.
  * could possibly have a course grid that had density information as an acceleration structure? dunno.
+
+* TAMs are basically "ordered dithering" but with brush strokes (etc) instead of individual pixels
