@@ -860,4 +860,7 @@ TAM GENERATOR TODO:
 
 * the blue noise dots get worse as they get darker, maybe need to find out how to make dense blue noise samples?
 
+* look into "hand tinted prints" - a technique where a printer prints black / white (dots?) and then someone colors over the top to give it color.
+ * Aunt Raffaella actually has some of these. check em out!
+
 */
